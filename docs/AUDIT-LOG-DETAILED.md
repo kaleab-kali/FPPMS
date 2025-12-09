@@ -1,0 +1,545 @@
+# EPPMS Audit Log System - Detailed Specification
+
+---
+
+# Module: Audit Log System
+
+## A.1 Audit Log Capture
+
+### A.1.1 Automatic Capture Events
+- A.1.1.1 Authentication Events
+  - A.1.1.1.1 Login Success
+    - A.1.1.1.1.1 User ID
+    - A.1.1.1.1.2 Timestamp
+    - A.1.1.1.1.3 IP Address
+    - A.1.1.1.1.4 User Agent
+    - A.1.1.1.1.5 Login Method (Password/MFA)
+    - A.1.1.1.1.6 Session ID Created
+  - A.1.1.1.2 Login Failure
+    - A.1.1.1.2.1 Attempted Username
+    - A.1.1.1.2.2 Timestamp
+    - A.1.1.1.2.3 IP Address
+    - A.1.1.1.2.4 User Agent
+    - A.1.1.1.2.5 Failure Reason
+    - A.1.1.1.2.6 Attempt Count
+  - A.1.1.1.3 Logout
+    - A.1.1.1.3.1 User ID
+    - A.1.1.1.3.2 Timestamp
+    - A.1.1.1.3.3 Session Duration
+    - A.1.1.1.3.4 Logout Type (Manual/Timeout/Forced)
+    - A.1.1.1.3.5 IP Address
+    - A.1.1.1.3.6 Session ID Terminated
+  - A.1.1.1.4 Password Change
+    - A.1.1.1.4.1 User ID
+    - A.1.1.1.4.2 Timestamp
+    - A.1.1.1.4.3 Changed By (Self/Admin)
+    - A.1.1.1.4.4 IP Address
+    - A.1.1.1.4.5 Method (Regular/Reset)
+    - A.1.1.1.4.6 Previous Password Hash (Reference Only)
+  - A.1.1.1.5 Password Reset Request
+    - A.1.1.1.5.1 User ID
+    - A.1.1.1.5.2 Email Sent To
+    - A.1.1.1.5.3 Timestamp
+    - A.1.1.1.5.4 IP Address
+    - A.1.1.1.5.5 Token Generated
+    - A.1.1.1.5.6 Expiry Time
+  - A.1.1.1.6 Session Invalidation
+    - A.1.1.1.6.1 User ID
+    - A.1.1.1.6.2 Sessions Invalidated Count
+    - A.1.1.1.6.3 Reason
+    - A.1.1.1.6.4 Initiated By
+    - A.1.1.1.6.5 Timestamp
+    - A.1.1.1.6.6 IP Address
+
+- A.1.1.2 Data Modification Events
+  - A.1.1.2.1 Create Operations
+    - A.1.1.2.1.1 Table/Entity Name
+    - A.1.1.2.1.2 Record ID Created
+    - A.1.1.2.1.3 All Field Values (JSON)
+    - A.1.1.2.1.4 User Who Created
+    - A.1.1.2.1.5 Timestamp
+    - A.1.1.2.1.6 Tenant ID
+  - A.1.1.2.2 Update Operations
+    - A.1.1.2.2.1 Table/Entity Name
+    - A.1.1.2.2.2 Record ID Updated
+    - A.1.1.2.2.3 Previous Values (JSON)
+    - A.1.1.2.2.4 New Values (JSON)
+    - A.1.1.2.2.5 Changed Fields List
+    - A.1.1.2.2.6 User Who Updated
+  - A.1.1.2.3 Delete Operations
+    - A.1.1.2.3.1 Table/Entity Name
+    - A.1.1.2.3.2 Record ID Deleted
+    - A.1.1.2.3.3 All Field Values Before Delete (JSON)
+    - A.1.1.2.3.4 Delete Type (Soft/Hard)
+    - A.1.1.2.3.5 User Who Deleted
+    - A.1.1.2.3.6 Timestamp
+  - A.1.1.2.4 Bulk Operations
+    - A.1.1.2.4.1 Operation Type
+    - A.1.1.2.4.2 Table/Entity Name
+    - A.1.1.2.4.3 Record IDs Affected (Array)
+    - A.1.1.2.4.4 Total Count
+    - A.1.1.2.4.5 User Who Performed
+    - A.1.1.2.4.6 Summary of Changes
+  - A.1.1.2.5 Restore Operations
+    - A.1.1.2.5.1 Table/Entity Name
+    - A.1.1.2.5.2 Record ID Restored
+    - A.1.1.2.5.3 Original Delete Date
+    - A.1.1.2.5.4 User Who Restored
+    - A.1.1.2.5.5 Timestamp
+    - A.1.1.2.5.6 Restore Reason
+  - A.1.1.2.6 Import Operations
+    - A.1.1.2.6.1 Import Type
+    - A.1.1.2.6.2 File Name
+    - A.1.1.2.6.3 Records Imported Count
+    - A.1.1.2.6.4 Records Failed Count
+    - A.1.1.2.6.5 User Who Imported
+    - A.1.1.2.6.6 Timestamp
+
+- A.1.1.3 Workflow Events
+  - A.1.1.3.1 Approval Actions
+    - A.1.1.3.1.1 Workflow Type (Leave/Retirement/Promotion/etc.)
+    - A.1.1.3.1.2 Request ID
+    - A.1.1.3.1.3 Action (Approve/Reject/Return)
+    - A.1.1.3.1.4 Approver User ID
+    - A.1.1.3.1.5 Comments/Reason
+    - A.1.1.3.1.6 Timestamp
+  - A.1.1.3.2 Status Changes
+    - A.1.1.3.2.1 Entity Type
+    - A.1.1.3.2.2 Record ID
+    - A.1.1.3.2.3 Previous Status
+    - A.1.1.3.2.4 New Status
+    - A.1.1.3.2.5 Changed By
+    - A.1.1.3.2.6 Reason/Trigger
+  - A.1.1.3.3 Assignment Changes
+    - A.1.1.3.3.1 Entity Type
+    - A.1.1.3.3.2 Record ID
+    - A.1.1.3.3.3 Previous Assignee
+    - A.1.1.3.3.4 New Assignee
+    - A.1.1.3.3.5 Assigned By
+    - A.1.1.3.3.6 Assignment Reason
+  - A.1.1.3.4 Escalation Events
+    - A.1.1.3.4.1 Entity Type
+    - A.1.1.3.4.2 Record ID
+    - A.1.1.3.4.3 Escalated From
+    - A.1.1.3.4.4 Escalated To
+    - A.1.1.3.4.5 Escalation Reason
+    - A.1.1.3.4.6 Auto/Manual Flag
+  - A.1.1.3.5 Deadline Events
+    - A.1.1.3.5.1 Entity Type
+    - A.1.1.3.5.2 Record ID
+    - A.1.1.3.5.3 Original Deadline
+    - A.1.1.3.5.4 New Deadline (If Extended)
+    - A.1.1.3.5.5 Extension Reason
+    - A.1.1.3.5.6 Approved By
+  - A.1.1.3.6 Cancellation Events
+    - A.1.1.3.6.1 Entity Type
+    - A.1.1.3.6.2 Record ID
+    - A.1.1.3.6.3 Previous Status
+    - A.1.1.3.6.4 Cancelled By
+    - A.1.1.3.6.5 Cancellation Reason
+    - A.1.1.3.6.6 Timestamp
+
+- A.1.1.4 Access Events
+  - A.1.1.4.1 Record View
+    - A.1.1.4.1.1 Entity Type
+    - A.1.1.4.1.2 Record ID
+    - A.1.1.4.1.3 Viewed By
+    - A.1.1.4.1.4 Timestamp
+    - A.1.1.4.1.5 View Duration (If Tracked)
+    - A.1.1.4.1.6 Access Context
+  - A.1.1.4.2 Report Generation
+    - A.1.1.4.2.1 Report Type
+    - A.1.1.4.2.2 Parameters Used
+    - A.1.1.4.2.3 Generated By
+    - A.1.1.4.2.4 Timestamp
+    - A.1.1.4.2.5 Export Format
+    - A.1.1.4.2.6 Records Included Count
+  - A.1.1.4.3 Export Actions
+    - A.1.1.4.3.1 Export Type
+    - A.1.1.4.3.2 Entity Type
+    - A.1.1.4.3.3 Filters Applied
+    - A.1.1.4.3.4 Records Exported Count
+    - A.1.1.4.3.5 Exported By
+    - A.1.1.4.3.6 Export Format
+  - A.1.1.4.4 Download Events
+    - A.1.1.4.4.1 File Type
+    - A.1.1.4.4.2 File ID/Name
+    - A.1.1.4.4.3 Related Entity
+    - A.1.1.4.4.4 Downloaded By
+    - A.1.1.4.4.5 Timestamp
+    - A.1.1.4.4.6 IP Address
+  - A.1.1.4.5 Print Events
+    - A.1.1.4.5.1 Document Type
+    - A.1.1.4.5.2 Record ID
+    - A.1.1.4.5.3 Printed By
+    - A.1.1.4.5.4 Timestamp
+    - A.1.1.4.5.5 Print Context
+    - A.1.1.4.5.6 IP Address
+  - A.1.1.4.6 Search Events (Sensitive)
+    - A.1.1.4.6.1 Search Query
+    - A.1.1.4.6.2 Search Scope
+    - A.1.1.4.6.3 Results Count
+    - A.1.1.4.6.4 Searched By
+    - A.1.1.4.6.5 Timestamp
+    - A.1.1.4.6.6 Filters Applied
+
+- A.1.1.5 System Events
+  - A.1.1.5.1 Configuration Changes
+    - A.1.1.5.1.1 Configuration Type
+    - A.1.1.5.1.2 Setting Name
+    - A.1.1.5.1.3 Previous Value
+    - A.1.1.5.1.4 New Value
+    - A.1.1.5.1.5 Changed By
+    - A.1.1.5.1.6 Effective Date
+  - A.1.1.5.2 Role/Permission Changes
+    - A.1.1.5.2.1 User Affected
+    - A.1.1.5.2.2 Previous Roles
+    - A.1.1.5.2.3 New Roles
+    - A.1.1.5.2.4 Changed By
+    - A.1.1.5.2.5 Timestamp
+    - A.1.1.5.2.6 Change Reason
+  - A.1.1.5.3 Scheduled Job Execution
+    - A.1.1.5.3.1 Job Name
+    - A.1.1.5.3.2 Start Time
+    - A.1.1.5.3.3 End Time
+    - A.1.1.5.3.4 Status (Success/Failure)
+    - A.1.1.5.3.5 Records Processed
+    - A.1.1.5.3.6 Error Details (If Any)
+  - A.1.1.5.4 Integration Events
+    - A.1.1.5.4.1 Integration Type (Fayda/etc.)
+    - A.1.1.5.4.2 Request Type
+    - A.1.1.5.4.3 Request Payload (Sanitized)
+    - A.1.1.5.4.4 Response Status
+    - A.1.1.5.4.5 Timestamp
+    - A.1.1.5.4.6 Duration
+  - A.1.1.5.5 Error Events
+    - A.1.1.5.5.1 Error Type
+    - A.1.1.5.5.2 Error Message
+    - A.1.1.5.5.3 Stack Trace
+    - A.1.1.5.5.4 User Context
+    - A.1.1.5.5.5 Request Context
+    - A.1.1.5.5.6 Timestamp
+  - A.1.1.5.6 Security Events
+    - A.1.1.5.6.1 Event Type (Suspicious Activity/Blocked Request)
+    - A.1.1.5.6.2 IP Address
+    - A.1.1.5.6.3 User Context
+    - A.1.1.5.6.4 Details
+    - A.1.1.5.6.5 Action Taken
+    - A.1.1.5.6.6 Timestamp
+
+## A.2 Audit Log Data Structure
+
+### A.2.1 Core Fields
+- A.2.1.1 Identification
+  - A.2.1.1.1 Audit Log ID (UUID)
+  - A.2.1.1.2 Tenant ID
+  - A.2.1.1.3 Correlation ID (Request Trace)
+  - A.2.1.1.4 Parent Audit ID (For Nested Operations)
+  - A.2.1.1.5 Sequence Number
+  - A.2.1.1.6 Batch ID (For Bulk Operations)
+- A.2.1.2 Temporal Data
+  - A.2.1.2.1 Timestamp (UTC)
+  - A.2.1.2.2 Timestamp (Local/Ethiopian)
+  - A.2.1.2.3 Processing Duration (ms)
+  - A.2.1.2.4 Server Time
+  - A.2.1.2.5 Client Time (If Available)
+  - A.2.1.2.6 Time Zone
+- A.2.1.3 Actor Information
+  - A.2.1.3.1 User ID
+  - A.2.1.3.2 Username
+  - A.2.1.3.3 User Full Name
+  - A.2.1.3.4 User Department
+  - A.2.1.3.5 User Role at Time of Action
+  - A.2.1.3.6 Impersonator ID (If Impersonating)
+- A.2.1.4 Action Details
+  - A.2.1.4.1 Action Type (CREATE/UPDATE/DELETE/VIEW/etc.)
+  - A.2.1.4.2 Action Category
+  - A.2.1.4.3 Module Name
+  - A.2.1.4.4 Entity/Table Name
+  - A.2.1.4.5 Record ID
+  - A.2.1.4.6 Action Description
+- A.2.1.5 Data Changes
+  - A.2.1.5.1 Previous State (JSON)
+  - A.2.1.5.2 New State (JSON)
+  - A.2.1.5.3 Changed Fields Array
+  - A.2.1.5.4 Change Summary Text
+  - A.2.1.5.5 Diff Patch (Optional)
+  - A.2.1.5.6 Sensitive Data Masked Flag
+- A.2.1.6 Context Information
+  - A.2.1.6.1 IP Address
+  - A.2.1.6.2 User Agent
+  - A.2.1.6.3 Device Type
+  - A.2.1.6.4 Browser
+  - A.2.1.6.5 Operating System
+  - A.2.1.6.6 Geolocation (If Available)
+
+## A.3 Audit Log Viewer UI
+
+### A.3.1 Audit Log List Page
+- A.3.1.1 Search Bar
+  - A.3.1.1.1 Full Text Search
+  - A.3.1.1.2 Search by User
+  - A.3.1.1.3 Search by Record ID
+  - A.3.1.1.4 Search by IP Address
+  - A.3.1.1.5 Search Suggestions
+  - A.3.1.1.6 Recent Searches
+- A.3.1.2 Filter Panel
+  - A.3.1.2.1 Date Range Picker
+    - A.3.1.2.1.1 Start Date
+    - A.3.1.2.1.2 End Date
+    - A.3.1.2.1.3 Quick Ranges (Today/Week/Month)
+    - A.3.1.2.1.4 Custom Range
+    - A.3.1.2.1.5 Time Selection
+    - A.3.1.2.1.6 Ethiopian Calendar Toggle
+  - A.3.1.2.2 User Filter
+    - A.3.1.2.2.1 User Dropdown
+    - A.3.1.2.2.2 Search Users
+    - A.3.1.2.2.3 Multiple Users Selection
+    - A.3.1.2.2.4 Department Filter
+    - A.3.1.2.2.5 Role Filter
+    - A.3.1.2.2.6 Include System User
+  - A.3.1.2.3 Action Type Filter
+    - A.3.1.2.3.1 Create Checkbox
+    - A.3.1.2.3.2 Update Checkbox
+    - A.3.1.2.3.3 Delete Checkbox
+    - A.3.1.2.3.4 View Checkbox
+    - A.3.1.2.3.5 Login/Logout Checkbox
+    - A.3.1.2.3.6 System Events Checkbox
+  - A.3.1.2.4 Module Filter
+    - A.3.1.2.4.1 Employees Module
+    - A.3.1.2.4.2 Leave Module
+    - A.3.1.2.4.3 Appraisal Module
+    - A.3.1.2.4.4 Salary Module
+    - A.3.1.2.4.5 All Other Modules
+    - A.3.1.2.4.6 System/Config
+  - A.3.1.2.5 Status Filter
+    - A.3.1.2.5.1 Success Only
+    - A.3.1.2.5.2 Failure Only
+    - A.3.1.2.5.3 Warnings
+    - A.3.1.2.5.4 All
+    - A.3.1.2.5.5 Suspicious Activity
+    - A.3.1.2.5.6 Security Events
+  - A.3.1.2.6 Filter Actions
+    - A.3.1.2.6.1 Apply Filters Button
+    - A.3.1.2.6.2 Reset Filters Button
+    - A.3.1.2.6.3 Save Filter Preset
+    - A.3.1.2.6.4 Load Filter Preset
+    - A.3.1.2.6.5 Active Filters Display
+    - A.3.1.2.6.6 Clear Individual Filter
+
+- A.3.1.3 Audit Log Table
+  - A.3.1.3.1 Column: Timestamp
+    - A.3.1.3.1.1 Date Display
+    - A.3.1.3.1.2 Time Display
+    - A.3.1.3.1.3 Relative Time Tooltip
+    - A.3.1.3.1.4 Ethiopian Date Tooltip
+    - A.3.1.3.1.5 Sortable
+    - A.3.1.3.1.6 Click to Filter
+  - A.3.1.3.2 Column: User
+    - A.3.1.3.2.1 User Avatar
+    - A.3.1.3.2.2 User Name
+    - A.3.1.3.2.3 Username Tooltip
+    - A.3.1.3.2.4 Link to User Profile
+    - A.3.1.3.2.5 Sortable
+    - A.3.1.3.2.6 Click to Filter
+  - A.3.1.3.3 Column: Action
+    - A.3.1.3.3.1 Action Type Badge (Color-coded)
+    - A.3.1.3.3.2 CREATE - Green
+    - A.3.1.3.3.3 UPDATE - Blue
+    - A.3.1.3.3.4 DELETE - Red
+    - A.3.1.3.3.5 VIEW - Gray
+    - A.3.1.3.3.6 LOGIN/LOGOUT - Purple
+  - A.3.1.3.4 Column: Module/Entity
+    - A.3.1.3.4.1 Module Name
+    - A.3.1.3.4.2 Entity/Table Name
+    - A.3.1.3.4.3 Icon per Module
+    - A.3.1.3.4.4 Click to Filter
+    - A.3.1.3.4.5 Tooltip with Description
+    - A.3.1.3.4.6 Sortable
+  - A.3.1.3.5 Column: Record
+    - A.3.1.3.5.1 Record ID (Short)
+    - A.3.1.3.5.2 Full ID Tooltip
+    - A.3.1.3.5.3 Link to Record (If Exists)
+    - A.3.1.3.5.4 Record Name/Title Preview
+    - A.3.1.3.5.5 Copy ID Button
+    - A.3.1.3.5.6 View History Link
+  - A.3.1.3.6 Column: Summary
+    - A.3.1.3.6.1 Change Summary Text
+    - A.3.1.3.6.2 Changed Fields Count
+    - A.3.1.3.6.3 Truncated with Ellipsis
+    - A.3.1.3.6.4 Expand on Hover
+    - A.3.1.3.6.5 Key Changes Highlighted
+    - A.3.1.3.6.6 Sensitive Data Masked
+  - A.3.1.3.7 Column: IP Address
+    - A.3.1.3.7.1 IP Display
+    - A.3.1.3.7.2 Location Tooltip
+    - A.3.1.3.7.3 Click to Filter
+    - A.3.1.3.7.4 Internal/External Badge
+    - A.3.1.3.7.5 Flag Icon (Country)
+    - A.3.1.3.7.6 Suspicious IP Warning
+  - A.3.1.3.8 Column: Actions
+    - A.3.1.3.8.1 View Details Button
+    - A.3.1.3.8.2 View Related Record
+    - A.3.1.3.8.3 View User Activity
+    - A.3.1.3.8.4 Export Single Entry
+    - A.3.1.3.8.5 Flag for Review
+    - A.3.1.3.8.6 More Actions Menu
+
+- A.3.1.4 Table Features
+  - A.3.1.4.1 Pagination
+    - A.3.1.4.1.1 Page Size (25/50/100/200)
+    - A.3.1.4.1.2 Page Navigation
+    - A.3.1.4.1.3 Total Count Display
+    - A.3.1.4.1.4 Jump to Page
+    - A.3.1.4.1.5 First/Last Page
+    - A.3.1.4.1.6 Infinite Scroll Option
+  - A.3.1.4.2 Sorting
+    - A.3.1.4.2.1 Single Column Sort
+    - A.3.1.4.2.2 Multi-Column Sort
+    - A.3.1.4.2.3 Sort Direction Toggle
+    - A.3.1.4.2.4 Default Sort (Newest First)
+    - A.3.1.4.2.5 Remember Sort Preference
+    - A.3.1.4.2.6 Clear Sort
+  - A.3.1.4.3 Column Management
+    - A.3.1.4.3.1 Show/Hide Columns
+    - A.3.1.4.3.2 Reorder Columns
+    - A.3.1.4.3.3 Resize Columns
+    - A.3.1.4.3.4 Pin Columns
+    - A.3.1.4.3.5 Reset to Default
+    - A.3.1.4.3.6 Save Column Layout
+  - A.3.1.4.4 Row Features
+    - A.3.1.4.4.1 Row Selection
+    - A.3.1.4.4.2 Expandable Rows
+    - A.3.1.4.4.3 Row Highlighting
+    - A.3.1.4.4.4 Alternate Row Colors
+    - A.3.1.4.4.5 Hover Preview
+    - A.3.1.4.4.6 Click to View Detail
+
+### A.3.2 Audit Log Detail Page
+- A.3.2.1 Header Section
+  - A.3.2.1.1 Audit Log ID
+  - A.3.2.1.2 Action Type Badge
+  - A.3.2.1.3 Timestamp (Full)
+  - A.3.2.1.4 Status Badge
+  - A.3.2.1.5 Back Button
+  - A.3.2.1.6 Navigation (Prev/Next)
+- A.3.2.2 Actor Information Card
+  - A.3.2.2.1 User Avatar
+  - A.3.2.2.2 User Full Name
+  - A.3.2.2.3 Username
+  - A.3.2.2.4 Department
+  - A.3.2.2.5 Role at Time of Action
+  - A.3.2.2.6 Link to User Profile
+- A.3.2.3 Context Information Card
+  - A.3.2.3.1 IP Address
+  - A.3.2.3.2 Geolocation Map
+  - A.3.2.3.3 User Agent (Parsed)
+  - A.3.2.3.4 Browser Name/Version
+  - A.3.2.3.5 Operating System
+  - A.3.2.3.6 Device Type
+- A.3.2.4 Action Details Card
+  - A.3.2.4.1 Module Name
+  - A.3.2.4.2 Entity/Table Name
+  - A.3.2.4.3 Record ID
+  - A.3.2.4.4 Action Description
+  - A.3.2.4.5 Link to Record
+  - A.3.2.4.6 View Record History
+- A.3.2.5 Data Changes Section
+  - A.3.2.5.1 View Mode Toggle
+    - A.3.2.5.1.1 Side-by-Side View
+    - A.3.2.5.1.2 Inline Diff View
+    - A.3.2.5.1.3 JSON View
+    - A.3.2.5.1.4 Table View
+    - A.3.2.5.1.5 Changed Fields Only
+    - A.3.2.5.1.6 Full Record View
+  - A.3.2.5.2 Previous State Panel
+    - A.3.2.5.2.1 Field Names
+    - A.3.2.5.2.2 Field Values
+    - A.3.2.5.2.3 Syntax Highlighting
+    - A.3.2.5.2.4 Collapsible Nested Objects
+    - A.3.2.5.2.5 Copy JSON Button
+    - A.3.2.5.2.6 Deleted Highlights (Red)
+  - A.3.2.5.3 New State Panel
+    - A.3.2.5.3.1 Field Names
+    - A.3.2.5.3.2 Field Values
+    - A.3.2.5.3.3 Syntax Highlighting
+    - A.3.2.5.3.4 Collapsible Nested Objects
+    - A.3.2.5.3.5 Copy JSON Button
+    - A.3.2.5.3.6 Added Highlights (Green)
+  - A.3.2.5.4 Changed Fields Summary
+    - A.3.2.5.4.1 Field Name
+    - A.3.2.5.4.2 Old Value
+    - A.3.2.5.4.3 New Value
+    - A.3.2.5.4.4 Change Type Icon
+    - A.3.2.5.4.5 Field Description
+    - A.3.2.5.4.6 Sensitive Field Indicator
+- A.3.2.6 Related Information
+  - A.3.2.6.1 Related Audit Logs
+  - A.3.2.6.2 Same Session Logs
+  - A.3.2.6.3 Same Record Logs
+  - A.3.2.6.4 Same User Recent Logs
+  - A.3.2.6.5 Correlation Chain
+  - A.3.2.6.6 Parent/Child Operations
+
+## A.4 Audit Log Export & Reporting
+
+### A.4.1 Export Options
+- A.4.1.1 Export Formats
+  - A.4.1.1.1 CSV Export
+  - A.4.1.1.2 Excel Export
+  - A.4.1.1.3 JSON Export
+  - A.4.1.1.4 PDF Export
+  - A.4.1.1.5 XML Export
+  - A.4.1.1.6 Custom Format
+- A.4.1.2 Export Scope
+  - A.4.1.2.1 Current Page
+  - A.4.1.2.2 All Filtered Results
+  - A.4.1.2.3 Selected Rows
+  - A.4.1.2.4 Date Range
+  - A.4.1.2.5 By Module
+  - A.4.1.2.6 By User
+
+### A.4.2 Audit Reports
+- A.4.2.1 User Activity Report
+  - A.4.2.1.1 Select User
+  - A.4.2.1.2 Date Range
+  - A.4.2.1.3 Action Summary
+  - A.4.2.1.4 Login History
+  - A.4.2.1.5 Changes Made
+  - A.4.2.1.6 Access Patterns
+- A.4.2.2 Entity History Report
+  - A.4.2.2.1 Select Entity Type
+  - A.4.2.2.2 Select Record
+  - A.4.2.2.3 Full Change History
+  - A.4.2.2.4 Timeline View
+  - A.4.2.2.5 Who Changed What When
+  - A.4.2.2.6 Version Comparison
+- A.4.2.3 Security Audit Report
+  - A.4.2.3.1 Failed Logins
+  - A.4.2.3.2 Suspicious Activity
+  - A.4.2.3.3 Permission Changes
+  - A.4.2.3.4 Sensitive Data Access
+  - A.4.2.3.5 After-Hours Activity
+  - A.4.2.3.6 IP Analysis
+
+## A.5 Audit Log Configuration
+
+### A.5.1 Retention Settings
+- A.5.1.1 Default Retention Period
+- A.5.1.2 Retention by Log Type
+- A.5.1.3 Archive Policy
+- A.5.1.4 Deletion Policy
+- A.5.1.5 Compliance Requirements
+- A.5.1.6 Storage Optimization
+
+### A.5.2 Capture Settings
+- A.5.2.1 Enable/Disable by Module
+- A.5.2.2 Enable/Disable by Action Type
+- A.5.2.3 Sensitive Fields Masking
+- A.5.2.4 View Events Toggle
+- A.5.2.5 Performance Mode
+- A.5.2.6 Detailed vs Summary Mode
+
+---
+
+End of Audit Log Specification

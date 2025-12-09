@@ -1,0 +1,16 @@
+{
+	"recommendations": [
+		"biomejs.biome",
+		"prisma.prisma",
+		"github.vscode-github-actions",
+		"GraphQL.vscode-graphql",
+		"GraphQL.vscode-graphql-syntax",
+		"mikestead.dotenv",
+		"redhat.vscode-yaml",
+		"tamasfe.even-better-toml"
+	],
+	"unwantedRecommendations": [
+		"dbaeumer.vscode-eslint",
+		"esbenp.prettier-vscode"
+	]
+}
