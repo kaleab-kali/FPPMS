@@ -439,8 +439,8 @@ create_stub_module() {
 
   cat > $path/$name.module.ts << MODEOF
 import { Module } from '@nestjs/common';
-import { ${pascal}Controller } from './${name}.controller';
-import { ${pascal}Service } from './${name}.service';
+import { ${pascal}Controller } from '#api/modules/${name}/${name}.controller';
+import { ${pascal}Service } from '#api/modules/${name}/${name}.service';
 
 @Module({
   controllers: [${pascal}Controller],
@@ -453,7 +453,7 @@ MODEOF
   cat > $path/$name.controller.ts << CTRLEOF
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { ${pascal}Service } from './${name}.service';
+import { ${pascal}Service } from '#api/modules/${name}/${name}.service';
 
 @ApiTags('${pascal}')
 @ApiBearerAuth()
@@ -509,8 +509,8 @@ mkdir -p $PROJECT_ROOT/src/modules/employees/services
 
 cat > $PROJECT_ROOT/src/modules/employees/employees.module.ts << 'EOF'
 import { Module } from '@nestjs/common';
-import { EmployeesController } from './employees.controller';
-import { EmployeesService } from './employees.service';
+import { EmployeesController } from '#api/modules/employees/employees.controller';
+import { EmployeesService } from '#api/modules/employees/employees.service';
 
 @Module({
   controllers: [EmployeesController],
@@ -523,7 +523,7 @@ EOF
 cat > $PROJECT_ROOT/src/modules/employees/employees.controller.ts << 'EOF'
 import { Controller, Get, Post, Patch, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { EmployeesService } from './employees.service';
+import { EmployeesService } from '#api/modules/employees/employees.service';
 import { CurrentTenant } from '#api/common/decorators/current-tenant.decorator';
 import { CurrentUser, CurrentUserData } from '#api/common/decorators/current-user.decorator';
 
