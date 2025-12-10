@@ -7,9 +7,30 @@ import { TenantMiddleware } from "#api/common/middleware/tenant.middleware";
 import { ConfigModule } from "#api/config";
 import { DatabaseModule } from "#api/database";
 import { AuthModule } from "#api/modules/auth/auth.module";
+import { CentersModule } from "#api/modules/centers/centers.module";
+import { DepartmentsModule } from "#api/modules/departments/departments.module";
+import { LookupsModule } from "#api/modules/lookups/lookups.module";
+import { PositionsModule } from "#api/modules/positions/positions.module";
+import { RanksModule } from "#api/modules/ranks/ranks.module";
+import { RolesModule } from "#api/modules/roles/roles.module";
+import { TenantsModule } from "#api/modules/tenants/tenants.module";
+import { UsersModule } from "#api/modules/users/users.module";
 
 @Module({
-	imports: [ConfigModule, DatabaseModule, CommonModule, AuthModule],
+	imports: [
+		ConfigModule,
+		DatabaseModule,
+		CommonModule,
+		AuthModule,
+		TenantsModule,
+		CentersModule,
+		DepartmentsModule,
+		PositionsModule,
+		LookupsModule,
+		RanksModule,
+		RolesModule,
+		UsersModule,
+	],
 	controllers: [AppController],
 	providers: [AppService],
 })

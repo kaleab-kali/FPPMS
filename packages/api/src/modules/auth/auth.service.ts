@@ -73,7 +73,7 @@ export class AuthService {
 		await this.resetFailedAttempts(user.id);
 		await this.recordLoginHistory(user.id, true);
 
-		const roles = user.userRoles.map((ur) => ur.role.name);
+		const roles = user.userRoles.map((ur) => ur.role.code);
 		const permissions = [
 			...new Set(
 				user.userRoles.flatMap((ur) =>
@@ -213,7 +213,7 @@ export class AuthService {
 			throw new UnauthorizedException("User not found");
 		}
 
-		const roles = user.userRoles.map((ur) => ur.role.name);
+		const roles = user.userRoles.map((ur) => ur.role.code);
 		const permissions = [
 			...new Set(
 				user.userRoles.flatMap((ur) =>

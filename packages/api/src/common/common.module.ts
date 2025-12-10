@@ -1,4 +1,4 @@
-import { Global, Module } from "@nestjs/common";
+import { Global, Module, ValidationPipe as NestValidationPipe } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { AllExceptionsFilter } from "#api/common/filters/all-exceptions.filter";
 import { HttpExceptionFilter } from "#api/common/filters/http-exception.filter";
@@ -9,7 +9,6 @@ import { RolesGuard } from "#api/common/guards/roles.guard";
 import { TenantGuard } from "#api/common/guards/tenant.guard";
 import { LoggingInterceptor } from "#api/common/interceptors/logging.interceptor";
 import { TenantContextInterceptor } from "#api/common/interceptors/tenant-context.interceptor";
-import { ValidationPipe } from "#api/common/pipes/validation.pipe";
 
 @Global()
 @Module({
@@ -28,7 +27,13 @@ import { ValidationPipe } from "#api/common/pipes/validation.pipe";
 		},
 		{
 			provide: APP_PIPE,
-			useClass: ValidationPipe,
+			useFactory: () =>
+				new NestValidationPipe({
+					whitelist: true,
+					forbidNonWhitelisted: true,
+					transform: true,
+					validateCustomDecorators: false,
+				}),
 		},
 		{
 			provide: APP_GUARD,
