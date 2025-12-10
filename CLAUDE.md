@@ -63,6 +63,18 @@ import { cn } from "#web/lib/utils";
 - NEVER insert emoji into any file.  Use unicode codepoints instead.
 - ALWAYS respect the ignored file patterns in the `.gitignore` file.
 - NEVER allow a git branch or Github pull request to contain more than 40 changed files.  If it does, do not do any work, and instruct the developer to split the changes into smaller branches.
+- ALWAYS check the latest official documentation for any library/framework (NestJS, Prisma, React, etc.) BEFORE writing integration code.
+- ALWAYS verify the current version of installed packages and use version-appropriate APIs.
+- NEVER assume API patterns from older versions - always confirm with latest docs.
+- ALWAYS test each small implementation step before moving to the next one.
+
+## GIT COMMIT RULES
+
+- ALWAYS use single-line commit messages only.
+- NEVER include multi-line commit messages with body text.
+- NEVER include "Co-Authored-By" or "Generated with Claude Code" in commit messages.
+- ALWAYS use conventional commit format: type(scope): description
+- Example: feat(auth): add login endpoint
 
 ## Code Style
 
