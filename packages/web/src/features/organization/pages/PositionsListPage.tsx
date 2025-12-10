@@ -115,6 +115,17 @@ export const PositionsListPage = React.memo(
 					header: t("position.code"),
 				},
 				{
+					id: "department",
+					header: t("position.department"),
+					cell: ({ row }) => {
+						const position = row.original;
+						if (!position.department) return "-";
+						const displayName =
+							isAmharic && position.department.nameAm ? position.department.nameAm : position.department.name;
+						return <span>{displayName}</span>;
+					},
+				},
+				{
 					accessorKey: "description",
 					header: t("position.description"),
 					cell: ({ row }) => <span className="max-w-[200px] truncate">{row.getValue("description") || "-"}</span>,

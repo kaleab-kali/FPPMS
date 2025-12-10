@@ -1,3 +1,9 @@
+export interface PositionDepartment {
+	id: string;
+	name: string;
+	nameAm?: string;
+}
+
 export interface Position {
 	id: string;
 	tenantId: string;
@@ -6,6 +12,7 @@ export interface Position {
 	nameAm?: string;
 	description?: string;
 	departmentId?: string;
+	department?: PositionDepartment;
 	sortOrder: number;
 	isActive: boolean;
 	createdAt: string;

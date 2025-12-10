@@ -177,7 +177,7 @@ export const DepartmentFormDialog = React.memo(
 
 							<div className="space-y-2">
 								<Label htmlFor="sortOrder">{t("department.sortOrder")}</Label>
-								<Input id="sortOrder" type="number" min={0} {...register("sortOrder")} />
+								<Input id="sortOrder" type="number" min={0} {...register("sortOrder", { valueAsNumber: true })} />
 							</div>
 						</div>
 
