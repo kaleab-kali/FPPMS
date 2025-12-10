@@ -1,0 +1,1512 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum EmployeeType {
+  MILITARY
+  CIVILIAN
+  TEMPORARY
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  ON_LEAVE
+  SUSPENDED
+  RETIRED
+  TERMINATED
+  DECEASED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum BloodType {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+}
+
+enum WorkScheduleType {
+  REGULAR
+  SHIFT_24
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  LOCKED
+  PENDING
+}
+
+enum LeaveRequestStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum AppraisalStatus {
+  DRAFT
+  IN_PROGRESS
+  SUBMITTED
+  REVIEWED
+  APPROVED
+  REJECTED
+}
+
+enum RetirementStatus {
+  PENDING
+  IN_PROGRESS
+  CLEARANCE
+  COMPLETED
+  CANCELLED
+}
+
+enum ClearanceStatus {
+  PENDING
+  CLEARED
+  ISSUES
+  WAIVED
+}
+
+enum DisciplinaryType {
+  ARTICLE_30
+  ARTICLE_31
+}
+
+enum DisciplinaryStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum InvestigationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED_CLEARED
+  COMPLETED_GUILTY
+  SUSPENDED
+}
+
+enum RewardEligibility {
+  ELIGIBLE
+  DISQUALIFIED_ARTICLE_31
+  POSTPONED_INVESTIGATION
+  PENDING_REVIEW
+}
+
+enum DocumentDirection {
+  INCOMING
+  OUTGOING
+}
+
+enum PhotoStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  ACTIVE
+  ARCHIVED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  LOGIN
+  LOGOUT
+  APPROVE
+  REJECT
+  EXPORT
+  IMPORT
+}
+
+// ============================================================================
+// TENANT
+// ============================================================================
+
+model Tenant {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  name      String
+  nameAm    String?   @map("name_am")
+  type      String    @default("CENTER")
+  settings  Json      @default("{}")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  centers     Center[]
+  users       User[]
+  employees   Employee[]
+  roles       Role[]
+  regions     Region[]
+  subCities   SubCity[]
+  woredas     Woreda[]
+  departments Department[]
+  positions   Position[]
+  militaryRanks MilitaryRank[]
+  leaveTypes  LeaveType[]
+  holidays    Holiday[]
+
+  @@map("tenants")
+  @@index([code])
+}
+
+// ============================================================================
+// CENTER (HQ and Regional Centers)
+// ============================================================================
+
+model Center {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  code           String
+  name           String
+  nameAm         String?   @map("name_am")
+  type           String    @default("CENTER")
+  regionId       String?   @map("region_id")
+  subCityId      String?   @map("sub_city_id")
+  woredaId       String?   @map("woreda_id")
+  address        String?
+  phone          String?
+  email          String?
+  parentCenterId String?   @map("parent_center_id")
+  commanderId    String?   @map("commander_id")
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  parentCenter Center?   @relation("CenterHierarchy", fields: [parentCenterId], references: [id])
+  childCenters Center[]  @relation("CenterHierarchy")
+  users        User[]
+  employees    Employee[]
+
+  @@unique([tenantId, code])
+  @@map("centers")
+  @@index([tenantId])
+  @@index([parentCenterId])
+}
+
+// ============================================================================
+// USER (Only HR staff, management - NOT regular employees)
+// ============================================================================
+
+model User {
+  id                  String      @id @default(cuid())
+  tenantId            String      @map("tenant_id")
+  centerId            String?     @map("center_id")
+  employeeId          String?     @unique @map("employee_id")
+  username            String
+  email               String?
+  passwordHash        String      @map("password_hash")
+  passwordSalt        String      @map("password_salt")
+  passwordChangedAt   DateTime?   @map("password_changed_at")
+  mustChangePassword  Boolean     @default(true) @map("must_change_password")
+  status              UserStatus  @default(PENDING)
+  failedLoginAttempts Int         @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime?   @map("locked_until")
+  lastLoginAt         DateTime?   @map("last_login_at")
+  lastLoginIp         String?     @map("last_login_ip")
+  currentSessionId    String?     @map("current_session_id")
+  sessionExpiresAt    DateTime?   @map("session_expires_at")
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+  createdBy           String?     @map("created_by")
+  updatedBy           String?     @map("updated_by")
+  deletedAt           DateTime?   @map("deleted_at")
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  center    Center?    @relation(fields: [centerId], references: [id])
+  userRoles UserRole[]
+
+  @@unique([tenantId, username])
+  @@map("users")
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([centerId])
+}
+
+// ============================================================================
+// ROLE
+// ============================================================================
+
+model Role {
+  id           String    @id @default(cuid())
+  tenantId     String?   @map("tenant_id")
+  code         String
+  name         String
+  nameAm       String?   @map("name_am")
+  description  String?
+  isSystemRole Boolean   @default(false) @map("is_system_role")
+  level        Int       @default(0)
+  accessScope  String    @default("OWN_CENTER") @map("access_scope")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  tenant          Tenant?          @relation(fields: [tenantId], references: [id])
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@unique([tenantId, code])
+  @@map("roles")
+  @@index([tenantId])
+  @@index([code])
+}
+
+// ============================================================================
+// PERMISSION
+// ============================================================================
+
+model Permission {
+  id          String  @id @default(cuid())
+  module      String
+  action      String
+  resource    String
+  description String?
+
+  rolePermissions RolePermission[]
+
+  @@unique([module, action, resource])
+  @@map("permissions")
+  @@index([module])
+}
+
+// ============================================================================
+// ROLE_PERMISSION
+// ============================================================================
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+  conditions   Json?  @default("{}")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ============================================================================
+// USER_ROLE
+// ============================================================================
+
+model UserRole {
+  userId     String    @map("user_id")
+  roleId     String    @map("role_id")
+  assignedAt DateTime  @default(now()) @map("assigned_at")
+  assignedBy String?   @map("assigned_by")
+  expiresAt  DateTime? @map("expires_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// ============================================================================
+// DEPARTMENT
+// ============================================================================
+
+model Department {
+  id               String    @id @default(cuid())
+  tenantId         String    @map("tenant_id")
+  code             String
+  name             String
+  nameAm           String?   @map("name_am")
+  description      String?
+  parentId         String?   @map("parent_id")
+  headEmployeeId   String?   @map("head_employee_id")
+  sortOrder        Int       @default(0) @map("sort_order")
+  isActive         Boolean   @default(true) @map("is_active")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  tenant     Tenant       @relation(fields: [tenantId], references: [id])
+  parent     Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children   Department[] @relation("DepartmentHierarchy")
+  positions  Position[]
+  employees  Employee[]
+
+  @@unique([tenantId, code])
+  @@map("departments")
+  @@index([tenantId])
+  @@index([parentId])
+}
+
+// ============================================================================
+// POSITION
+// ============================================================================
+
+model Position {
+  id           String    @id @default(cuid())
+  tenantId     String    @map("tenant_id")
+  departmentId String?   @map("department_id")
+  code         String
+  name         String
+  nameAm       String?   @map("name_am")
+  description  String?
+  sortOrder    Int       @default(0) @map("sort_order")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  employees  Employee[]
+
+  @@unique([tenantId, code])
+  @@map("positions")
+  @@index([tenantId])
+  @@index([departmentId])
+}
+
+// ============================================================================
+// REGION -> SUB_CITY -> WOREDA (Cascading Lookups)
+// ============================================================================
+
+model Region {
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  code      String
+  name      String
+  nameAm    String    @map("name_am")
+  sortOrder Int       @default(0) @map("sort_order")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  subCities SubCity[]
+
+  @@unique([tenantId, code])
+  @@map("regions")
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+}
+
+model SubCity {
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  regionId  String    @map("region_id")
+  code      String
+  name      String
+  nameAm    String    @map("name_am")
+  sortOrder Int       @default(0) @map("sort_order")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  region  Region   @relation(fields: [regionId], references: [id])
+  woredas Woreda[]
+
+  @@unique([tenantId, code])
+  @@map("sub_cities")
+  @@index([tenantId])
+  @@index([regionId])
+  @@index([tenantId, regionId, isActive])
+}
+
+model Woreda {
+  id        String    @id @default(cuid())
+  tenantId  String    @map("tenant_id")
+  subCityId String    @map("sub_city_id")
+  code      String
+  name      String
+  nameAm    String    @map("name_am")
+  sortOrder Int       @default(0) @map("sort_order")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id])
+  subCity SubCity @relation(fields: [subCityId], references: [id])
+
+  @@unique([tenantId, code])
+  @@map("woredas")
+  @@index([tenantId])
+  @@index([subCityId])
+}
+
+// ============================================================================
+// MILITARY RANKS WITH SALARY SCALE
+// ============================================================================
+
+model MilitaryRank {
+  id                   String    @id @default(cuid())
+  tenantId             String?   @map("tenant_id")
+  code                 String
+  name                 String
+  nameAm               String    @map("name_am")
+  level                Int
+  category             String
+  baseSalary           Decimal   @map("base_salary") @db.Decimal(12, 2)
+  ceilingSalary        Decimal   @map("ceiling_salary") @db.Decimal(12, 2)
+  stepCount            Int       @default(9) @map("step_count")
+  stepPeriodYears      Int       @default(2) @map("step_period_years")
+  retirementAge        Int       @map("retirement_age")
+  minYearsForPromotion Int?      @map("min_years_for_promotion")
+  minAppraisalScore    Int?      @map("min_appraisal_score")
+  badgePath            String?   @map("badge_path")
+  sortOrder            Int       @default(0) @map("sort_order")
+  isActive             Boolean   @default(true) @map("is_active")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  tenant      Tenant?                  @relation(fields: [tenantId], references: [id])
+  salarySteps MilitaryRankSalaryStep[]
+  employees   Employee[]
+
+  @@unique([tenantId, code])
+  @@unique([tenantId, level])
+  @@map("military_ranks")
+  @@index([level])
+  @@index([category])
+}
+
+model MilitaryRankSalaryStep {
+  id            String  @id @default(cuid())
+  rankId        String  @map("rank_id")
+  stepNumber    Int     @map("step_number")
+  salaryAmount  Decimal @map("salary_amount") @db.Decimal(12, 2)
+  yearsRequired Int     @map("years_required")
+
+  rank MilitaryRank @relation(fields: [rankId], references: [id], onDelete: Cascade)
+
+  @@unique([rankId, stepNumber])
+  @@map("military_rank_salary_steps")
+  @@index([rankId])
+}
+
+// ============================================================================
+// EMPLOYEE (Main Table)
+// ============================================================================
+
+model Employee {
+  id                     String           @id @default(cuid())
+  tenantId               String           @map("tenant_id")
+  centerId               String?          @map("center_id")
+  employeeId             String           @unique @map("employee_id")
+  employeeType           EmployeeType     @map("employee_type")
+  firstName              String           @map("first_name")
+  firstNameAm            String           @map("first_name_am")
+  middleName             String           @map("middle_name")
+  middleNameAm           String           @map("middle_name_am")
+  lastName               String           @map("last_name")
+  lastNameAm             String           @map("last_name_am")
+  fullName               String           @map("full_name")
+  fullNameAm             String           @map("full_name_am")
+  gender                 Gender
+  dateOfBirth            DateTime         @map("date_of_birth") @db.Date
+  birthPlace             String?          @map("birth_place")
+  birthPlaceAm           String?          @map("birth_place_am")
+  height                 Int?
+  weight                 Int?
+  bloodType              BloodType?       @map("blood_type")
+  eyeColor               String?          @map("eye_color")
+  hairColor              String?          @map("hair_color")
+  distinguishingMarks    String?          @map("distinguishing_marks")
+  nationality            String           @default("Ethiopian")
+  ethnicity              String?
+  faydaId                String?          @map("fayda_id")
+  faydaVerified          Boolean          @default(false) @map("fayda_verified")
+  passportNumber         String?          @map("passport_number")
+  drivingLicense         String?          @map("driving_license")
+  primaryPhone           String           @map("primary_phone")
+  secondaryPhone         String?          @map("secondary_phone")
+  email                  String?
+  currentPhotoId         String?          @map("current_photo_id")
+  departmentId           String?          @map("department_id")
+  positionId             String?          @map("position_id")
+  rankId                 String?          @map("rank_id")
+  employmentDate         DateTime         @map("employment_date") @db.Date
+  originalEmploymentDate DateTime?        @map("original_employment_date") @db.Date
+  isTransfer             Boolean          @default(false) @map("is_transfer")
+  sourceOrganization     String?          @map("source_organization")
+  workScheduleType       WorkScheduleType @default(REGULAR) @map("work_schedule_type")
+  maritalStatus          MaritalStatus    @default(SINGLE) @map("marital_status")
+  marriageDate           DateTime?        @map("marriage_date") @db.Date
+  currentSalaryStep      Int              @default(0) @map("current_salary_step")
+  currentSalary          Decimal?         @map("current_salary") @db.Decimal(12, 2)
+  salaryEffectiveDate    DateTime?        @map("salary_effective_date") @db.Date
+  contractStartDate      DateTime?        @map("contract_start_date") @db.Date
+  contractEndDate        DateTime?        @map("contract_end_date") @db.Date
+  contractAmount         Decimal?         @map("contract_amount") @db.Decimal(12, 2)
+  retirementDate         DateTime?        @map("retirement_date") @db.Date
+  status                 EmployeeStatus   @default(ACTIVE)
+  statusChangedAt        DateTime?        @map("status_changed_at")
+  statusReason           String?          @map("status_reason")
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+  createdBy              String?          @map("created_by")
+  updatedBy              String?          @map("updated_by")
+  deletedAt              DateTime?        @map("deleted_at")
+
+  tenant              Tenant                       @relation(fields: [tenantId], references: [id])
+  center              Center?                      @relation(fields: [centerId], references: [id])
+  department          Department?                  @relation(fields: [departmentId], references: [id])
+  position            Position?                    @relation(fields: [positionId], references: [id])
+  rank                MilitaryRank?                @relation(fields: [rankId], references: [id])
+  addresses           EmployeeAddress[]
+  motherInfo          EmployeeMotherInfo?
+  emergencyContacts   EmployeeEmergencyContact[]
+  education           EmployeeEducation[]
+  workExperience      EmployeeWorkExperience[]
+  familyMembers       EmployeeFamilyMember[]
+  medicalDependents   EmployeeMedicalDependent[]
+  photos              EmployeePhoto[]
+  documents           EmployeeDocument[]
+  leaveBalances       EmployeeLeaveBalance[]
+  leaveRequests       LeaveRequest[]
+  appraisals          Appraisal[]
+  disciplinaryRecords DisciplinaryRecord[]
+  investigations      Investigation[]
+  serviceRewards      ServiceReward[]
+  attendanceRecords   AttendanceRecord[]
+  shiftAssignments    ShiftAssignment[]
+  inventoryAssignments InventoryAssignment[]
+
+  @@map("employees")
+  @@index([tenantId])
+  @@index([tenantId, centerId])
+  @@index([tenantId, status])
+  @@index([tenantId, employeeType])
+  @@index([tenantId, departmentId])
+  @@index([tenantId, rankId])
+  @@index([tenantId, retirementDate])
+  @@index([fullName])
+  @@index([primaryPhone])
+  @@index([faydaId])
+}
+
+// ============================================================================
+// EMPLOYEE SUB-TABLES
+// ============================================================================
+
+model EmployeeAddress {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  employeeId     String    @map("employee_id")
+  addressType    String    @map("address_type")
+  regionId       String    @map("region_id")
+  subCityId      String    @map("sub_city_id")
+  woredaId       String    @map("woreda_id")
+  houseNumber    String?   @map("house_number")
+  uniqueAreaName String?   @map("unique_area_name")
+  fullAddress    String?   @map("full_address")
+  fullAddressAm  String?   @map("full_address_am")
+  isPrimary      Boolean   @default(false) @map("is_primary")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, addressType])
+  @@map("employee_addresses")
+  @@index([employeeId])
+}
+
+model EmployeeMotherInfo {
+  id         String    @id @default(cuid())
+  tenantId   String    @map("tenant_id")
+  employeeId String    @unique @map("employee_id")
+  fullName   String    @map("full_name")
+  fullNameAm String    @map("full_name_am")
+  phone      String?
+  isAlive    Boolean   @default(true) @map("is_alive")
+  address    String?
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_mother_info")
+}
+
+model EmployeeEmergencyContact {
+  id               String    @id @default(cuid())
+  tenantId         String    @map("tenant_id")
+  employeeId       String    @map("employee_id")
+  fullName         String    @map("full_name")
+  fullNameAm       String    @map("full_name_am")
+  relationship     String
+  phone            String
+  alternativePhone String?   @map("alternative_phone")
+  email            String?
+  regionId         String?   @map("region_id")
+  subCityId        String?   @map("sub_city_id")
+  woredaId         String?   @map("woreda_id")
+  houseNumber      String?   @map("house_number")
+  uniqueAreaName   String?   @map("unique_area_name")
+  priority         Int       @default(1)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_emergency_contacts")
+  @@index([employeeId])
+}
+
+model EmployeeEducation {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  employeeId      String    @map("employee_id")
+  educationLevel  String    @map("education_level")
+  institutionName String    @map("institution_name")
+  graduationYear  Int       @map("graduation_year")
+  fieldOfStudy    String?   @map("field_of_study")
+  gpa             Decimal?  @db.Decimal(3, 2)
+  certificatePath String?   @map("certificate_path")
+  isVerified      Boolean   @default(false) @map("is_verified")
+  verifiedAt      DateTime? @map("verified_at")
+  verifiedBy      String?   @map("verified_by")
+  sortOrder       Int       @default(0) @map("sort_order")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_education")
+  @@index([employeeId])
+}
+
+model EmployeeWorkExperience {
+  id                   String    @id @default(cuid())
+  tenantId             String    @map("tenant_id")
+  employeeId           String    @map("employee_id")
+  organizationName     String    @map("organization_name")
+  position             String
+  startDate            DateTime  @map("start_date") @db.Date
+  endDate              DateTime? @map("end_date") @db.Date
+  isCurrent            Boolean   @default(false) @map("is_current")
+  responsibilities     String?
+  reasonForLeaving     String?   @map("reason_for_leaving")
+  lastSalary           Decimal?  @map("last_salary") @db.Decimal(12, 2)
+  referenceName        String?   @map("reference_name")
+  referencePhone       String?   @map("reference_phone")
+  experienceLetterPath String?   @map("experience_letter_path")
+  sortOrder            Int       @default(0) @map("sort_order")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_work_experience")
+  @@index([employeeId])
+}
+
+model EmployeeFamilyMember {
+  id                      String    @id @default(cuid())
+  tenantId                String    @map("tenant_id")
+  employeeId              String    @map("employee_id")
+  relationship            String
+  fullName                String    @map("full_name")
+  fullNameAm              String?   @map("full_name_am")
+  gender                  Gender?
+  dateOfBirth             DateTime? @map("date_of_birth") @db.Date
+  nationalId              String?   @map("national_id")
+  phone                   String?
+  occupation              String?
+  marriageDate            DateTime? @map("marriage_date") @db.Date
+  marriageCertificatePath String?   @map("marriage_certificate_path")
+  birthCertificatePath    String?   @map("birth_certificate_path")
+  schoolName              String?   @map("school_name")
+  isAlive                 Boolean   @default(true) @map("is_alive")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+  deletedAt               DateTime? @map("deleted_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_family_members")
+  @@index([employeeId])
+}
+
+model EmployeeMedicalDependent {
+  id                String    @id @default(cuid())
+  tenantId          String    @map("tenant_id")
+  employeeId        String    @map("employee_id")
+  fullName          String    @map("full_name")
+  fullNameAm        String?   @map("full_name_am")
+  relationship      String
+  dateOfBirth       DateTime  @map("date_of_birth") @db.Date
+  nationalId        String?   @map("national_id")
+  isEligible        Boolean   @default(true) @map("is_eligible")
+  eligibilityReason String?   @map("eligibility_reason")
+  ageCheckDate      DateTime? @map("age_check_date")
+  documentPath      String?   @map("document_path")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_medical_dependents")
+  @@index([employeeId])
+  @@index([employeeId, isEligible])
+}
+
+model EmployeePhoto {
+  id              String      @id @default(cuid())
+  tenantId        String      @map("tenant_id")
+  employeeId      String      @map("employee_id")
+  filePath        String      @map("file_path")
+  fileName        String      @map("file_name")
+  fileSize        Int         @map("file_size")
+  mimeType        String      @map("mime_type")
+  fileHash        String      @map("file_hash")
+  width           Int?
+  height          Int?
+  thumbnailPath   String?     @map("thumbnail_path")
+  mediumPath      String?     @map("medium_path")
+  largePath       String?     @map("large_path")
+  photoType       String      @map("photo_type")
+  photoReason     String?     @map("photo_reason")
+  captureMethod   String      @map("capture_method")
+  capturedAt      DateTime    @default(now()) @map("captured_at")
+  capturedBy      String      @map("captured_by")
+  status          PhotoStatus @default(PENDING_APPROVAL)
+  approvedAt      DateTime?   @map("approved_at")
+  approvedBy      String?     @map("approved_by")
+  rejectionReason String?     @map("rejection_reason")
+  isActive        Boolean     @default(false) @map("is_active")
+  activatedAt     DateTime?   @map("activated_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  deletedAt       DateTime?   @map("deleted_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_photos")
+  @@index([employeeId])
+  @@index([tenantId, status])
+  @@index([employeeId, isActive])
+}
+
+model EmployeeDocument {
+  id               String    @id @default(cuid())
+  tenantId         String    @map("tenant_id")
+  employeeId       String    @map("employee_id")
+  documentCategory String    @map("document_category")
+  documentType     String    @map("document_type")
+  title            String
+  description      String?
+  filePath         String    @map("file_path")
+  fileName         String    @map("file_name")
+  fileSize         Int       @map("file_size")
+  mimeType         String    @map("mime_type")
+  issueDate        DateTime? @map("issue_date") @db.Date
+  expiryDate       DateTime? @map("expiry_date") @db.Date
+  isExpired        Boolean   @default(false) @map("is_expired")
+  isVerified       Boolean   @default(false) @map("is_verified")
+  verifiedBy       String?   @map("verified_by")
+  verifiedAt       DateTime? @map("verified_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  uploadedBy       String    @map("uploaded_by")
+  deletedAt        DateTime? @map("deleted_at")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_documents")
+  @@index([employeeId])
+  @@index([tenantId, documentCategory])
+}
+
+// ============================================================================
+// LEAVE MANAGEMENT
+// ============================================================================
+
+model LeaveType {
+  id                     String    @id @default(cuid())
+  tenantId               String    @map("tenant_id")
+  code                   String
+  name                   String
+  nameAm                 String    @map("name_am")
+  description            String?
+  defaultDays            Int       @map("default_days")
+  isPaid                 Boolean   @default(true) @map("is_paid")
+  accrualMethod          String    @default("YEARLY") @map("accrual_method")
+  allowCarryOver         Boolean   @default(false) @map("allow_carry_over")
+  maxCarryOverDays       Int?      @map("max_carry_over_days")
+  carryOverExpiryYears   Int?      @map("carry_over_expiry_years")
+  applicableEmployeeTypes String[] @default(["MILITARY", "CIVILIAN", "TEMPORARY"]) @map("applicable_employee_types")
+  applicableGender       String?   @map("applicable_gender")
+  requiresDocument       Boolean   @default(false) @map("requires_document")
+  minNoticeDays          Int       @default(0) @map("min_notice_days")
+  holidayExtendsLeave    Boolean   @default(true) @map("holiday_extends_leave")
+  shiftWorkerException   Boolean   @default(true) @map("shift_worker_exception")
+  sortOrder              Int       @default(0) @map("sort_order")
+  isActive               Boolean   @default(true) @map("is_active")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  tenant        Tenant                 @relation(fields: [tenantId], references: [id])
+  balances      EmployeeLeaveBalance[]
+  leaveRequests LeaveRequest[]
+
+  @@unique([tenantId, code])
+  @@map("leave_types")
+  @@index([tenantId])
+}
+
+model EmployeeLeaveBalance {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  employeeId      String   @map("employee_id")
+  leaveTypeId     String   @map("leave_type_id")
+  year            Int
+  baseEntitlement Decimal  @map("base_entitlement") @db.Decimal(5, 2)
+  carriedForward  Decimal  @default(0) @map("carried_forward") @db.Decimal(5, 2)
+  adjustments     Decimal  @default(0) @db.Decimal(5, 2)
+  usedDays        Decimal  @default(0) @map("used_days") @db.Decimal(5, 2)
+  pendingDays     Decimal  @default(0) @map("pending_days") @db.Decimal(5, 2)
+  expiredDays     Decimal  @default(0) @map("expired_days") @db.Decimal(5, 2)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  employee  Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType          @relation(fields: [leaveTypeId], references: [id])
+  details   LeaveBalanceDetail[]
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@map("employee_leave_balances")
+  @@index([employeeId])
+  @@index([tenantId, year])
+}
+
+model LeaveBalanceDetail {
+  id            String    @id @default(cuid())
+  balanceId     String    @map("balance_id")
+  sourceYear    Int       @map("source_year")
+  originalDays  Decimal   @map("original_days") @db.Decimal(5, 2)
+  remainingDays Decimal   @map("remaining_days") @db.Decimal(5, 2)
+  expiresAt     DateTime? @map("expires_at") @db.Date
+  isExpired     Boolean   @default(false) @map("is_expired")
+
+  balance EmployeeLeaveBalance @relation(fields: [balanceId], references: [id], onDelete: Cascade)
+
+  @@unique([balanceId, sourceYear])
+  @@map("leave_balance_details")
+}
+
+model LeaveRequest {
+  id                     String             @id @default(cuid())
+  tenantId               String             @map("tenant_id")
+  employeeId             String             @map("employee_id")
+  leaveTypeId            String             @map("leave_type_id")
+  requestNumber          String             @unique @map("request_number")
+  startDate              DateTime           @map("start_date") @db.Date
+  endDate                DateTime           @map("end_date") @db.Date
+  requestedDays          Decimal            @map("requested_days") @db.Decimal(5, 2)
+  holidaysInPeriod       Int                @default(0) @map("holidays_in_period")
+  actualDaysDeducted     Decimal            @map("actual_days_deducted") @db.Decimal(5, 2)
+  isShiftWorker          Boolean            @default(false) @map("is_shift_worker")
+  reason                 String?
+  destination            String?
+  contactDuringLeave     String?            @map("contact_during_leave")
+  handoverEmployeeId     String?            @map("handover_employee_id")
+  handoverNotes          String?            @map("handover_notes")
+  documentPath           String?            @map("document_path")
+  wasInterrupted         Boolean            @default(false) @map("was_interrupted")
+  interruptedByRequestId String?            @map("interrupted_by_request_id")
+  originalEndDate        DateTime?          @map("original_end_date") @db.Date
+  status                 LeaveRequestStatus @default(DRAFT)
+  submittedAt            DateTime?          @map("submitted_at")
+  approvedAt             DateTime?          @map("approved_at")
+  approvedBy             String?            @map("approved_by")
+  rejectedAt             DateTime?          @map("rejected_at")
+  rejectedBy             String?            @map("rejected_by")
+  rejectionReason        String?            @map("rejection_reason")
+  permitNumber           String?            @map("permit_number")
+  permitIssuedAt         DateTime?          @map("permit_issued_at")
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+  createdBy              String?            @map("created_by")
+
+  employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  @@map("leave_requests")
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([tenantId, status])
+  @@index([tenantId, startDate, endDate])
+}
+
+// ============================================================================
+// HOLIDAY
+// ============================================================================
+
+model Holiday {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  name           String
+  nameAm         String    @map("name_am")
+  holidayDate    DateTime  @map("holiday_date") @db.Date
+  holidayType    String    @map("holiday_type")
+  isHalfDay      Boolean   @default(false) @map("is_half_day")
+  isRecurring    Boolean   @default(false) @map("is_recurring")
+  recurrenceType String?   @map("recurrence_type")
+  ethiopianMonth Int?      @map("ethiopian_month")
+  ethiopianDay   Int?      @map("ethiopian_day")
+  appliesTo      String[]  @default(["ALL"]) @map("applies_to")
+  description    String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  createdBy      String?   @map("created_by")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, holidayDate])
+  @@map("holidays")
+  @@index([tenantId])
+  @@index([tenantId, holidayDate])
+}
+
+// ============================================================================
+// APPRAISAL & DISCIPLINARY
+// ============================================================================
+
+model AppraisalPeriod {
+  id                      String    @id @default(cuid())
+  tenantId                String    @map("tenant_id")
+  name                    String
+  nameAm                  String?   @map("name_am")
+  startDate               DateTime  @map("start_date") @db.Date
+  endDate                 DateTime  @map("end_date") @db.Date
+  reviewDeadline          DateTime  @map("review_deadline") @db.Date
+  applicableEmployeeTypes String[]  @default(["MILITARY", "CIVILIAN"]) @map("applicable_employee_types")
+  status                  String    @default("DRAFT")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+  createdBy               String?   @map("created_by")
+
+  criteria   AppraisalCriteria[]
+  appraisals Appraisal[]
+
+  @@map("appraisal_periods")
+  @@index([tenantId])
+}
+
+model AppraisalCriteria {
+  id                      String    @id @default(cuid())
+  tenantId                String    @map("tenant_id")
+  periodId                String?   @map("period_id")
+  code                    String
+  name                    String
+  nameAm                  String?   @map("name_am")
+  description             String?
+  maxScore                Int       @map("max_score")
+  weightPercentage        Decimal   @map("weight_percentage") @db.Decimal(5, 2)
+  category                String?
+  applicableEmployeeTypes String[]  @default(["ALL"]) @map("applicable_employee_types")
+  sortOrder               Int       @default(0) @map("sort_order")
+  isActive                Boolean   @default(true) @map("is_active")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  period AppraisalPeriod? @relation(fields: [periodId], references: [id])
+
+  @@unique([tenantId, code])
+  @@map("appraisal_criteria")
+  @@index([tenantId])
+}
+
+model Appraisal {
+  id                    String          @id @default(cuid())
+  tenantId              String          @map("tenant_id")
+  employeeId            String          @map("employee_id")
+  periodId              String          @map("period_id")
+  isEligible            Boolean         @default(true) @map("is_eligible")
+  ineligibilityReason   String?         @map("ineligibility_reason")
+  criteriaScore         Decimal?        @map("criteria_score") @db.Decimal(5, 2)
+  disciplinaryDeduction Decimal         @default(0) @map("disciplinary_deduction") @db.Decimal(5, 2)
+  finalScore            Decimal?        @map("final_score") @db.Decimal(5, 2)
+  grade                 String?
+  reviewedBy            String?         @map("reviewed_by")
+  reviewedAt            DateTime?       @map("reviewed_at")
+  reviewerComments      String?         @map("reviewer_comments")
+  approvedBy            String?         @map("approved_by")
+  approvedAt            DateTime?       @map("approved_at")
+  status                AppraisalStatus @default(DRAFT)
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+  createdBy             String?         @map("created_by")
+
+  employee Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  period   AppraisalPeriod @relation(fields: [periodId], references: [id])
+
+  @@unique([employeeId, periodId])
+  @@map("appraisals")
+  @@index([tenantId])
+  @@index([employeeId])
+}
+
+model DisciplinaryRecord {
+  id               String             @id @default(cuid())
+  tenantId         String             @map("tenant_id")
+  employeeId       String             @map("employee_id")
+  disciplinaryType DisciplinaryType   @map("disciplinary_type")
+  violationDate    DateTime           @map("violation_date") @db.Date
+  description      String
+  effectiveFrom    DateTime           @map("effective_from") @db.Date
+  effectiveUntil   DateTime?          @map("effective_until") @db.Date
+  penalties        Json               @default("[]")
+  orderReference   String?            @map("order_reference")
+  documentPath     String?            @map("document_path")
+  status           DisciplinaryStatus @default(ACTIVE)
+  impactsAppraisal Boolean            @default(true) @map("impacts_appraisal")
+  impactsReward    Boolean            @default(true) @map("impacts_reward")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  createdBy        String?            @map("created_by")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("disciplinary_records")
+  @@index([employeeId])
+  @@index([tenantId, status])
+  @@index([employeeId, status])
+}
+
+model Investigation {
+  id                      String              @id @default(cuid())
+  tenantId                String              @map("tenant_id")
+  employeeId              String              @map("employee_id")
+  caseNumber              String              @unique @map("case_number")
+  subject                 String
+  description             String?
+  startDate               DateTime            @map("start_date") @db.Date
+  endDate                 DateTime?           @map("end_date") @db.Date
+  status                  InvestigationStatus @default(IN_PROGRESS)
+  outcome                 String?
+  resultingDisciplinaryId String?             @map("resulting_disciplinary_id")
+  createdAt               DateTime            @default(now()) @map("created_at")
+  updatedAt               DateTime            @updatedAt @map("updated_at")
+  createdBy               String?             @map("created_by")
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("investigations")
+  @@index([employeeId])
+  @@index([tenantId, status])
+}
+
+// ============================================================================
+// SERVICE REWARDS
+// ============================================================================
+
+model RewardMilestone {
+  id             String    @id @default(cuid())
+  tenantId       String    @map("tenant_id")
+  yearsOfService Int       @map("years_of_service")
+  name           String
+  nameAm         String?   @map("name_am")
+  description    String?
+  rewardType     String    @map("reward_type")
+  monetaryValue  Decimal?  @map("monetary_value") @db.Decimal(12, 2)
+  isActive       Boolean   @default(true) @map("is_active")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  serviceRewards ServiceReward[]
+
+  @@unique([tenantId, yearsOfService])
+  @@map("reward_milestones")
+  @@index([tenantId])
+}
+
+model ServiceReward {
+  id                   String            @id @default(cuid())
+  tenantId             String            @map("tenant_id")
+  employeeId           String            @map("employee_id")
+  milestoneId          String            @map("milestone_id")
+  eligibilityStatus    RewardEligibility @default(PENDING_REVIEW) @map("eligibility_status")
+  eligibilityCheckDate DateTime          @map("eligibility_check_date")
+  ineligibilityReason  String?           @map("ineligibility_reason")
+  postponedUntil       DateTime?         @map("postponed_until") @db.Date
+  postponementReason   String?           @map("postponement_reason")
+  originalEligibleDate DateTime?         @map("original_eligible_date") @db.Date
+  awardDate            DateTime?         @map("award_date") @db.Date
+  awardedBy            String?           @map("awarded_by")
+  ceremonyDetails      String?           @map("ceremony_details")
+  certificateNumber    String?           @map("certificate_number")
+  certificatePath      String?           @map("certificate_path")
+  photoPath            String?           @map("photo_path")
+  status               String            @default("PENDING")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+
+  employee  Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  milestone RewardMilestone @relation(fields: [milestoneId], references: [id])
+
+  @@unique([employeeId, milestoneId])
+  @@map("service_rewards")
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([tenantId, eligibilityStatus])
+}
+
+// ============================================================================
+// RETIREMENT
+// ============================================================================
+
+model Retirement {
+  id                    String           @id @default(cuid())
+  tenantId              String           @map("tenant_id")
+  employeeId            String           @unique @map("employee_id")
+  retirementType        String           @map("retirement_type")
+  retirementDate        DateTime         @map("retirement_date") @db.Date
+  initiatedDate         DateTime         @map("initiated_date") @db.Date
+  completedDate         DateTime?        @map("completed_date") @db.Date
+  dateOfBirth           DateTime         @map("date_of_birth") @db.Date
+  ageAtRetirement       Int              @map("age_at_retirement")
+  rankAtRetirement      String           @map("rank_at_retirement")
+  retirementAgeRule     Int              @map("retirement_age_rule")
+  totalServiceYears     Int              @map("total_service_years")
+  totalServiceMonths    Int              @map("total_service_months")
+  status                RetirementStatus @default(PENDING)
+  allClearancesComplete Boolean          @default(false) @map("all_clearances_complete")
+  retirementOrderPath   String?          @map("retirement_order_path")
+  certificatePath       String?          @map("certificate_path")
+  finalSettlementAmount Decimal?         @map("final_settlement_amount") @db.Decimal(14, 2)
+  leaveEncashment       Decimal?         @map("leave_encashment") @db.Decimal(12, 2)
+  createdAt             DateTime         @default(now()) @map("created_at")
+  updatedAt             DateTime         @updatedAt @map("updated_at")
+  createdBy             String?          @map("created_by")
+
+  clearances RetirementClearance[]
+
+  @@map("retirements")
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, retirementDate])
+}
+
+model RetirementClearance {
+  id             String          @id @default(cuid())
+  retirementId   String          @map("retirement_id")
+  department     String
+  departmentName String          @map("department_name")
+  status         ClearanceStatus @default(PENDING)
+  clearedBy      String?         @map("cleared_by")
+  clearedAt      DateTime?       @map("cleared_at")
+  issues         String?
+  waivedBy       String?         @map("waived_by")
+  waiverReason   String?         @map("waiver_reason")
+
+  retirement Retirement @relation(fields: [retirementId], references: [id], onDelete: Cascade)
+
+  @@unique([retirementId, department])
+  @@map("retirement_clearances")
+}
+
+// ============================================================================
+// ATTENDANCE & SHIFT
+// ============================================================================
+
+model ShiftDefinition {
+  id           String           @id @default(cuid())
+  tenantId     String           @map("tenant_id")
+  code         String
+  name         String
+  nameAm       String?          @map("name_am")
+  scheduleType WorkScheduleType @map("schedule_type")
+  startTime    String           @map("start_time")
+  endTime      String           @map("end_time")
+  isOvernight  Boolean          @default(false) @map("is_overnight")
+  breakMinutes Int              @default(30) @map("break_minutes")
+  holidayAware Boolean          @default(true) @map("holiday_aware")
+  color        String?
+  isActive     Boolean          @default(true) @map("is_active")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  shiftAssignments  ShiftAssignment[]
+  attendanceRecords AttendanceRecord[]
+
+  @@unique([tenantId, code])
+  @@map("shift_definitions")
+  @@index([tenantId])
+}
+
+model ShiftAssignment {
+  id                    String    @id @default(cuid())
+  tenantId              String    @map("tenant_id")
+  employeeId            String    @map("employee_id")
+  shiftId               String    @map("shift_id")
+  shiftDate             DateTime  @map("shift_date") @db.Date
+  status                String    @default("SCHEDULED")
+  swappedWithEmployeeId String?   @map("swapped_with_employee_id")
+  swapApprovedBy        String?   @map("swap_approved_by")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  employee Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shift    ShiftDefinition @relation(fields: [shiftId], references: [id])
+
+  @@unique([employeeId, shiftDate])
+  @@map("shift_assignments")
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([tenantId, shiftDate])
+}
+
+model AttendanceRecord {
+  id               String    @id @default(cuid())
+  tenantId         String    @map("tenant_id")
+  employeeId       String    @map("employee_id")
+  attendanceDate   DateTime  @map("attendance_date") @db.Date
+  shiftId          String?   @map("shift_id")
+  clockIn          DateTime? @map("clock_in")
+  clockOut         DateTime? @map("clock_out")
+  clockInMethod    String?   @map("clock_in_method")
+  clockOutMethod   String?   @map("clock_out_method")
+  clockInDeviceId  String?   @map("clock_in_device_id")
+  clockOutDeviceId String?   @map("clock_out_device_id")
+  status           String    @default("PRESENT")
+  hoursWorked      Decimal?  @map("hours_worked") @db.Decimal(4, 2)
+  overtimeHours    Decimal?  @map("overtime_hours") @db.Decimal(4, 2)
+  lateMinutes      Int?      @map("late_minutes")
+  remarks          String?
+  recordedBy       String?   @map("recorded_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  employee Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shift    ShiftDefinition? @relation(fields: [shiftId], references: [id])
+
+  @@unique([employeeId, attendanceDate])
+  @@map("attendance_records")
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([tenantId, attendanceDate])
+}
+
+// ============================================================================
+// INVENTORY
+// ============================================================================
+
+model InventoryCategory {
+  id                   String    @id @default(cuid())
+  tenantId             String    @map("tenant_id")
+  code                 String
+  name                 String
+  nameAm               String?   @map("name_am")
+  requiresSerialNumber Boolean   @default(false) @map("requires_serial_number")
+  requiresLicense      Boolean   @default(false) @map("requires_license")
+  requiresInspection   Boolean   @default(false) @map("requires_inspection")
+  isHighSecurity       Boolean   @default(false) @map("is_high_security")
+  returnRequired       Boolean   @default(true) @map("return_required")
+  isActive             Boolean   @default(true) @map("is_active")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  itemTypes InventoryItemType[]
+
+  @@unique([tenantId, code])
+  @@map("inventory_categories")
+  @@index([tenantId])
+}
+
+model InventoryItemType {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id")
+  categoryId  String    @map("category_id")
+  code        String
+  name        String
+  nameAm      String?   @map("name_am")
+  description String?
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  category    InventoryCategory     @relation(fields: [categoryId], references: [id])
+  assignments InventoryAssignment[]
+
+  @@unique([tenantId, code])
+  @@map("inventory_item_types")
+  @@index([tenantId])
+  @@index([categoryId])
+}
+
+model InventoryAssignment {
+  id                    String    @id @default(cuid())
+  tenantId              String    @map("tenant_id")
+  employeeId            String    @map("employee_id")
+  itemTypeId            String    @map("item_type_id")
+  serialNumber          String?   @map("serial_number")
+  assetTag              String?   @map("asset_tag")
+  size                  String?
+  quantity              Int       @default(1)
+  assignedDate          DateTime  @map("assigned_date") @db.Date
+  assignedBy            String    @map("assigned_by")
+  conditionAtAssignment String    @map("condition_at_assignment")
+  isReturned            Boolean   @default(false) @map("is_returned")
+  returnedDate          DateTime? @map("returned_date") @db.Date
+  returnedTo            String?   @map("returned_to")
+  conditionAtReturn     String?   @map("condition_at_return")
+  isLost                Boolean   @default(false) @map("is_lost")
+  isDamaged             Boolean   @default(false) @map("is_damaged")
+  damageNotes           String?   @map("damage_notes")
+  costRecovery          Decimal?  @map("cost_recovery") @db.Decimal(12, 2)
+  remarks               String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  employee Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  itemType InventoryItemType @relation(fields: [itemTypeId], references: [id])
+
+  @@map("inventory_assignments")
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([employeeId, isReturned])
+}
+
+// ============================================================================
+// DOCUMENT TRACKING
+// ============================================================================
+
+model DocumentType {
+  id            String            @id @default(cuid())
+  tenantId      String            @map("tenant_id")
+  code          String
+  name          String
+  nameAm        String?           @map("name_am")
+  direction     DocumentDirection
+  prefix        String?
+  currentNumber Int               @default(0) @map("current_number")
+  isActive      Boolean           @default(true) @map("is_active")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  documents Document[]
+
+  @@unique([tenantId, code])
+  @@map("document_types")
+  @@index([tenantId])
+}
+
+model Document {
+  id                      String            @id @default(cuid())
+  tenantId                String            @map("tenant_id")
+  documentTypeId          String            @map("document_type_id")
+  referenceNumber         String            @unique @map("reference_number")
+  direction               DocumentDirection
+  documentDate            DateTime          @map("document_date") @db.Date
+  receivedDate            DateTime?         @map("received_date") @db.Date
+  sentDate                DateTime?         @map("sent_date") @db.Date
+  sourceOrganization      String?           @map("source_organization")
+  destinationOrganization String?           @map("destination_organization")
+  subject                 String
+  summary                 String?
+  priority                String            @default("NORMAL")
+  actionRequired          String?           @map("action_required")
+  deadline                DateTime?         @db.Date
+  assignedTo              String?           @map("assigned_to")
+  assignedDepartmentId    String?           @map("assigned_department_id")
+  filePath                String?           @map("file_path")
+  status                  String            @default("RECEIVED")
+  registeredBy            String            @map("registered_by")
+  createdAt               DateTime          @default(now()) @map("created_at")
+  updatedAt               DateTime          @updatedAt @map("updated_at")
+
+  documentType DocumentType @relation(fields: [documentTypeId], references: [id])
+
+  @@map("documents")
+  @@index([tenantId])
+  @@index([tenantId, direction])
+  @@index([tenantId, status])
+  @@index([tenantId, documentDate])
+}
+
+// ============================================================================
+// AUDIT LOG
+// ============================================================================
+
+model AuditLog {
+  id            String      @id @default(cuid())
+  tenantId      String      @map("tenant_id")
+  timestamp     DateTime    @default(now())
+  userId        String?     @map("user_id")
+  username      String?
+  userRole      String?     @map("user_role")
+  userCenter    String?     @map("user_center")
+  action        AuditAction
+  module        String
+  resource      String
+  resourceId    String?     @map("resource_id")
+  ipAddress     String      @map("ip_address")
+  userAgent     String?     @map("user_agent")
+  deviceType    String?     @map("device_type")
+  browser       String?
+  os            String?
+  sessionId     String?     @map("session_id")
+  requestId     String?     @map("request_id")
+  previousValue Json?       @map("previous_value")
+  newValue      Json?       @map("new_value")
+  changedFields String[]    @default([]) @map("changed_fields")
+  description   String?
+  reason        String?
+  relatedAuditId String?    @map("related_audit_id")
+
+  @@map("audit_logs")
+  @@index([tenantId])
+  @@index([timestamp])
+  @@index([userId])
+  @@index([module, resource])
+  @@index([resourceId])
+  @@index([ipAddress])
+}
+
+model LoginHistory {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  loginAt       DateTime  @default(now()) @map("login_at")
+  logoutAt      DateTime? @map("logout_at")
+  ipAddress     String    @map("ip_address")
+  userAgent     String?   @map("user_agent")
+  deviceType    String?   @map("device_type")
+  browser       String?
+  os            String?
+  location      String?
+  sessionId     String    @map("session_id")
+  isSuccessful  Boolean   @default(true) @map("is_successful")
+  failureReason String?   @map("failure_reason")
+
+  @@map("login_history")
+  @@index([userId])
+  @@index([loginAt])
+  @@index([ipAddress])
+}

@@ -15,6 +15,7 @@
 		"#web/*": "./packages/web/src/*"
 	},
 	"scripts": {
+		"typecheck": "npm run typecheck --workspaces",
 		"dev": "npm run dev:api & npm run dev:web",
 		"dev:api": "npm --workspace=packages/api run start:dev",
 		"dev:web": "npm --workspace=packages/web run dev",
@@ -26,6 +27,7 @@
 		"test:e2e": "npm --workspace=packages/api run test:e2e",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
+		"lint:ci": "biome ci --max-diagnostics=none",
 		"format": "biome format --write .",
 		"check": "biome check .",
 		"check:fix": "biome check --write ."
