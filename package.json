@@ -26,6 +26,7 @@
 		"test:e2e": "npm --workspace=packages/api run test:e2e",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
+		"lint:ci": "biome ci --max-diagnostics=none",
 		"format": "biome format --write .",
 		"check": "biome check .",
 		"check:fix": "biome check --write ."

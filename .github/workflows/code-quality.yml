@@ -1,0 +1,31 @@
+name: Code Quality
+on: ["push", "workflow_dispatch"]
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
+      - name: NPM Install
+        run: npm install --no-cache
+      - name: Linter
+        run: npm run lint:ci
+  types:
+    name: TS Types
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
+      - name: NPM Install
+        run: npm install --no-cache
+      - name: TS Type Checker
+        run: npm run typecheck
