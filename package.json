@@ -15,6 +15,7 @@
 		"#web/*": "./packages/web/src/*"
 	},
 	"scripts": {
+		"typecheck": "npm run typecheck --workspaces",
 		"dev": "npm run dev:api & npm run dev:web",
 		"dev:api": "npm --workspace=packages/api run start:dev",
 		"dev:web": "npm --workspace=packages/web run dev",
