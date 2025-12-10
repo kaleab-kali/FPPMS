@@ -1,15 +1,15 @@
-import { Module, Global } from "@nestjs/common";
-import { APP_FILTER, APP_GUARD, APP_PIPE, APP_INTERCEPTOR } from "@nestjs/core";
-import { JwtAuthGuard } from "#api/common/guards/jwt-auth.guard";
-import { RolesGuard } from "#api/common/guards/roles.guard";
-import { PermissionsGuard } from "#api/common/guards/permissions.guard";
-import { TenantGuard } from "#api/common/guards/tenant.guard";
+import { Global, Module } from "@nestjs/common";
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
+import { AllExceptionsFilter } from "#api/common/filters/all-exceptions.filter";
 import { HttpExceptionFilter } from "#api/common/filters/http-exception.filter";
 import { PrismaExceptionFilter } from "#api/common/filters/prisma-exception.filter";
-import { AllExceptionsFilter } from "#api/common/filters/all-exceptions.filter";
-import { ValidationPipe } from "#api/common/pipes/validation.pipe";
-import { TenantContextInterceptor } from "#api/common/interceptors/tenant-context.interceptor";
+import { JwtAuthGuard } from "#api/common/guards/jwt-auth.guard";
+import { PermissionsGuard } from "#api/common/guards/permissions.guard";
+import { RolesGuard } from "#api/common/guards/roles.guard";
+import { TenantGuard } from "#api/common/guards/tenant.guard";
 import { LoggingInterceptor } from "#api/common/interceptors/logging.interceptor";
+import { TenantContextInterceptor } from "#api/common/interceptors/tenant-context.interceptor";
+import { ValidationPipe } from "#api/common/pipes/validation.pipe";
 
 @Global()
 @Module({

@@ -144,6 +144,8 @@ import { cn } from "#web/lib/utils";
 - NEVER use the `@type {Object} a; @property {...} b;` syntax for JSDOC variable declarations in `.js` files.
 - ALWAYS use arrow functions. Never use function declarations unless function overloads are needed.
 - ALWAYS use function overloading when it could be helpful.
+- NEVER use magic numbers or magic strings directly in code. Always use named constants.
+- ALWAYS define configuration values in a constant object with `as const` at the top of the file or in a dedicated constants file.
 
 ## REACT RULES
 
