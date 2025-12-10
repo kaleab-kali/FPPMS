@@ -1,0 +1,11 @@
+{
+	"required": "{{field}} ያስፈልጋል",
+	"minLength": "{{field}} ቢያንስ {{min}} ፊደሎች መሆን አለበት",
+	"maxLength": "{{field}} ከ {{max}} ፊደሎች መብለጥ የለበትም",
+	"email": "እባክዎ ትክክለኛ የኢሜል አድራሻ ያስገቡ",
+	"phone": "እባክዎ ትክክለኛ የስልክ ቁጥር ያስገቡ",
+	"passwordMin": "የምስጥር ቁልፍ ቢያንስ 8 ፊደሎች መሆን አለበት",
+	"passwordMatch": "የምስጥር ቁልፎች መመሳሰል አለባቸው",
+	"invalidFormat": "ልክ ያልሆነ ቅርጸት",
+	"unique": "{{field}} ሎለያ መሆን አለበት"
+}

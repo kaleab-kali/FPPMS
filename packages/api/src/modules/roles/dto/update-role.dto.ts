@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from "class-validator";
+import { IsArray, IsBoolean, IsInt, IsOptional, IsString, MaxLength, Min } from "class-validator";
 
 export class UpdateRoleDto {
 	@IsString()
@@ -29,4 +29,9 @@ export class UpdateRoleDto {
 	@IsBoolean()
 	@IsOptional()
 	isActive?: boolean;
+
+	@IsArray()
+	@IsString({ each: true })
+	@IsOptional()
+	permissionIds?: string[];
 }

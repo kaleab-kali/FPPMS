@@ -45,6 +45,7 @@ export class SubCitiesService {
 	async findAll(tenantId: string): Promise<SubCityResponseDto[]> {
 		const subCities = await this.prisma.subCity.findMany({
 			where: { tenantId },
+			include: { region: true },
 			orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
 		});
 
@@ -127,6 +128,14 @@ export class SubCitiesService {
 		isActive: boolean;
 		createdAt: Date;
 		updatedAt: Date;
+		region?: {
+			id: string;
+			code: string;
+			name: string;
+			nameAm: string;
+			sortOrder: number;
+			isActive: boolean;
+		};
 	}): SubCityResponseDto {
 		return {
 			id: subCity.id,
@@ -139,6 +148,14 @@ export class SubCitiesService {
 			isActive: subCity.isActive,
 			createdAt: subCity.createdAt,
 			updatedAt: subCity.updatedAt,
+			region: subCity.region
+				? {
+						id: subCity.region.id,
+						code: subCity.region.code,
+						name: subCity.region.name,
+						nameAm: subCity.region.nameAm,
+					}
+				: undefined,
 		};
 	}
 }

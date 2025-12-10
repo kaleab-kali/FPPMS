@@ -1,0 +1,55 @@
+{
+	"tenant": {
+		"title": "Tenants",
+		"create": "Create Tenant",
+		"edit": "Edit Tenant",
+		"name": "Name",
+		"nameAm": "Name (Amharic)",
+		"code": "Code",
+		"type": "Type",
+		"isActive": "Active",
+		"deleteConfirm": "Are you sure you want to delete this tenant?"
+	},
+	"center": {
+		"title": "Centers",
+		"create": "Create Center",
+		"edit": "Edit Center",
+		"name": "Name",
+		"nameAm": "Name (Amharic)",
+		"code": "Code",
+		"type": "Type",
+		"address": "Address",
+		"phone": "Phone",
+		"email": "Email",
+		"isActive": "Active",
+		"deleteConfirm": "Are you sure you want to delete this center?"
+	},
+	"department": {
+		"title": "Departments",
+		"create": "Create Department",
+		"edit": "Edit Department",
+		"name": "Name",
+		"nameAm": "Name (Amharic)",
+		"code": "Code",
+		"description": "Description",
+		"parent": "Parent Department",
+		"selectParent": "Select parent department",
+		"sortOrder": "Sort Order",
+		"isActive": "Active",
+		"deleteConfirm": "Are you sure you want to delete this department?"
+	},
+	"position": {
+		"title": "Positions",
+		"create": "Create Position",
+		"edit": "Edit Position",
+		"name": "Name",
+		"nameAm": "Name (Amharic)",
+		"code": "Code",
+		"description": "Description",
+		"department": "Department",
+		"selectDepartment": "Select department",
+		"sortOrder": "Sort Order",
+		"isActive": "Active",
+		"deleteConfirm": "Are you sure you want to delete this position?"
+	}
+}

@@ -1,3 +1,10 @@
+export class RegionNestedDto {
+	id: string;
+	code: string;
+	name: string;
+	nameAm: string;
+}
+
 export class SubCityResponseDto {
 	id: string;
 	tenantId: string;
@@ -9,4 +16,5 @@ export class SubCityResponseDto {
 	isActive: boolean;
 	createdAt: Date;
 	updatedAt: Date;
+	region?: RegionNestedDto;
 }

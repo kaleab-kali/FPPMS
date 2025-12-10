@@ -45,6 +45,7 @@ export class WoredasService {
 	async findAll(tenantId: string): Promise<WoredaResponseDto[]> {
 		const woredas = await this.prisma.woreda.findMany({
 			where: { tenantId },
+			include: { subCity: true },
 			orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
 		});
 
@@ -119,6 +120,12 @@ export class WoredasService {
 		isActive: boolean;
 		createdAt: Date;
 		updatedAt: Date;
+		subCity?: {
+			id: string;
+			code: string;
+			name: string;
+			nameAm: string;
+		};
 	}): WoredaResponseDto {
 		return {
 			id: woreda.id,
@@ -131,6 +138,14 @@ export class WoredasService {
 			isActive: woreda.isActive,
 			createdAt: woreda.createdAt,
 			updatedAt: woreda.updatedAt,
+			subCity: woreda.subCity
+				? {
+						id: woreda.subCity.id,
+						code: woreda.subCity.code,
+						name: woreda.subCity.name,
+						nameAm: woreda.subCity.nameAm,
+					}
+				: undefined,
 		};
 	}
 }

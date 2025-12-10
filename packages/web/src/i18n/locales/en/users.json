@@ -1,0 +1,23 @@
+{
+	"title": "Users",
+	"create": "Create User",
+	"edit": "Edit User",
+	"username": "Username",
+	"email": "Email",
+	"password": "Password",
+	"leaveBlank": "leave blank to keep current",
+	"roles": "Roles",
+	"center": "Center",
+	"selectCenter": "Select Center",
+	"selectStatus": "Select Status",
+	"mustChangePassword": "Must Change Password",
+	"lastLogin": "Last Login",
+	"resetPassword": "Reset Password",
+	"deleteConfirm": "Are you sure you want to delete this user?",
+	"status": {
+		"active": "Active",
+		"inactive": "Inactive",
+		"suspended": "Suspended",
+		"pending": "Pending"
+	}
+}

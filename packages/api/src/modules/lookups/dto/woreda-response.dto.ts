@@ -1,3 +1,10 @@
+export class SubCityNestedDto {
+	id: string;
+	code: string;
+	name: string;
+	nameAm: string;
+}
+
 export class WoredaResponseDto {
 	id: string;
 	tenantId: string;
@@ -9,4 +16,5 @@ export class WoredaResponseDto {
 	isActive: boolean;
 	createdAt: Date;
 	updatedAt: Date;
+	subCity?: SubCityNestedDto;
 }

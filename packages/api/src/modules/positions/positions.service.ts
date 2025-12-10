@@ -39,6 +39,7 @@ export class PositionsService {
 				sortOrder: dto.sortOrder ?? DEFAULT_SORT_ORDER,
 				isActive: dto.isActive ?? true,
 			},
+			include: { department: true },
 		});
 
 		return this.mapToResponse(position);
@@ -47,6 +48,7 @@ export class PositionsService {
 	async findAll(tenantId: string): Promise<PositionResponseDto[]> {
 		const positions = await this.prisma.position.findMany({
 			where: { tenantId },
+			include: { department: true },
 			orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
 		});
 
@@ -56,6 +58,7 @@ export class PositionsService {
 	async findByDepartment(tenantId: string, departmentId: string): Promise<PositionResponseDto[]> {
 		const positions = await this.prisma.position.findMany({
 			where: { tenantId, departmentId },
+			include: { department: true },
 			orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
 		});
 
@@ -65,6 +68,7 @@ export class PositionsService {
 	async findOne(tenantId: string, id: string): Promise<PositionResponseDto> {
 		const position = await this.prisma.position.findFirst({
 			where: { id, tenantId },
+			include: { department: true },
 		});
 
 		if (!position) {
@@ -102,6 +106,7 @@ export class PositionsService {
 				sortOrder: dto.sortOrder,
 				isActive: dto.isActive,
 			},
+			include: { department: true },
 		});
 
 		return this.mapToResponse(position);
@@ -125,6 +130,7 @@ export class PositionsService {
 		id: string;
 		tenantId: string;
 		departmentId: string | null;
+		department: { id: string; name: string; nameAm: string | null } | null;
 		code: string;
 		name: string;
 		nameAm: string | null;
@@ -138,6 +144,13 @@ export class PositionsService {
 			id: position.id,
 			tenantId: position.tenantId,
 			departmentId: position.departmentId || undefined,
+			department: position.department
+				? {
+						id: position.department.id,
+						name: position.department.name,
+						nameAm: position.department.nameAm || undefined,
+					}
+				: undefined,
 			code: position.code,
 			name: position.name,
 			nameAm: position.nameAm || undefined,

@@ -1,0 +1,23 @@
+{
+	"title": "ተጠቃሚዎች",
+	"create": "አዲስ ተጠቃሚ ጠቅል",
+	"edit": "ተጠቃሚ አስተካክል",
+	"username": "የተጠቃሚ ስም",
+	"email": "ኢሜል",
+	"password": "የምስጥር ቁልፍ",
+	"leaveBlank": "የአሁኑን ለማስቀጠል ባዶ ይተዉ",
+	"roles": "ሮሎች",
+	"center": "ማእከል",
+	"selectCenter": "ማእከል ይምረጡ",
+	"selectStatus": "ሁኔታ ይምረጡ",
+	"mustChangePassword": "የምስጥር ቁልፍ መቀየር ይገባል",
+	"lastLogin": "የመጨረሻ የገባ ጊዜ",
+	"resetPassword": "የምስጥር ቁልፍ ዝርዝር",
+	"deleteConfirm": "ይህን ተጠቃሚ ለመሰረዝ እርግጠኛ ነዎት?",
+	"status": {
+		"active": "አክቲቭ",
+		"inactive": "አይነቃሕም",
+		"suspended": "ተዋቅዷል",
+		"pending": "በመጠናበቅ"
+	}
+}

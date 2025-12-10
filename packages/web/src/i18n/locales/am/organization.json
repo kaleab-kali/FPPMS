@@ -1,0 +1,55 @@
+{
+	"tenant": {
+		"title": "ተከራዮች",
+		"create": "አዲስ ተከራይ ጠቅል",
+		"edit": "ተከራይ አስተካክል",
+		"name": "ስም",
+		"nameAm": "ስም (አማርኛ)",
+		"code": "ኮድ",
+		"type": "አይነት",
+		"isActive": "አክቲቭ",
+		"deleteConfirm": "ይህን ተከራይ ለመሰረዝ እርግጠኛ ነዎት?"
+	},
+	"center": {
+		"title": "ማዕከላት",
+		"create": "አዲስ ማዕከል ጠቅል",
+		"edit": "ማዕከል አስተካክል",
+		"name": "ስም",
+		"nameAm": "ስም (አማርኛ)",
+		"code": "ኮድ",
+		"type": "አይነት",
+		"address": "አድራሻ",
+		"phone": "ስልክ",
+		"email": "ኢሜይል",
+		"isActive": "አክቲቭ",
+		"deleteConfirm": "ይህን ማዕከል ለመሰረዝ እርግጠኛ ነዎት?"
+	},
+	"department": {
+		"title": "ክፍሎች",
+		"create": "አዲስ ክፍል ጠቅል",
+		"edit": "ክፍል አስተካክል",
+		"name": "ስም",
+		"nameAm": "ስም (አማርኛ)",
+		"code": "ኮድ",
+		"description": "መግለጫ",
+		"parent": "የወላጅ ክፍል",
+		"selectParent": "የወላጅ ክፍል ይምረጡ",
+		"sortOrder": "ቅደም ተከተል",
+		"isActive": "አክቲቭ",
+		"deleteConfirm": "ይህን ክፍል ለመሰረዝ እርግጠኛ ነዎት?"
+	},
+	"position": {
+		"title": "የስራ መደቦች",
+		"create": "አዲስ የስራ መደብ ጠቅል",
+		"edit": "የስራ መደብ አስተካክል",
+		"name": "ስም",
+		"nameAm": "ስም (አማርኛ)",
+		"code": "ኮድ",
+		"description": "መግለጫ",
+		"department": "ክፍል",
+		"selectDepartment": "ክፍል ይምረጡ",
+		"sortOrder": "ቅደም ተከተል",
+		"isActive": "አክቲቭ",
+		"deleteConfirm": "ይህን የስራ መደብ ለመሰረዝ እርግጠኛ ነዎት?"
+	}
+}
