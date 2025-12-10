@@ -1,0 +1,60 @@
+{
+	"region": {
+		"title": "ክልሎች",
+		"name": "ስም",
+		"nameAm": "ስም (አማርኛ)",
+		"code": "ኮድ",
+		"sortOrder": "የመደርደሪያ ቅደም ተከተል",
+		"isActive": "አክቲቭ",
+		"create": "አዲስ ክልል ጠቅል",
+		"edit": "ክልል አስተካክል",
+		"deleteConfirm": "ይህን ክልል ለመሰረዝ እርግጠኛ ነዎት?"
+	},
+	"subCity": {
+		"title": "ክፍለ ከተማዎች",
+		"name": "ስም",
+		"nameAm": "ስም (አማርኛ)",
+		"code": "ኮድ",
+		"region": "ክልል",
+		"selectRegion": "ክልል ይምረጡ",
+		"sortOrder": "የመደርደሪያ ቅደም ተከተል",
+		"isActive": "አክቲቭ",
+		"create": "አዲስ ክፍለ ከተማ ጠቅል",
+		"edit": "ክፍለ ከተማ አስተካክል",
+		"deleteConfirm": "ይህን ክፍለ ከተማ ለመሰረዝ እርግጠኛ ነዎት?"
+	},
+	"woreda": {
+		"title": "ወረዳዎች",
+		"name": "ስም",
+		"nameAm": "ስም (አማርኛ)",
+		"code": "ኮድ",
+		"subCity": "ክፍለ ከተማ",
+		"selectSubCity": "ክፍለ ከተማ ይምረጡ",
+		"sortOrder": "የመደርደሪያ ቅደም ተከተል",
+		"isActive": "አክቲቭ",
+		"create": "አዲስ ወረዳ ጠቅል",
+		"edit": "ወረዳ አስተካክል",
+		"deleteConfirm": "ይህን ወረዳ ለመሰረዝ እርግጠኛ ነዎት?"
+	},
+	"rank": {
+		"title": "የውትብ ደረጃዎች",
+		"name": "ስም",
+		"nameAm": "ስም (አማርኛ)",
+		"code": "ኮድ",
+		"level": "ደረጃ",
+		"category": "ምድብ",
+		"selectCategory": "ምድብ ይምረጡ",
+		"baseSalary": "መሰረታዊ ደሞዝ",
+		"ceilingSalary": "ከፍተኛ ደሞዝ",
+		"stepCount": "የደረጃ ብዛት",
+		"stepPeriodYears": "የደረጃ ጊዜ (ዓመታት)",
+		"retirementAge": "የጡረታ ዕድሜ",
+		"minYearsForPromotion": "ለእድገት አነስተኛ ዓመታት",
+		"minAppraisalScore": "አነስተኛ የግምገማ ውጤት",
+		"sortOrder": "የመደርደሪያ ቅደም ተከተል",
+		"isActive": "አክቲቭ",
+		"create": "አዲስ ደረጃ ጠቅል",
+		"edit": "ደረጃ አስተካክል",
+		"deleteConfirm": "ይህን ደረጃ ለመሰረዝ እርግጠኛ ነዎት?"
+	}
+}

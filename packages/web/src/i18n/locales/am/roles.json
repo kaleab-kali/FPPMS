@@ -1,0 +1,27 @@
+{
+	"title": "ሮሎች",
+	"create": "አዲስ ሮል ጠቅል",
+	"edit": "ሮል አስተካክል",
+	"name": "የሮል ስም",
+	"nameAm": "የሮል ስም (አማርኛ)",
+	"code": "የሮል ኮድ",
+	"description": "መግለጫ",
+	"level": "ደረጃ",
+	"accessScope": "የመድረስ ወሰን",
+	"selectAccessScope": "የመድረስ ወሰን ይምረጡ",
+	"isSystemRole": "አይነት",
+	"system": "ሲስተም",
+	"custom": "ብጁ",
+	"isActive": "አክቲቭ",
+	"permissions": "ፍቃዶች",
+	"permissionsCount": "ፍቃዶች",
+	"permissionsSelected": "ፍቃዶች ተመርጠዋል",
+	"partialEdit": "ከፊል አርትዖት ብቻ",
+	"deleteConfirm": "ይህን ሮል ለመሰረዝ እርግጠኛ ነዎት?",
+	"scopes": {
+		"ALL_CENTERS": "ሁሉም ማእከሎች",
+		"OWN_CENTER": "የራስ ማእከል",
+		"OWN_DEPARTMENT": "የራስ ዲፓርትመንት",
+		"OWN_RECORDS": "የራስ መዝገቦች"
+	}
+}

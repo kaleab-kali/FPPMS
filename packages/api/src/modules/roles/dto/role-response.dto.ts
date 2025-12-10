@@ -1,3 +1,11 @@
+export class RolePermissionDto {
+	id: string;
+	module: string;
+	action: string;
+	resource: string;
+	description?: string;
+}
+
 export class RoleResponseDto {
 	id: string;
 	tenantId: string | undefined;
@@ -9,6 +17,7 @@ export class RoleResponseDto {
 	level: number;
 	accessScope: string;
 	isActive: boolean;
+	permissions: RolePermissionDto[];
 	createdAt: Date;
 	updatedAt: Date;
 }

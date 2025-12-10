@@ -1,0 +1,17 @@
+{
+	"dashboard": "Dashboard",
+	"organization": "Organization",
+	"tenants": "Tenants",
+	"centers": "Centers",
+	"departments": "Departments",
+	"positions": "Positions",
+	"users": "Users",
+	"roles": "Roles",
+	"lookups": "Lookups",
+	"regions": "Regions",
+	"subCities": "Sub Cities",
+	"woredas": "Woredas",
+	"ranks": "Ranks",
+	"settings": "Settings",
+	"profile": "Profile"
+}

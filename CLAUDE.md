@@ -161,6 +161,77 @@ import { cn } from "#web/lib/utils";
 - NEVER allow a non React component function to be larger than 100 lines of code.
 - NEVER render a React component as a function call. It should only be rendered as a JSX element.
 - NEVER add SSR checks such as `if (typeof window !== 'undefined')` to React components.  These should be handled manually by a developer.
+- NEVER create `index.ts` barrel files in the frontend package except in rare essential cases. Import directly from the source file instead.
+- ALWAYS make frontend code responsive. All components must work on mobile, tablet, and desktop screens.
+- ALWAYS use TanStack Table for data tables with proper styling and responsive design.
+
+## MEMORY LEAK PREVENTION (React)
+
+- ALWAYS cleanup subscriptions, timers, and event listeners in useEffect cleanup functions.
+- NEVER create subscriptions or timers without corresponding cleanup.
+- ALWAYS use AbortController for fetch requests that may be cancelled.
+- NEVER store component references in module-level variables.
+- ALWAYS check if component is still mounted before updating state in async callbacks.
+- NEVER create closures that capture large objects unnecessarily.
+- ALWAYS use weak references (WeakMap, WeakSet) when caching component instances.
+- NEVER add event listeners to window/document without cleanup.
+- ALWAYS cleanup TanStack Query subscriptions by using proper query invalidation.
+- NEVER create new object/array references in render without useMemo.
+- ALWAYS use stable callback references with useCallback for event handlers passed to children.
+- NEVER store DOM references without cleanup.
+
+### Memory Leak Checklist for Every Component
+
+1. **useEffect cleanup**: Every useEffect with subscriptions/timers MUST return cleanup function
+2. **Event listeners**: addEventListener MUST have corresponding removeEventListener in cleanup
+3. **Timers**: setTimeout/setInterval MUST be cleared with clearTimeout/clearInterval
+4. **Async operations**: Use AbortController or mounted flag to prevent state updates after unmount
+5. **Refs**: Clear refs to DOM elements in cleanup if storing externally
+6. **Subscriptions**: Unsubscribe from all observables/event emitters in cleanup
+
+### Example Pattern for Async Operations
+
+```typescript
+useEffect(() => {
+  const abortController = new AbortController();
+
+  const fetchData = async () => {
+    const response = await fetch(url, { signal: abortController.signal });
+    if (!abortController.signal.aborted) {
+      setData(await response.json());
+    }
+  };
+
+  fetchData();
+
+  return () => {
+    abortController.abort();
+  };
+}, [url]);
+```
+
+## FRONTEND-BACKEND INTEGRATION RULES
+
+- ALWAYS check backend DTOs before creating frontend types.
+- ALWAYS match frontend request/response types exactly with backend DTOs.
+- NEVER send fields that don't exist in backend DTOs.
+- ALWAYS use undefined (not empty string) for optional fields not provided.
+- ALWAYS filter out immutable fields (like `code`) when updating entities.
+- ALWAYS check backend controller endpoints for correct HTTP methods and paths.
+
+## CRUD FEATURE COMPLETION RULES
+
+- NEVER move to the next feature/module until the current one is fully tested and confirmed working.
+- ALWAYS ask the user to confirm that all CRUD operations (Create, Read, Update, Delete) work before proceeding.
+- ALWAYS test each CRUD operation in the following order:
+  1. List/Read - verify data displays correctly
+  2. Create - verify new records can be created
+  3. Update - verify existing records can be edited
+  4. Delete - verify records can be deleted
+- NEVER assume a feature works without user confirmation.
+- ALWAYS wait for explicit user approval before moving to the next module.
+- When fixing multiple modules, complete ONE module fully before starting the next.
+- If the user reports an issue, FIX IT before moving on - do not skip to another module.
 
 ## DATABASE AND SQL RULES
 

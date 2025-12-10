@@ -85,7 +85,10 @@ export class RanksService {
 
 	async update(tenantId: string, id: string, dto: UpdateRankDto): Promise<RankResponseDto> {
 		const existing = await this.prisma.militaryRank.findFirst({
-			where: { id, tenantId },
+			where: {
+				id,
+				OR: [{ tenantId }, { tenantId: null }],
+			},
 		});
 
 		if (!existing) {

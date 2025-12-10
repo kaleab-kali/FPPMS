@@ -1,0 +1,17 @@
+{
+	"dashboard": "ዳሽቦርድ",
+	"organization": "ድርጅት",
+	"tenants": "ተከራዮች",
+	"centers": "ማዕከላት",
+	"departments": "ክፍሎች",
+	"positions": "የስራ መደቦች",
+	"users": "ተጠቃሚዎች",
+	"roles": "ሮሎች",
+	"lookups": "የፍለጋ መረጃዎች",
+	"regions": "ክልሎች",
+	"subCities": "ክፍለ ከተማዎች",
+	"woredas": "ወረዳዎች",
+	"ranks": "የውትብ ደረጃዎች",
+	"settings": "ቅጂኖች",
+	"profile": "መገሆር"
+}

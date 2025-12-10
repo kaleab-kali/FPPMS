@@ -1,33 +1,26 @@
-import { useState } from "react";
-import viteLogo from "/vite.svg";
-import reactLogo from "./assets/react.svg";
-import "./App.css";
+import { QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
+import { RouterProvider } from "react-router-dom";
+import { Toaster } from "#web/components/ui/sonner.tsx";
+import { queryClient } from "#web/config/query-client.ts";
+import { AuthProvider } from "#web/context/AuthContext.tsx";
+import { router } from "#web/routes/routes.tsx";
+import "#web/i18n/config.ts";
 
-function App() {
-	const [count, setCount] = useState(0);
+const App = React.memo(
+	() => {
+		return (
+			<QueryClientProvider client={queryClient}>
+				<AuthProvider>
+					<RouterProvider router={router} />
+					<Toaster position="top-right" />
+				</AuthProvider>
+			</QueryClientProvider>
+		);
+	},
+	() => true,
+);
 
-	return (
-		<>
-			<div>
-				<a href="https://vite.dev" target="_blank" rel="noopener">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank" rel="noopener">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-			</div>
-			<h1>Vite + React</h1>
-			<div className="card">
-				<button type="button" onClick={() => setCount((count) => count + 1)}>
-					count is {count}
-				</button>
-				<p>
-					Edit <code>src/App.tsx</code> and save to test HMR
-				</p>
-			</div>
-			<p className="read-the-docs">Click on the Vite and React logos to learn more</p>
-		</>
-	);
-}
+App.displayName = "App";
 
 export default App;

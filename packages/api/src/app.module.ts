@@ -10,6 +10,7 @@ import { AuthModule } from "#api/modules/auth/auth.module";
 import { CentersModule } from "#api/modules/centers/centers.module";
 import { DepartmentsModule } from "#api/modules/departments/departments.module";
 import { LookupsModule } from "#api/modules/lookups/lookups.module";
+import { PermissionsModule } from "#api/modules/permissions/permissions.module";
 import { PositionsModule } from "#api/modules/positions/positions.module";
 import { RanksModule } from "#api/modules/ranks/ranks.module";
 import { RolesModule } from "#api/modules/roles/roles.module";
@@ -27,6 +28,7 @@ import { UsersModule } from "#api/modules/users/users.module";
 		DepartmentsModule,
 		PositionsModule,
 		LookupsModule,
+		PermissionsModule,
 		RanksModule,
 		RolesModule,
 		UsersModule,
