@@ -6,6 +6,21 @@ import { RolesService } from "#api/modules/roles/roles.service";
 const MOCK_TENANT_ID = "tenant-123";
 const MOCK_ROLE_ID = "role-123";
 
+const mockRolePermissions = [
+	{
+		id: "rp-1",
+		roleId: MOCK_ROLE_ID,
+		permissionId: "perm-1",
+		permission: {
+			id: "perm-1",
+			module: "employees",
+			action: "read",
+			resource: "employee",
+			description: "View employees",
+		},
+	},
+];
+
 const mockRole = {
 	id: MOCK_ROLE_ID,
 	tenantId: MOCK_TENANT_ID,
@@ -19,6 +34,7 @@ const mockRole = {
 	isActive: true,
 	createdAt: new Date(),
 	updatedAt: new Date(),
+	rolePermissions: mockRolePermissions,
 };
 
 const mockSystemRole = {
@@ -29,6 +45,7 @@ const mockSystemRole = {
 	isSystemRole: true,
 	level: 100,
 	accessScope: "ALL_CENTERS",
+	rolePermissions: [],
 };
 
 const mockPrismaService = {
@@ -41,6 +58,10 @@ const mockPrismaService = {
 	},
 	userRole: {
 		findMany: jest.fn(),
+	},
+	rolePermission: {
+		deleteMany: jest.fn(),
+		createMany: jest.fn(),
 	},
 };
 
@@ -132,8 +153,9 @@ describe("RolesService", () => {
 		const updateDto = { name: "Updated Name" };
 
 		it("should update a role", async () => {
-			prisma.role.findFirst.mockResolvedValue(mockRole);
-			prisma.role.update.mockResolvedValue({ ...mockRole, ...updateDto });
+			const updatedRole = { ...mockRole, name: "Updated Name" };
+			prisma.role.findFirst.mockResolvedValueOnce(mockRole).mockResolvedValueOnce(updatedRole);
+			prisma.role.update.mockResolvedValue(updatedRole);
 
 			const result = await service.update(MOCK_TENANT_ID, MOCK_ROLE_ID, updateDto);
 
@@ -146,10 +168,15 @@ describe("RolesService", () => {
 			await expect(service.update(MOCK_TENANT_ID, "nonexistent", updateDto)).rejects.toThrow(NotFoundException);
 		});
 
-		it("should throw BadRequestException if trying to modify system role", async () => {
-			prisma.role.findFirst.mockResolvedValue(mockSystemRole);
+		it("should allow partial update of system role", async () => {
+			const partialUpdateDto = { nameAm: "Updated Amharic Name", description: "Updated description" };
+			const updatedSystemRole = { ...mockSystemRole, nameAm: "Updated Amharic Name", description: "Updated description" };
+			prisma.role.findFirst.mockResolvedValueOnce(mockSystemRole).mockResolvedValueOnce(updatedSystemRole);
+			prisma.role.update.mockResolvedValue(updatedSystemRole);
 
-			await expect(service.update(MOCK_TENANT_ID, "system-role-123", updateDto)).rejects.toThrow(BadRequestException);
+			const result = await service.update(MOCK_TENANT_ID, "system-role-123", partialUpdateDto);
+
+			expect(result.nameAm).toBe("Updated Amharic Name");
 		});
 	});
 
