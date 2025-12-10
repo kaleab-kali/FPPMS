@@ -170,7 +170,11 @@ describe("RolesService", () => {
 
 		it("should allow partial update of system role", async () => {
 			const partialUpdateDto = { nameAm: "Updated Amharic Name", description: "Updated description" };
-			const updatedSystemRole = { ...mockSystemRole, nameAm: "Updated Amharic Name", description: "Updated description" };
+			const updatedSystemRole = {
+				...mockSystemRole,
+				nameAm: "Updated Amharic Name",
+				description: "Updated description",
+			};
 			prisma.role.findFirst.mockResolvedValueOnce(mockSystemRole).mockResolvedValueOnce(updatedSystemRole);
 			prisma.role.update.mockResolvedValue(updatedSystemRole);
 
