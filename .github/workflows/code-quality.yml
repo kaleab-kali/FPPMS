@@ -30,6 +30,8 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
         working-directory: packages/api
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
       - name: TS Type Checker
         run: npm run typecheck
   test:
@@ -47,5 +49,7 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
         working-directory: packages/api
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
       - name: Run Tests
         run: npm run test
