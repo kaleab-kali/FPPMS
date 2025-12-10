@@ -9,7 +9,7 @@
 		"#api/*": "./src/*"
 	},
 	"scripts": {
-		"typecheck": "tsc -p ./tsconfig.json --noEmit",
+		"typecheck": "tsc -p ./tsconfig.build.json --noEmit",
 		"build": "nest build",
 		"start": "nest start",
 		"start:dev": "nest start --watch",

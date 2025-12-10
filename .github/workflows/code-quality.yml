@@ -27,5 +27,25 @@ jobs:
           node-version: 22.18.0
       - name: NPM Install
         run: npm install --no-cache
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        working-directory: packages/api
       - name: TS Type Checker
         run: npm run typecheck
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
+      - name: NPM Install
+        run: npm install --no-cache
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        working-directory: packages/api
+      - name: Run Tests
+        run: npm run test
