@@ -43,6 +43,7 @@ async function bootstrap() {
 		.addTag("permissions", "Permission management")
 		.addTag("ranks", "Military rank management")
 		.addTag("lookups", "Lookup data (regions, sub-cities, woredas)")
+		.addTag("employees", "Employee management (military, civilian, temporary)")
 		.build();
 
 	const documentFactory = () => SwaggerModule.createDocument(app, config);
