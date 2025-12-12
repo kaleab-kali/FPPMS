@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
 import { Roles } from "#api/common/decorators/roles.decorator";
@@ -8,32 +9,47 @@ import { RoleResponseDto } from "#api/modules/roles/dto/role-response.dto";
 import { UpdateRoleDto } from "#api/modules/roles/dto/update-role.dto";
 import { RolesService } from "#api/modules/roles/roles.service";
 
+@ApiTags("roles")
+@ApiBearerAuth("JWT-auth")
 @Controller("roles")
 @Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
 export class RolesController {
 	constructor(private rolesService: RolesService) {}
 
 	@Post()
+	@ApiOperation({ summary: "Create role", description: "Create a new role" })
+	@ApiResponse({ status: 201, description: "Role created", type: RoleResponseDto })
 	create(@CurrentUser() user: AuthUserDto, @Body() dto: CreateRoleDto): Promise<RoleResponseDto> {
 		return this.rolesService.create(user.tenantId, dto);
 	}
 
 	@Get()
+	@ApiOperation({ summary: "List all roles", description: "Get all roles including system roles" })
+	@ApiResponse({ status: 200, description: "List of roles", type: [RoleResponseDto] })
 	findAll(@CurrentUser() user: AuthUserDto): Promise<RoleResponseDto[]> {
 		return this.rolesService.findAll(user.tenantId);
 	}
 
 	@Get(":id")
+	@ApiOperation({ summary: "Get role by ID", description: "Get a single role by ID" })
+	@ApiResponse({ status: 200, description: "Role details", type: RoleResponseDto })
+	@ApiResponse({ status: 404, description: "Role not found" })
 	findOne(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<RoleResponseDto> {
 		return this.rolesService.findOne(user.tenantId, id);
 	}
 
 	@Get("code/:code")
+	@ApiOperation({ summary: "Get role by code", description: "Get a single role by code" })
+	@ApiResponse({ status: 200, description: "Role details", type: RoleResponseDto })
+	@ApiResponse({ status: 404, description: "Role not found" })
 	findByCode(@CurrentUser() user: AuthUserDto, @Param("code") code: string): Promise<RoleResponseDto> {
 		return this.rolesService.findByCode(user.tenantId, code);
 	}
 
 	@Patch(":id")
+	@ApiOperation({ summary: "Update role", description: "Update role details and permissions" })
+	@ApiResponse({ status: 200, description: "Role updated", type: RoleResponseDto })
+	@ApiResponse({ status: 404, description: "Role not found" })
 	update(
 		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
@@ -43,6 +59,10 @@ export class RolesController {
 	}
 
 	@Delete(":id")
+	@ApiOperation({ summary: "Delete role", description: "Delete a custom role (system roles cannot be deleted)" })
+	@ApiResponse({ status: 200, description: "Role deleted" })
+	@ApiResponse({ status: 400, description: "Cannot delete system role or role in use" })
+	@ApiResponse({ status: 404, description: "Role not found" })
 	remove(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<{ message: string }> {
 		return this.rolesService.remove(user.tenantId, id);
 	}

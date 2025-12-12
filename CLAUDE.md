@@ -64,7 +64,7 @@ import { cn } from "#web/lib/utils";
 - ALWAYS respect the ignored file patterns in the `.gitignore` file.
 - NEVER allow a git branch or Github pull request to contain more than 40 changed files.  If it does, do not do any work, and instruct the developer to split the changes into smaller branches.
 - ALWAYS check the latest official documentation for any library/framework (NestJS, Prisma, React, etc.) BEFORE writing integration code.
-- ALWAYS verify the current version of installed packages and use version-appropriate APIs.
+- ALWAYS verify the current version of installed packages.
 - NEVER assume API patterns from older versions - always confirm with latest docs.
 - ALWAYS test each small implementation step before moving to the next one.
 
