@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { Employee, EmployeeStatus, EmployeeType, MaritalStatus, Prisma, WorkScheduleType } from "@prisma/client";
 import { PrismaService } from "#api/database/prisma.service";
 import {
+	ChangeEmployeeStatusDto,
 	CreateCivilianEmployeeDto,
 	CreateMilitaryEmployeeDto,
 	CreateTemporaryEmployeeDto,
@@ -590,6 +591,73 @@ export class EmployeesService {
 		});
 
 		return { message: "Employee deleted successfully" };
+	}
+
+	async changeStatus(
+		tenantId: string,
+		id: string,
+		dto: ChangeEmployeeStatusDto,
+		updatedBy: string,
+	): Promise<EmployeeResponseDto> {
+		const existing = await this.prisma.employee.findFirst({
+			where: { id, tenantId, deletedAt: null },
+		});
+
+		if (!existing) {
+			throw new NotFoundException(`Employee with ID "${id}" not found`);
+		}
+
+		const statusReason = dto.notes ? `${dto.reason}\n\nNotes: ${dto.notes}` : dto.reason;
+
+		const updateData: Prisma.EmployeeUncheckedUpdateInput = {
+			status: dto.status,
+			statusChangedAt: dto.effectiveDate,
+			statusReason,
+			updatedBy,
+		};
+
+		if (dto.status === EmployeeStatus.SUSPENDED && dto.endDate) {
+			updateData.statusReason = `${statusReason}\n\nSuspension End Date: ${dto.endDate.toISOString().split("T")[0]}`;
+		}
+
+		const employee = await this.prisma.employee.update({
+			where: { id },
+			data: updateData,
+			include: this.getEmployeeIncludes(),
+		});
+
+		return this.mapToResponse(employee);
+	}
+
+	async returnToActive(tenantId: string, id: string, updatedBy: string): Promise<EmployeeResponseDto> {
+		const existing = await this.prisma.employee.findFirst({
+			where: { id, tenantId, deletedAt: null },
+		});
+
+		if (!existing) {
+			throw new NotFoundException(`Employee with ID "${id}" not found`);
+		}
+
+		if (existing.status === EmployeeStatus.ACTIVE) {
+			throw new BadRequestException("Employee is already active");
+		}
+
+		if (existing.status === EmployeeStatus.DECEASED) {
+			throw new BadRequestException("Cannot return a deceased employee to active status");
+		}
+
+		const employee = await this.prisma.employee.update({
+			where: { id },
+			data: {
+				status: EmployeeStatus.ACTIVE,
+				statusChangedAt: new Date(),
+				statusReason: `Returned to active from ${existing.status}`,
+				updatedBy,
+			},
+			include: this.getEmployeeIncludes(),
+		});
+
+		return this.mapToResponse(employee);
 	}
 
 	async getStatistics(tenantId: string): Promise<{

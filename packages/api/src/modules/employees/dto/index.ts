@@ -1,3 +1,4 @@
+export { ChangeEmployeeStatusDto } from "#api/modules/employees/dto/change-status.dto";
 export {
 	CreateAddressDto,
 	CreateCivilianEmployeeDto,

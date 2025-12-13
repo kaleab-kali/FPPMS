@@ -268,3 +268,13 @@ export interface UpdateEmployeeRequest {
 	terminationDate?: string;
 	terminationReason?: string;
 }
+
+export type ArchiveStatus = "TERMINATED" | "RETIRED" | "SUSPENDED" | "DECEASED";
+
+export interface ChangeStatusRequest {
+	status: ArchiveStatus;
+	reason: string;
+	effectiveDate: string;
+	endDate?: string;
+	notes?: string;
+}
