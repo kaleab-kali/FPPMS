@@ -5,6 +5,7 @@ import { APP_CONFIG, STORAGE_KEYS } from "#web/config/constants.ts";
 import amAuth from "#web/i18n/locales/am/auth.json";
 import amCommon from "#web/i18n/locales/am/common.json";
 import amDashboard from "#web/i18n/locales/am/dashboard.json";
+import amEmployees from "#web/i18n/locales/am/employees.json";
 import amErrors from "#web/i18n/locales/am/errors.json";
 import amLookups from "#web/i18n/locales/am/lookups.json";
 import amNavigation from "#web/i18n/locales/am/navigation.json";
@@ -15,6 +16,7 @@ import amValidation from "#web/i18n/locales/am/validation.json";
 import enAuth from "#web/i18n/locales/en/auth.json";
 import enCommon from "#web/i18n/locales/en/common.json";
 import enDashboard from "#web/i18n/locales/en/dashboard.json";
+import enEmployees from "#web/i18n/locales/en/employees.json";
 import enErrors from "#web/i18n/locales/en/errors.json";
 import enLookups from "#web/i18n/locales/en/lookups.json";
 import enNavigation from "#web/i18n/locales/en/navigation.json";
@@ -35,6 +37,7 @@ const resources = {
 		organization: enOrganization,
 		lookups: enLookups,
 		dashboard: enDashboard,
+		employees: enEmployees,
 	},
 	am: {
 		common: amCommon,
@@ -47,6 +50,7 @@ const resources = {
 		organization: amOrganization,
 		lookups: amLookups,
 		dashboard: amDashboard,
+		employees: amEmployees,
 	},
 } as const;
 
@@ -69,6 +73,7 @@ i18n
 			"organization",
 			"lookups",
 			"dashboard",
+			"employees",
 		],
 		interpolation: {
 			escapeValue: false,

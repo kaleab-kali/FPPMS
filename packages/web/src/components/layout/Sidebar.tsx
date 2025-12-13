@@ -1,4 +1,4 @@
-import { Building2, ChevronDown, ChevronRight, LayoutDashboard, MapPin, Shield, Users } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight, LayoutDashboard, MapPin, Shield, UserCheck, Users } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
@@ -87,6 +87,11 @@ export const Sidebar = React.memo(
 					to: "/dashboard",
 					icon: <LayoutDashboard className="h-4 w-4" />,
 					label: t("dashboard"),
+				},
+				{
+					to: "/employees",
+					icon: <UserCheck className="h-4 w-4" />,
+					label: t("employees"),
 				},
 				{
 					to: "/organization",

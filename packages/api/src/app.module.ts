@@ -9,6 +9,7 @@ import { DatabaseModule } from "#api/database";
 import { AuthModule } from "#api/modules/auth/auth.module";
 import { CentersModule } from "#api/modules/centers/centers.module";
 import { DepartmentsModule } from "#api/modules/departments/departments.module";
+import { EmployeesModule } from "#api/modules/employees/employees.module";
 import { LookupsModule } from "#api/modules/lookups/lookups.module";
 import { PermissionsModule } from "#api/modules/permissions/permissions.module";
 import { PositionsModule } from "#api/modules/positions/positions.module";
@@ -32,6 +33,7 @@ import { UsersModule } from "#api/modules/users/users.module";
 		RanksModule,
 		RolesModule,
 		UsersModule,
+		EmployeesModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

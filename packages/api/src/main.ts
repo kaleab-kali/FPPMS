@@ -1,3 +1,4 @@
+import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "#api/app.module";
@@ -8,6 +9,17 @@ const SWAGGER_PATH = "docs";
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
+
+	app.useGlobalPipes(
+		new ValidationPipe({
+			transform: true,
+			whitelist: true,
+			forbidNonWhitelisted: false,
+			transformOptions: {
+				enableImplicitConversion: true,
+			},
+		}),
+	);
 
 	app.enableCors({
 		origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -43,6 +55,7 @@ async function bootstrap() {
 		.addTag("permissions", "Permission management")
 		.addTag("ranks", "Military rank management")
 		.addTag("lookups", "Lookup data (regions, sub-cities, woredas)")
+		.addTag("employees", "Employee management (military, civilian, temporary)")
 		.build();
 
 	const documentFactory = () => SwaggerModule.createDocument(app, config);
