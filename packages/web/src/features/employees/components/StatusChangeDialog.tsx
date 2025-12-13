@@ -20,7 +20,7 @@ type ArchiveStatus = "TERMINATED" | "RETIRED" | "SUSPENDED" | "DECEASED";
 type StatusChangeType = ArchiveStatus | "ACTIVE";
 
 interface StatusChangeData {
-	status: StatusChangeType;
+	status: ArchiveStatus;
 	reason: string;
 	effectiveDate: string;
 	endDate?: string;
@@ -131,7 +131,7 @@ export const StatusChangeDialog = React.memo(
 				onReturnToActive();
 			} else {
 				onConfirm({
-					status: selectedStatus,
+					status: selectedStatus as ArchiveStatus,
 					reason,
 					effectiveDate,
 					endDate: currentOption?.requiresEndDate ? endDate : undefined,
