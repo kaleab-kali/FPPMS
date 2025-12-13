@@ -81,10 +81,7 @@ export const EmployeeEditPage = React.memo(
 		const { data: employee, isLoading: isLoadingEmployee } = useEmployee(id ?? "");
 		const updateMutation = useUpdateEmployee();
 
-		const defaultValues = React.useMemo(
-			() => (employee ? mapEmployeeToFormData(employee) : undefined),
-			[employee],
-		);
+		const defaultValues = React.useMemo(() => (employee ? mapEmployeeToFormData(employee) : undefined), [employee]);
 
 		const {
 			register,
