@@ -16,11 +16,47 @@ import { RetirementCalculationService } from "#api/modules/employees/services/re
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_SALARY_STEP = 0;
 
+interface EmployeeAddressRelation {
+	id: string;
+	addressType: string;
+	regionId: string;
+	subCityId: string;
+	woredaId: string;
+	houseNumber: string | null;
+	uniqueAreaName: string | null;
+}
+
+interface EmployeeMotherInfoRelation {
+	fullName: string;
+	fullNameAm: string;
+	phone: string | null;
+	isAlive: boolean;
+	address: string | null;
+}
+
+interface EmployeeEmergencyContactRelation {
+	fullName: string;
+	fullNameAm: string;
+	relationship: string;
+	phone: string;
+	alternativePhone: string | null;
+	email: string | null;
+	regionId: string | null;
+	subCityId: string | null;
+	woredaId: string | null;
+	houseNumber: string | null;
+	uniqueAreaName: string | null;
+	priority: number;
+}
+
 type EmployeeWithRelations = Employee & {
 	center?: { id: string; name: string } | null;
 	department?: { id: string; name: string } | null;
 	position?: { id: string; name: string } | null;
 	rank?: { id: string; name: string } | null;
+	addresses?: EmployeeAddressRelation[];
+	motherInfo?: EmployeeMotherInfoRelation | null;
+	emergencyContacts?: EmployeeEmergencyContactRelation[];
 };
 
 type EmployeeListItem = Employee & {
@@ -56,7 +92,7 @@ export class EmployeesService {
 
 		await this.validateRelations(tenantId, dto);
 
-		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId);
+		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId, EmployeeType.MILITARY);
 		const fullName = `${dto.firstName} ${dto.middleName} ${dto.lastName}`;
 		const fullNameAm = `${dto.firstNameAm} ${dto.middleNameAm} ${dto.lastNameAm}`;
 		const retirementInfo = await this.retirementCalculation.calculateRetirementDate(dto.dateOfBirth, dto.rankId);
@@ -112,6 +148,51 @@ export class EmployeesService {
 				retirementDate: retirementInfo.retirementDate,
 				status: EmployeeStatus.ACTIVE,
 				createdBy,
+				addresses: dto.address
+					? {
+							create: {
+								tenantId,
+								addressType: dto.address.addressType,
+								regionId: dto.address.regionId,
+								subCityId: dto.address.subCityId,
+								woredaId: dto.address.woredaId,
+								houseNumber: dto.address.houseNumber,
+								uniqueAreaName: dto.address.uniqueAreaName,
+								isPrimary: true,
+							},
+						}
+					: undefined,
+				motherInfo: dto.motherInfo
+					? {
+							create: {
+								tenantId,
+								fullName: dto.motherInfo.fullName,
+								fullNameAm: dto.motherInfo.fullNameAm,
+								phone: dto.motherInfo.phone,
+								isAlive: dto.motherInfo.isAlive ?? true,
+								address: dto.motherInfo.address,
+							},
+						}
+					: undefined,
+				emergencyContacts: dto.emergencyContact
+					? {
+							create: {
+								tenantId,
+								fullName: dto.emergencyContact.fullName,
+								fullNameAm: dto.emergencyContact.fullNameAm,
+								relationship: dto.emergencyContact.relationship,
+								phone: dto.emergencyContact.phone,
+								alternativePhone: dto.emergencyContact.alternativePhone,
+								email: dto.emergencyContact.email,
+								regionId: dto.emergencyContact.regionId,
+								subCityId: dto.emergencyContact.subCityId,
+								woredaId: dto.emergencyContact.woredaId,
+								houseNumber: dto.emergencyContact.houseNumber,
+								uniqueAreaName: dto.emergencyContact.uniqueAreaName,
+								priority: 1,
+							},
+						}
+					: undefined,
 			},
 			include: this.getEmployeeIncludes(),
 		});
@@ -126,7 +207,7 @@ export class EmployeesService {
 	): Promise<EmployeeResponseDto> {
 		await this.validateRelations(tenantId, dto);
 
-		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId);
+		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId, EmployeeType.CIVILIAN);
 		const fullName = `${dto.firstName} ${dto.middleName} ${dto.lastName}`;
 		const fullNameAm = `${dto.firstNameAm} ${dto.middleNameAm} ${dto.lastNameAm}`;
 		const retirementInfo = await this.retirementCalculation.calculateRetirementDate(dto.dateOfBirth);
@@ -176,6 +257,51 @@ export class EmployeesService {
 				retirementDate: retirementInfo.retirementDate,
 				status: EmployeeStatus.ACTIVE,
 				createdBy,
+				addresses: dto.address
+					? {
+							create: {
+								tenantId,
+								addressType: dto.address.addressType,
+								regionId: dto.address.regionId,
+								subCityId: dto.address.subCityId,
+								woredaId: dto.address.woredaId,
+								houseNumber: dto.address.houseNumber,
+								uniqueAreaName: dto.address.uniqueAreaName,
+								isPrimary: true,
+							},
+						}
+					: undefined,
+				motherInfo: dto.motherInfo
+					? {
+							create: {
+								tenantId,
+								fullName: dto.motherInfo.fullName,
+								fullNameAm: dto.motherInfo.fullNameAm,
+								phone: dto.motherInfo.phone,
+								isAlive: dto.motherInfo.isAlive ?? true,
+								address: dto.motherInfo.address,
+							},
+						}
+					: undefined,
+				emergencyContacts: dto.emergencyContact
+					? {
+							create: {
+								tenantId,
+								fullName: dto.emergencyContact.fullName,
+								fullNameAm: dto.emergencyContact.fullNameAm,
+								relationship: dto.emergencyContact.relationship,
+								phone: dto.emergencyContact.phone,
+								alternativePhone: dto.emergencyContact.alternativePhone,
+								email: dto.emergencyContact.email,
+								regionId: dto.emergencyContact.regionId,
+								subCityId: dto.emergencyContact.subCityId,
+								woredaId: dto.emergencyContact.woredaId,
+								houseNumber: dto.emergencyContact.houseNumber,
+								uniqueAreaName: dto.emergencyContact.uniqueAreaName,
+								priority: 1,
+							},
+						}
+					: undefined,
 			},
 			include: this.getEmployeeIncludes(),
 		});
@@ -190,7 +316,7 @@ export class EmployeesService {
 	): Promise<EmployeeResponseDto> {
 		await this.validateRelations(tenantId, dto);
 
-		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId);
+		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId, EmployeeType.TEMPORARY);
 		const fullName = `${dto.firstName} ${dto.middleName} ${dto.lastName}`;
 		const fullNameAm = `${dto.firstNameAm} ${dto.middleNameAm} ${dto.lastNameAm}`;
 
@@ -239,6 +365,51 @@ export class EmployeesService {
 				contractAmount: dto.contractAmount,
 				status: EmployeeStatus.ACTIVE,
 				createdBy,
+				addresses: dto.address
+					? {
+							create: {
+								tenantId,
+								addressType: dto.address.addressType,
+								regionId: dto.address.regionId,
+								subCityId: dto.address.subCityId,
+								woredaId: dto.address.woredaId,
+								houseNumber: dto.address.houseNumber,
+								uniqueAreaName: dto.address.uniqueAreaName,
+								isPrimary: true,
+							},
+						}
+					: undefined,
+				motherInfo: dto.motherInfo
+					? {
+							create: {
+								tenantId,
+								fullName: dto.motherInfo.fullName,
+								fullNameAm: dto.motherInfo.fullNameAm,
+								phone: dto.motherInfo.phone,
+								isAlive: dto.motherInfo.isAlive ?? true,
+								address: dto.motherInfo.address,
+							},
+						}
+					: undefined,
+				emergencyContacts: dto.emergencyContact
+					? {
+							create: {
+								tenantId,
+								fullName: dto.emergencyContact.fullName,
+								fullNameAm: dto.emergencyContact.fullNameAm,
+								relationship: dto.emergencyContact.relationship,
+								phone: dto.emergencyContact.phone,
+								alternativePhone: dto.emergencyContact.alternativePhone,
+								email: dto.emergencyContact.email,
+								regionId: dto.emergencyContact.regionId,
+								subCityId: dto.emergencyContact.subCityId,
+								woredaId: dto.emergencyContact.woredaId,
+								houseNumber: dto.emergencyContact.houseNumber,
+								uniqueAreaName: dto.emergencyContact.uniqueAreaName,
+								priority: 1,
+							},
+						}
+					: undefined,
 			},
 			include: this.getEmployeeIncludes(),
 		});
@@ -354,6 +525,7 @@ export class EmployeesService {
 			"eyeColor",
 			"hairColor",
 			"distinguishingMarks",
+			"nationality",
 			"ethnicity",
 			"faydaId",
 			"faydaVerified",
@@ -507,12 +679,64 @@ export class EmployeesService {
 			department: { select: { id: true, name: true } },
 			position: { select: { id: true, name: true } },
 			rank: { select: { id: true, name: true } },
+			addresses: {
+				select: {
+					id: true,
+					addressType: true,
+					regionId: true,
+					subCityId: true,
+					woredaId: true,
+					houseNumber: true,
+					uniqueAreaName: true,
+				},
+				orderBy: { isPrimary: "desc" as const },
+			},
+			motherInfo: {
+				select: {
+					fullName: true,
+					fullNameAm: true,
+					phone: true,
+					isAlive: true,
+					address: true,
+				},
+			},
+			emergencyContacts: {
+				select: {
+					fullName: true,
+					fullNameAm: true,
+					relationship: true,
+					phone: true,
+					alternativePhone: true,
+					email: true,
+					regionId: true,
+					subCityId: true,
+					woredaId: true,
+					houseNumber: true,
+					uniqueAreaName: true,
+					priority: true,
+				},
+				orderBy: { priority: "asc" as const },
+				take: 1,
+			},
 		} as const;
 	}
 
-	private mapToResponse(employee: EmployeeWithRelations): EmployeeResponseDto {
+	private async mapToResponse(employee: EmployeeWithRelations): Promise<EmployeeResponseDto> {
 		const n = <T>(value: T | null): T | undefined => value ?? undefined;
 		const e = employee;
+
+		const primaryAddress = e.addresses?.[0];
+		const motherInfo = e.motherInfo;
+		const emergencyContact = e.emergencyContacts?.[0];
+
+		const lookupNames = await this.fetchAddressLookupNames(
+			primaryAddress?.regionId,
+			primaryAddress?.subCityId,
+			primaryAddress?.woredaId,
+			emergencyContact?.regionId,
+			emergencyContact?.subCityId,
+			emergencyContact?.woredaId,
+		);
 
 		return {
 			id: e.id,
@@ -571,8 +795,80 @@ export class EmployeesService {
 			status: e.status,
 			statusChangedAt: n(e.statusChangedAt),
 			statusReason: n(e.statusReason),
+			addressRegionId: primaryAddress?.regionId,
+			addressRegionName: lookupNames.addressRegionName,
+			addressSubCityId: primaryAddress?.subCityId,
+			addressSubCityName: lookupNames.addressSubCityName,
+			addressWoredaId: primaryAddress?.woredaId,
+			addressWoredaName: lookupNames.addressWoredaName,
+			addressHouseNumber: n(primaryAddress?.houseNumber),
+			addressUniqueAreaName: n(primaryAddress?.uniqueAreaName),
+			motherFullName: motherInfo?.fullName,
+			motherFullNameAm: motherInfo?.fullNameAm,
+			motherPhone: n(motherInfo?.phone),
+			motherIsAlive: motherInfo?.isAlive,
+			motherAddress: n(motherInfo?.address),
+			emergencyFullName: emergencyContact?.fullName,
+			emergencyFullNameAm: emergencyContact?.fullNameAm,
+			emergencyRelationship: emergencyContact?.relationship,
+			emergencyPhone: emergencyContact?.phone,
+			emergencyAltPhone: n(emergencyContact?.alternativePhone),
+			emergencyEmail: n(emergencyContact?.email),
+			emergencyRegionId: n(emergencyContact?.regionId),
+			emergencyRegionName: lookupNames.emergencyRegionName,
+			emergencySubCityId: n(emergencyContact?.subCityId),
+			emergencySubCityName: lookupNames.emergencySubCityName,
+			emergencyWoredaId: n(emergencyContact?.woredaId),
+			emergencyWoredaName: lookupNames.emergencyWoredaName,
+			emergencyHouseNumber: n(emergencyContact?.houseNumber),
+			emergencyUniqueAreaName: n(emergencyContact?.uniqueAreaName),
 			createdAt: e.createdAt,
 			updatedAt: e.updatedAt,
+		};
+	}
+
+	private async fetchAddressLookupNames(
+		addressRegionId?: string,
+		addressSubCityId?: string,
+		addressWoredaId?: string,
+		emergencyRegionId?: string | null,
+		emergencySubCityId?: string | null,
+		emergencyWoredaId?: string | null,
+	): Promise<{
+		addressRegionName?: string;
+		addressSubCityName?: string;
+		addressWoredaName?: string;
+		emergencyRegionName?: string;
+		emergencySubCityName?: string;
+		emergencyWoredaName?: string;
+	}> {
+		const regionIds = [addressRegionId, emergencyRegionId].filter(Boolean) as string[];
+		const subCityIds = [addressSubCityId, emergencySubCityId].filter(Boolean) as string[];
+		const woredaIds = [addressWoredaId, emergencyWoredaId].filter(Boolean) as string[];
+
+		const [regions, subCities, woredas] = await Promise.all([
+			regionIds.length > 0
+				? this.prisma.region.findMany({ where: { id: { in: regionIds } }, select: { id: true, name: true } })
+				: [],
+			subCityIds.length > 0
+				? this.prisma.subCity.findMany({ where: { id: { in: subCityIds } }, select: { id: true, name: true } })
+				: [],
+			woredaIds.length > 0
+				? this.prisma.woreda.findMany({ where: { id: { in: woredaIds } }, select: { id: true, name: true } })
+				: [],
+		]);
+
+		const regionMap = new Map(regions.map((r) => [r.id, r.name]));
+		const subCityMap = new Map(subCities.map((s) => [s.id, s.name]));
+		const woredaMap = new Map(woredas.map((w) => [w.id, w.name]));
+
+		return {
+			addressRegionName: addressRegionId ? regionMap.get(addressRegionId) : undefined,
+			addressSubCityName: addressSubCityId ? subCityMap.get(addressSubCityId) : undefined,
+			addressWoredaName: addressWoredaId ? woredaMap.get(addressWoredaId) : undefined,
+			emergencyRegionName: emergencyRegionId ? regionMap.get(emergencyRegionId) : undefined,
+			emergencySubCityName: emergencySubCityId ? subCityMap.get(emergencySubCityId) : undefined,
+			emergencyWoredaName: emergencyWoredaId ? woredaMap.get(emergencyWoredaId) : undefined,
 		};
 	}
 

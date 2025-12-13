@@ -173,6 +173,87 @@ export class EmployeeResponseDto {
 	@ApiPropertyOptional({ description: "Current photo URL" })
 	currentPhotoUrl?: string;
 
+	@ApiPropertyOptional({ description: "Address region ID" })
+	addressRegionId?: string;
+
+	@ApiPropertyOptional({ description: "Address region name" })
+	addressRegionName?: string;
+
+	@ApiPropertyOptional({ description: "Address sub-city ID" })
+	addressSubCityId?: string;
+
+	@ApiPropertyOptional({ description: "Address sub-city name" })
+	addressSubCityName?: string;
+
+	@ApiPropertyOptional({ description: "Address woreda ID" })
+	addressWoredaId?: string;
+
+	@ApiPropertyOptional({ description: "Address woreda name" })
+	addressWoredaName?: string;
+
+	@ApiPropertyOptional({ description: "Address house number" })
+	addressHouseNumber?: string;
+
+	@ApiPropertyOptional({ description: "Address unique area name" })
+	addressUniqueAreaName?: string;
+
+	@ApiPropertyOptional({ description: "Mother's full name" })
+	motherFullName?: string;
+
+	@ApiPropertyOptional({ description: "Mother's full name in Amharic" })
+	motherFullNameAm?: string;
+
+	@ApiPropertyOptional({ description: "Mother's phone" })
+	motherPhone?: string;
+
+	@ApiPropertyOptional({ description: "Mother is alive" })
+	motherIsAlive?: boolean;
+
+	@ApiPropertyOptional({ description: "Mother's address" })
+	motherAddress?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact full name" })
+	emergencyFullName?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact full name in Amharic" })
+	emergencyFullNameAm?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact relationship" })
+	emergencyRelationship?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact phone" })
+	emergencyPhone?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact alternative phone" })
+	emergencyAltPhone?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact email" })
+	emergencyEmail?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact region ID" })
+	emergencyRegionId?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact region name" })
+	emergencyRegionName?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact sub-city ID" })
+	emergencySubCityId?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact sub-city name" })
+	emergencySubCityName?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact woreda ID" })
+	emergencyWoredaId?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact woreda name" })
+	emergencyWoredaName?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact house number" })
+	emergencyHouseNumber?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact area name" })
+	emergencyUniqueAreaName?: string;
+
 	@ApiProperty({ description: "Created at" })
 	createdAt: Date;
 

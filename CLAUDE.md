@@ -60,7 +60,9 @@ import { cn } from "#web/lib/utils";
 
 ## GENERAL CODE RULES
 
-- NEVER insert emoji into any file.  Use unicode codepoints instead.
+- NEVER insert emoji into any file. Use unicode codepoints instead.
+- ONLY use valid, working unicode codepoints that render correctly. Test that unicode characters are valid before using them.
+- For i18n/translation files: ALWAYS write the actual language characters directly (e.g., Amharic, Arabic, Chinese). NEVER use unicode escape sequences like \u1230 in JSON translation files - write the actual characters instead.
 - ALWAYS respect the ignored file patterns in the `.gitignore` file.
 - NEVER allow a git branch or Github pull request to contain more than 40 changed files.  If it does, do not do any work, and instruct the developer to split the changes into smaller branches.
 - ALWAYS check the latest official documentation for any library/framework (NestJS, Prisma, React, etc.) BEFORE writing integration code.

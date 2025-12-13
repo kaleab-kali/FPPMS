@@ -96,6 +96,12 @@ export class UpdateEmployeeDto {
 	@MaxLength(500)
 	distinguishingMarks?: string;
 
+	@ApiPropertyOptional({ description: "Nationality" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(50)
+	nationality?: string;
+
 	@ApiPropertyOptional({ description: "Ethnicity" })
 	@IsOptional()
 	@IsString()

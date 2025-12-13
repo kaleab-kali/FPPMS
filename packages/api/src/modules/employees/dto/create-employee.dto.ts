@@ -11,7 +11,132 @@ import {
 	IsString,
 	MaxLength,
 	MinLength,
+	ValidateNested,
 } from "class-validator";
+
+export class CreateAddressDto {
+	@ApiProperty({ description: "Address type (CURRENT or PERMANENT)" })
+	@IsString()
+	addressType: string;
+
+	@ApiProperty({ description: "Region ID" })
+	@IsString()
+	regionId: string;
+
+	@ApiProperty({ description: "Sub-city ID" })
+	@IsString()
+	subCityId: string;
+
+	@ApiProperty({ description: "Woreda ID" })
+	@IsString()
+	woredaId: string;
+
+	@ApiPropertyOptional({ description: "House number" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(50)
+	houseNumber?: string;
+
+	@ApiPropertyOptional({ description: "Unique area/neighborhood name" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(100)
+	uniqueAreaName?: string;
+}
+
+export class CreateMotherInfoDto {
+	@ApiProperty({ description: "Mother's full name in English" })
+	@IsString()
+	@MinLength(2)
+	@MaxLength(100)
+	fullName: string;
+
+	@ApiProperty({ description: "Mother's full name in Amharic" })
+	@IsString()
+	@MinLength(2)
+	@MaxLength(100)
+	fullNameAm: string;
+
+	@ApiPropertyOptional({ description: "Mother's phone number" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(15)
+	phone?: string;
+
+	@ApiPropertyOptional({ description: "Is mother alive?" })
+	@IsOptional()
+	@IsBoolean()
+	isAlive?: boolean;
+
+	@ApiPropertyOptional({ description: "Mother's address" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(200)
+	address?: string;
+}
+
+export class CreateEmergencyContactDto {
+	@ApiProperty({ description: "Emergency contact full name in English" })
+	@IsString()
+	@MinLength(2)
+	@MaxLength(100)
+	fullName: string;
+
+	@ApiProperty({ description: "Emergency contact full name in Amharic" })
+	@IsString()
+	@MinLength(2)
+	@MaxLength(100)
+	fullNameAm: string;
+
+	@ApiProperty({ description: "Relationship to employee" })
+	@IsString()
+	@MaxLength(50)
+	relationship: string;
+
+	@ApiProperty({ description: "Emergency contact phone" })
+	@IsString()
+	@MinLength(9)
+	@MaxLength(15)
+	phone: string;
+
+	@ApiPropertyOptional({ description: "Alternative phone" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(15)
+	alternativePhone?: string;
+
+	@ApiPropertyOptional({ description: "Emergency contact email" })
+	@IsOptional()
+	@IsEmail()
+	email?: string;
+
+	@ApiPropertyOptional({ description: "Region ID" })
+	@IsOptional()
+	@IsString()
+	regionId?: string;
+
+	@ApiPropertyOptional({ description: "Sub-city ID" })
+	@IsOptional()
+	@IsString()
+	subCityId?: string;
+
+	@ApiPropertyOptional({ description: "Woreda ID" })
+	@IsOptional()
+	@IsString()
+	woredaId?: string;
+
+	@ApiPropertyOptional({ description: "House number" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(50)
+	houseNumber?: string;
+
+	@ApiPropertyOptional({ description: "Unique area/neighborhood name" })
+	@IsOptional()
+	@IsString()
+	@MaxLength(100)
+	uniqueAreaName?: string;
+}
 
 export class CreateEmployeeBaseDto {
 	@ApiProperty({ description: "First name in English" })
@@ -197,6 +322,24 @@ export class CreateEmployeeBaseDto {
 	@IsDate()
 	@Type(() => Date)
 	marriageDate?: Date;
+
+	@ApiPropertyOptional({ description: "Address information", type: CreateAddressDto })
+	@IsOptional()
+	@ValidateNested()
+	@Type(() => CreateAddressDto)
+	address?: CreateAddressDto;
+
+	@ApiPropertyOptional({ description: "Mother information", type: CreateMotherInfoDto })
+	@IsOptional()
+	@ValidateNested()
+	@Type(() => CreateMotherInfoDto)
+	motherInfo?: CreateMotherInfoDto;
+
+	@ApiPropertyOptional({ description: "Emergency contact information", type: CreateEmergencyContactDto })
+	@IsOptional()
+	@ValidateNested()
+	@Type(() => CreateEmergencyContactDto)
+	emergencyContact?: CreateEmergencyContactDto;
 }
 
 export class CreateMilitaryEmployeeDto extends CreateEmployeeBaseDto {
