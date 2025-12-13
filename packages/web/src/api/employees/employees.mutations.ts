@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { employeesApi } from "#web/api/employees/employees.api.ts";
 import { employeeKeys } from "#web/api/employees/employees.queries.ts";
 import type {
+	ChangeStatusRequest,
 	CreateCivilianEmployeeRequest,
 	CreateMilitaryEmployeeRequest,
 	CreateTemporaryEmployeeRequest,
@@ -57,6 +58,28 @@ export const useDeleteEmployee = () => {
 
 	return useMutation({
 		mutationFn: (id: string) => employeesApi.delete(id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: employeeKeys.all });
+		},
+	});
+};
+
+export const useChangeEmployeeStatus = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({ id, data }: { id: string; data: ChangeStatusRequest }) => employeesApi.changeStatus(id, data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: employeeKeys.all });
+		},
+	});
+};
+
+export const useReturnToActive = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (id: string) => employeesApi.returnToActive(id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 		},
