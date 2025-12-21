@@ -47,5 +47,8 @@
 	"deselectAll": "ሁሉንም አትምረጥ",
 	"all": "ሁሉም",
 	"none": "ምንም",
-	"error": "ስህተት"
+	"error": "ስህተት",
+	"newDepartment": "አዲስ ክፍል",
+	"newPosition": "አዲስ ቦታ",
+	"keepCurrent": "የአሁኑን ይያዙ"
 }

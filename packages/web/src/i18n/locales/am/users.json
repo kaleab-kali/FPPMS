@@ -30,10 +30,34 @@
 	"credentialsCopied": "መረጃዎች ተቀድተዋል",
 	"unlock": "ተጠቃሚ ክፈት",
 	"userUnlocked": "ተጠቃሚ በተሳካ ሁኔታ ተከፍቷል",
+	"statusReason": "ምክንያት",
+	"statusChange": {
+		"title": "የተጠቃሚ ሁኔታ ቀይር",
+		"description": "የተጠቃሚ '{{username}}' ሁኔታን ለመቀየር እየሞከሩ ነው። እባክዎ አዲሱን ሁኔታ ይምረጡ እና ምክንያት ያስገቡ።",
+		"selectStatus": "አዲስ ሁኔታ ይምረጡ",
+		"inactive": "መለያ አቦዝን",
+		"inactiveDescription": "ጊዜያዊ መዳረሻ ያቁሙ። ተጠቃሚ በኋላ እንደገና ሊነቃ ይችላል።",
+		"transferred": "እንደ ተዛወረ ምልክት ያድርጉ",
+		"transferredDescription": "ተጠቃሚ ወደ ሌላ ክፍል/ቦታ ተዛውሯል እና የHR ስርዓት መዳረሻ አያስፈልገውም።",
+		"terminated": "መዳረሻ አቁም",
+		"terminatedDescription": "ተጠቃሚ ድርጅቱን ለቋል። መዳረሻቸው በቋሚነት ይሰረዛል።",
+		"reason": "የለውጥ ምክንያት",
+		"reasonPlaceholder": "ለዚህ የሁኔታ ለውጥ ዝርዝር ምክንያት ያስገቡ...",
+		"reasonHint": "ይህ ምክንያት ለኦዲት ዓላማ ይመዘገባል። ቢያንስ 10 ቁምፊዎች።",
+		"reasonRequired": "እባክዎ ለሁኔታ ለውጥ ምክንያት ያስገቡ",
+		"reasonTooShort": "ምክንያት ቢያንስ 10 ቁምፊዎች መሆን አለበት",
+		"confirm": "የሁኔታ ለውጥ አረጋግጥ",
+		"success": "የተጠቃሚ ሁኔታ በተሳካ ሁኔታ ተቀይሯል",
+		"deactivate": "ተጠቃሚ አቦዝን",
+		"reactivate": "እንደገና አንቃ",
+		"reactivated": "ተጠቃሚ በተሳካ ሁኔታ እንደገና ነቅቷል"
+	},
 	"status": {
 		"active": "ንቁ",
 		"inactive": "ንቁ ያልሆነ",
 		"locked": "የተቆለፈ",
-		"pending": "በመጠበቅ ላይ"
+		"pending": "በመጠበቅ ላይ",
+		"transferred": "የተዛወረ",
+		"terminated": "የተቋረጠ"
 	}
 }

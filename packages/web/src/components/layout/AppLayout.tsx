@@ -1,5 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
+import { InactivityWarningDialog } from "#web/components/common/InactivityWarningDialog.tsx";
 import { Header } from "#web/components/layout/Header.tsx";
 import { Sidebar } from "#web/components/layout/Sidebar.tsx";
 
@@ -14,6 +15,7 @@ export const AppLayout = React.memo(
 						<Outlet />
 					</main>
 				</div>
+				<InactivityWarningDialog timeoutMinutes={15} />
 			</div>
 		);
 	},

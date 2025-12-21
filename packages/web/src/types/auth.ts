@@ -12,22 +12,17 @@ export interface LoginResponse {
 export interface AuthUser {
 	id: string;
 	username: string;
-	email: string;
-	firstName: string;
-	lastName: string;
-	role: {
-		id: string;
-		name: string;
-		code: string;
-	};
 	tenantId: string;
 	centerId?: string;
-	isActive: boolean;
+	roles: string[];
+	permissions: string[];
+	requirePasswordChange: boolean;
 }
 
 export interface ChangePasswordRequest {
 	currentPassword: string;
 	newPassword: string;
+	confirmPassword: string;
 }
 
 export interface RefreshTokenRequest {

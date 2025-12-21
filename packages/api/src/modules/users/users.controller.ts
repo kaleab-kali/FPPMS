@@ -1,9 +1,11 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { UserStatus } from "@prisma/client";
 import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
 import { Roles } from "#api/common/decorators/roles.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
+import { ChangeUserStatusDto } from "#api/modules/users/dto/change-user-status.dto";
 import { CreateUserDto, CreateUserFromEmployeeDto } from "#api/modules/users/dto/create-user.dto";
 import { UpdateUserDto } from "#api/modules/users/dto/update-user.dto";
 import { UserResponseDto } from "#api/modules/users/dto/user-response.dto";
@@ -124,5 +126,22 @@ export class UsersController {
 		@Param("id") id: string,
 	): Promise<{ message: string; newPassword: string }> {
 		return this.usersService.resetToDefaultPassword(user.tenantId, id, user.id);
+	}
+
+	@Post(":id/change-status")
+	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@ApiOperation({
+		summary: "Change user status",
+		description: "Change user status (ACTIVE, INACTIVE, TRANSFERRED, TERMINATED) with reason",
+	})
+	@ApiResponse({ status: 200, description: "User status changed", type: UserResponseDto })
+	@ApiResponse({ status: 400, description: "Invalid status transition" })
+	@ApiResponse({ status: 404, description: "User not found" })
+	changeStatus(
+		@CurrentUser() user: AuthUserDto,
+		@Param("id") id: string,
+		@Body() dto: ChangeUserStatusDto,
+	): Promise<UserResponseDto> {
+		return this.usersService.changeUserStatus(user.tenantId, id, dto.status as UserStatus, dto.reason, user.id);
 	}
 }

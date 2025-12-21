@@ -3,6 +3,8 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useCenters } from "#web/api/centers/centers.queries.ts";
+import { useDepartments } from "#web/api/departments/departments.queries.ts";
+import { usePositions } from "#web/api/positions/positions.queries.ts";
 import { useRoles } from "#web/api/roles/roles.queries.ts";
 import { useAvailableEmployees } from "#web/api/users/users.queries.ts";
 import { Button } from "#web/components/ui/button.tsx";
@@ -28,10 +30,16 @@ import { Label } from "#web/components/ui/label.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "#web/components/ui/popover.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
 import { cn } from "#web/lib/utils.ts";
-import type { AvailableEmployee, CreateUserFromEmployeeRequest, UpdateUserRequest, User } from "#web/types/user.ts";
+import type {
+	AvailableEmployee,
+	CreateUserFromEmployeeRequest,
+	UpdateUserRequest,
+	User,
+	UserStatus,
+} from "#web/types/user.ts";
 
 const NONE_VALUE = "__none__";
-const USER_STATUSES = ["ACTIVE", "INACTIVE", "LOCKED", "PENDING"] as const;
+const USER_STATUSES: UserStatus[] = ["ACTIVE", "INACTIVE", "LOCKED", "PENDING", "TRANSFERRED", "TERMINATED"];
 
 interface UserFormDialogProps {
 	open: boolean;
@@ -52,18 +60,24 @@ export const UserFormDialog = React.memo(
 		const [selectedEmployee, setSelectedEmployee] = React.useState<AvailableEmployee | undefined>(undefined);
 		const [employeePopoverOpen, setEmployeePopoverOpen] = React.useState(false);
 		const [centerId, setCenterId] = React.useState<string>("");
-		const [status, setStatus] = React.useState<(typeof USER_STATUSES)[number]>("ACTIVE");
+		const [status, setStatus] = React.useState<UserStatus>("ACTIVE");
 		const [mustChangePassword, setMustChangePassword] = React.useState(true);
 		const [roleIds, setRoleIds] = React.useState<string[]>([]);
 		const [email, setEmail] = React.useState("");
+		const [newDepartmentId, setNewDepartmentId] = React.useState<string>("");
+		const [newPositionId, setNewPositionId] = React.useState<string>("");
 
 		const { data: rolesData } = useRoles();
 		const { data: centersData } = useCenters();
 		const { data: employeesData } = useAvailableEmployees(employeeSearch);
+		const { data: departmentsData } = useDepartments();
+		const { data: positionsData } = usePositions(newDepartmentId || undefined);
 
 		const roles = rolesData ?? [];
 		const centers = centersData ?? [];
 		const availableEmployees = employeesData ?? [];
+		const departments = departmentsData ?? [];
+		const positions = positionsData ?? [];
 
 		React.useEffect(() => {
 			if (user) {
@@ -79,6 +93,8 @@ export const UserFormDialog = React.memo(
 				setMustChangePassword(true);
 				setRoleIds([]);
 				setEmail("");
+				setNewDepartmentId("");
+				setNewPositionId("");
 			}
 		}, [user]);
 
@@ -104,11 +120,25 @@ export const UserFormDialog = React.memo(
 						employeeId: selectedEmployee.id,
 						centerId: centerId === NONE_VALUE || centerId === "" ? undefined : centerId,
 						roleIds: roleIds.length > 0 ? roleIds : undefined,
+						newDepartmentId: newDepartmentId === NONE_VALUE || newDepartmentId === "" ? undefined : newDepartmentId,
+						newPositionId: newPositionId === NONE_VALUE || newPositionId === "" ? undefined : newPositionId,
 					};
 					onSubmit(createPayload);
 				}
 			},
-			[isEditing, selectedEmployee, centerId, status, mustChangePassword, roleIds, email, onSubmit, t],
+			[
+				isEditing,
+				selectedEmployee,
+				centerId,
+				status,
+				mustChangePassword,
+				roleIds,
+				email,
+				newDepartmentId,
+				newPositionId,
+				onSubmit,
+				t,
+			],
 		);
 
 		const handleRoleToggle = React.useCallback((roleId: string, checked: boolean) => {
@@ -226,6 +256,53 @@ export const UserFormDialog = React.memo(
 							</div>
 						)}
 
+						{!isEditing && (
+							<>
+								<div className="space-y-2">
+									<Label>{tCommon("newDepartment")}</Label>
+									<Select
+										value={newDepartmentId || NONE_VALUE}
+										onValueChange={(v) => {
+											setNewDepartmentId(v === NONE_VALUE ? "" : v);
+											setNewPositionId("");
+										}}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder={tCommon("keepCurrent")} />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value={NONE_VALUE}>{tCommon("keepCurrent")}</SelectItem>
+											{departments.map((dept) => (
+												<SelectItem key={dept.id} value={dept.id}>
+													{dept.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="space-y-2">
+									<Label>{tCommon("newPosition")}</Label>
+									<Select
+										value={newPositionId || NONE_VALUE}
+										onValueChange={(v) => setNewPositionId(v === NONE_VALUE ? "" : v)}
+										disabled={!newDepartmentId}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder={tCommon("keepCurrent")} />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value={NONE_VALUE}>{tCommon("keepCurrent")}</SelectItem>
+											{positions.map((pos) => (
+												<SelectItem key={pos.id} value={pos.id}>
+													{pos.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+							</>
+						)}
+
 						{isEditing && (
 							<>
 								<div className="space-y-2">
@@ -238,7 +315,7 @@ export const UserFormDialog = React.memo(
 								</div>
 								<div className="space-y-2">
 									<Label>{tCommon("status")}</Label>
-									<Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+									<Select value={status} onValueChange={(v) => setStatus(v as UserStatus)}>
 										<SelectTrigger>
 											<SelectValue />
 										</SelectTrigger>

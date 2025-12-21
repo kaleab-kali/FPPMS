@@ -1,7 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { employeeKeys } from "#web/api/employees/employees.queries.ts";
 import { usersApi } from "#web/api/users/users.api.ts";
 import { userKeys } from "#web/api/users/users.queries.ts";
-import type { CreateUserFromEmployeeRequest, CreateUserRequest, UpdateUserRequest } from "#web/types/user.ts";
+import type {
+	ChangeUserStatusRequest,
+	CreateUserFromEmployeeRequest,
+	CreateUserRequest,
+	UpdateUserRequest,
+} from "#web/types/user.ts";
 
 export const useCreateUser = () => {
 	const queryClient = useQueryClient();
@@ -22,6 +28,7 @@ export const useCreateUserFromEmployee = () => {
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: userKeys.all });
 			queryClient.invalidateQueries({ queryKey: userKeys.availableEmployees() });
+			queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 		},
 	});
 };
@@ -66,6 +73,19 @@ export const useResetPassword = () => {
 		mutationFn: (id: string) => usersApi.resetPassword(id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: userKeys.all });
+		},
+	});
+};
+
+export const useChangeUserStatus = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({ id, data }: { id: string; data: ChangeUserStatusRequest }) => usersApi.changeStatus(id, data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: userKeys.all });
+			queryClient.invalidateQueries({ queryKey: userKeys.availableEmployees() });
+			queryClient.invalidateQueries({ queryKey: employeeKeys.all });
 		},
 	});
 };

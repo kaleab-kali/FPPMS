@@ -1,15 +1,11 @@
-import * as crypto from "node:crypto";
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { UserStatus } from "@prisma/client";
+import { hashPassword } from "#api/common/utils/hash.util";
 import { PrismaService } from "#api/database/prisma.service";
 import { CreateUserDto, CreateUserFromEmployeeDto } from "#api/modules/users/dto/create-user.dto";
 import { UpdateUserDto } from "#api/modules/users/dto/update-user.dto";
 import { UserResponseDto } from "#api/modules/users/dto/user-response.dto";
 
-const SALT_BYTES = 32;
-const HASH_ITERATIONS = 100000;
-const HASH_KEY_LENGTH = 64;
-const HASH_ALGORITHM = "sha512";
 const DEFAULT_PASSWORD_PREFIX = "Police@";
 
 @Injectable()
@@ -23,12 +19,6 @@ export class UsersService {
 	generateDefaultPassword(): string {
 		const currentYear = new Date().getFullYear();
 		return `${DEFAULT_PASSWORD_PREFIX}${currentYear}`;
-	}
-
-	private hashPassword(password: string): { hash: string; salt: string } {
-		const salt = crypto.randomBytes(SALT_BYTES).toString("hex");
-		const hash = crypto.pbkdf2Sync(password, salt, HASH_ITERATIONS, HASH_KEY_LENGTH, HASH_ALGORITHM).toString("hex");
-		return { hash, salt };
 	}
 
 	async createFromEmployee(
@@ -72,15 +62,14 @@ export class UsersService {
 			}
 		}
 
-		const { hash, salt } = this.hashPassword(generatedPassword);
+		const passwordHash = await hashPassword(generatedPassword);
 
 		const user = await this.prisma.user.create({
 			data: {
 				tenantId,
 				username: generatedUsername,
 				email: employee.email,
-				passwordHash: hash,
-				passwordSalt: salt,
+				passwordHash,
 				centerId: dto.centerId || employee.centerId,
 				employeeId: dto.employeeId,
 				status: UserStatus.ACTIVE,
@@ -96,6 +85,35 @@ export class UsersService {
 
 		if (dto.roleIds && dto.roleIds.length > 0) {
 			await this.assignRoles(tenantId, user.id, dto.roleIds);
+		}
+
+		if (dto.newDepartmentId || dto.newPositionId) {
+			const employeeUpdateData: Record<string, unknown> = { updatedBy: createdBy };
+
+			if (dto.newDepartmentId) {
+				const department = await this.prisma.department.findFirst({
+					where: { id: dto.newDepartmentId, tenantId },
+				});
+				if (!department) {
+					throw new BadRequestException("Department not found in this tenant");
+				}
+				employeeUpdateData.departmentId = dto.newDepartmentId;
+			}
+
+			if (dto.newPositionId) {
+				const position = await this.prisma.position.findFirst({
+					where: { id: dto.newPositionId, tenantId },
+				});
+				if (!position) {
+					throw new BadRequestException("Position not found in this tenant");
+				}
+				employeeUpdateData.positionId = dto.newPositionId;
+			}
+
+			await this.prisma.employee.update({
+				where: { id: dto.employeeId },
+				data: employeeUpdateData,
+			});
 		}
 
 		const userWithRoles = await this.findOne(tenantId, user.id);
@@ -141,15 +159,14 @@ export class UsersService {
 			}
 		}
 
-		const { hash, salt } = this.hashPassword(dto.password);
+		const passwordHash = await hashPassword(dto.password);
 
 		const user = await this.prisma.user.create({
 			data: {
 				tenantId,
 				username: dto.username,
 				email: employee.email,
-				passwordHash: hash,
-				passwordSalt: salt,
+				passwordHash,
 				centerId: dto.centerId || employee.centerId,
 				employeeId: dto.employeeId,
 				status: UserStatus.ACTIVE,
@@ -185,13 +202,12 @@ export class UsersService {
 		}
 
 		const newPassword = this.generateDefaultPassword();
-		const { hash, salt } = this.hashPassword(newPassword);
+		const passwordHash = await hashPassword(newPassword);
 
 		await this.prisma.user.update({
 			where: { id: userId },
 			data: {
-				passwordHash: hash,
-				passwordSalt: salt,
+				passwordHash,
 				mustChangePassword: true,
 				failedLoginAttempts: 0,
 				status: user.status === UserStatus.LOCKED ? UserStatus.ACTIVE : user.status,
@@ -278,12 +294,19 @@ export class UsersService {
 			positionName?: string;
 		}>
 	> {
-		const employeesWithUsers = await this.prisma.user.findMany({
-			where: { tenantId, deletedAt: null, employeeId: { not: null } },
+		const employeesWithActiveUsers = await this.prisma.user.findMany({
+			where: {
+				tenantId,
+				deletedAt: null,
+				employeeId: { not: null },
+				status: { in: [UserStatus.ACTIVE, UserStatus.INACTIVE, UserStatus.LOCKED, UserStatus.PENDING] },
+			},
 			select: { employeeId: true },
 		});
 
-		const employeeIdsWithUsers = employeesWithUsers.map((u) => u.employeeId).filter((id): id is string => id !== null);
+		const employeeIdsWithUsers = employeesWithActiveUsers
+			.map((u) => u.employeeId)
+			.filter((id): id is string => id !== null);
 
 		const whereClause: Record<string, unknown> = {
 			tenantId,
@@ -399,6 +422,74 @@ export class UsersService {
 		});
 
 		return { message: "User unlocked successfully" };
+	}
+
+	async changeUserStatus(
+		tenantId: string,
+		id: string,
+		status: UserStatus,
+		reason: string,
+		changedBy: string,
+	): Promise<UserResponseDto> {
+		const existingUser = await this.prisma.user.findFirst({
+			where: { id, tenantId, deletedAt: null },
+		});
+
+		if (!existingUser) {
+			throw new NotFoundException(`User with ID "${id}" not found`);
+		}
+
+		const validTransitions: Record<UserStatus, UserStatus[]> = {
+			[UserStatus.ACTIVE]: [UserStatus.INACTIVE, UserStatus.LOCKED, UserStatus.TRANSFERRED, UserStatus.TERMINATED],
+			[UserStatus.INACTIVE]: [UserStatus.ACTIVE, UserStatus.TRANSFERRED, UserStatus.TERMINATED],
+			[UserStatus.LOCKED]: [UserStatus.ACTIVE, UserStatus.INACTIVE],
+			[UserStatus.PENDING]: [UserStatus.ACTIVE, UserStatus.INACTIVE],
+			[UserStatus.TRANSFERRED]: [UserStatus.ACTIVE],
+			[UserStatus.TERMINATED]: [],
+		};
+
+		if (!validTransitions[existingUser.status].includes(status)) {
+			throw new BadRequestException(`Cannot change status from ${existingUser.status} to ${status}`);
+		}
+
+		await this.prisma.user.update({
+			where: { id },
+			data: {
+				status,
+				statusChangedAt: new Date(),
+				statusChangeReason: reason,
+				updatedBy: changedBy,
+			},
+		});
+
+		const statusesThatRevokeTokens: UserStatus[] = [
+			UserStatus.INACTIVE,
+			UserStatus.LOCKED,
+			UserStatus.TRANSFERRED,
+			UserStatus.TERMINATED,
+		];
+		if (statusesThatRevokeTokens.includes(status)) {
+			await this.prisma.refreshToken.updateMany({
+				where: { userId: id, revokedAt: null },
+				data: { revokedAt: new Date() },
+			});
+		}
+
+		await this.prisma.auditLog.create({
+			data: {
+				userId: changedBy,
+				tenantId,
+				action: "UPDATE",
+				module: "users",
+				resource: "user",
+				resourceId: id,
+				ipAddress: "0.0.0.0",
+				previousValue: { status: existingUser.status },
+				newValue: { status, reason, changedAt: new Date().toISOString() },
+			},
+		});
+
+		return this.findOne(tenantId, id);
 	}
 
 	private async assignRoles(tenantId: string, userId: string, roleIds: string[]): Promise<void> {

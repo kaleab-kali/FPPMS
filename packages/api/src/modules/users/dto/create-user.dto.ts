@@ -13,6 +13,14 @@ export class CreateUserFromEmployeeDto {
 	@IsString({ each: true })
 	@IsOptional()
 	roleIds?: string[];
+
+	@IsString()
+	@IsOptional()
+	newDepartmentId?: string;
+
+	@IsString()
+	@IsOptional()
+	newPositionId?: string;
 }
 
 export class CreateUserDto {

@@ -47,5 +47,8 @@
 	"deselectAll": "Deselect All",
 	"all": "All",
 	"none": "None",
-	"error": "Error"
+	"error": "Error",
+	"newDepartment": "New Department",
+	"newPosition": "New Position",
+	"keepCurrent": "Keep Current"
 }

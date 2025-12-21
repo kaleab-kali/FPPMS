@@ -1,6 +1,7 @@
 import { api } from "#web/lib/api-client.ts";
 import type {
 	AvailableEmployee,
+	ChangeUserStatusRequest,
 	CreateUserFromEmployeeRequest,
 	CreateUserFromEmployeeResponse,
 	CreateUserRequest,
@@ -23,4 +24,5 @@ export const usersApi = {
 	delete: (id: string) => api.delete<void>(`${BASE_URL}/${id}`),
 	unlock: (id: string) => api.post<{ message: string }>(`${BASE_URL}/${id}/unlock`),
 	resetPassword: (id: string) => api.post<ResetPasswordResponse>(`${BASE_URL}/${id}/reset-password`),
+	changeStatus: (id: string, data: ChangeUserStatusRequest) => api.post<User>(`${BASE_URL}/${id}/change-status`, data),
 } as const;

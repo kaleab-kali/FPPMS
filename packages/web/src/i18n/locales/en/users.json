@@ -30,10 +30,34 @@
 	"credentialsCopied": "Credentials copied to clipboard",
 	"unlock": "Unlock User",
 	"userUnlocked": "User unlocked successfully",
+	"statusReason": "Reason",
+	"statusChange": {
+		"title": "Change User Status",
+		"description": "You are about to change the status of user '{{username}}'. Please select the new status and provide a reason.",
+		"selectStatus": "Select New Status",
+		"inactive": "Deactivate Account",
+		"inactiveDescription": "Temporarily disable access. User can be reactivated later.",
+		"transferred": "Mark as Transferred",
+		"transferredDescription": "User has moved to another department/position and no longer needs HR system access.",
+		"terminated": "Terminate Access",
+		"terminatedDescription": "User has left the organization. Their access will be permanently revoked.",
+		"reason": "Reason for Change",
+		"reasonPlaceholder": "Enter a detailed reason for this status change...",
+		"reasonHint": "This reason will be recorded for audit purposes. Minimum 10 characters.",
+		"reasonRequired": "Please provide a reason for the status change",
+		"reasonTooShort": "Reason must be at least 10 characters",
+		"confirm": "Confirm Status Change",
+		"success": "User status changed successfully",
+		"deactivate": "Deactivate User",
+		"reactivate": "Reactivate",
+		"reactivated": "User reactivated successfully"
+	},
 	"status": {
 		"active": "Active",
 		"inactive": "Inactive",
 		"locked": "Locked",
-		"pending": "Pending"
+		"pending": "Pending",
+		"transferred": "Transferred",
+		"terminated": "Terminated"
 	}
 }

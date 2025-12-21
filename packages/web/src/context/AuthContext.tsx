@@ -7,8 +7,9 @@ interface AuthContextValue {
 	user: AuthUser | undefined;
 	isAuthenticated: boolean;
 	isLoading: boolean;
+	requirePasswordChange: boolean;
 	login: (credentials: LoginRequest) => Promise<void>;
-	logout: () => void;
+	logout: () => Promise<void>;
 	updateUser: (user: AuthUser) => void;
 }
 
@@ -31,12 +32,23 @@ const getStoredToken = (): string | undefined => {
 	return globalThis.localStorage.getItem(STORAGE_KEYS.accessToken) ?? undefined;
 };
 
+const getStoredRefreshToken = (): string | undefined => {
+	return globalThis.localStorage.getItem(STORAGE_KEYS.refreshToken) ?? undefined;
+};
+
+const clearAuthStorage = () => {
+	globalThis.localStorage.removeItem(STORAGE_KEYS.accessToken);
+	globalThis.localStorage.removeItem(STORAGE_KEYS.refreshToken);
+	globalThis.localStorage.removeItem(STORAGE_KEYS.authStore);
+};
+
 export const AuthProvider = React.memo(
 	({ children }: AuthProviderProps) => {
 		const [user, setUser] = useState<AuthUser | undefined>(getStoredUser);
 		const [isLoading, setIsLoading] = useState(true);
 
 		const isAuthenticated = !!user && !!getStoredToken();
+		const requirePasswordChange = user?.requirePasswordChange ?? false;
 
 		useEffect(() => {
 			const token = getStoredToken();
@@ -48,9 +60,7 @@ export const AuthProvider = React.memo(
 						globalThis.localStorage.setItem(STORAGE_KEYS.authStore, JSON.stringify({ user: data }));
 					})
 					.catch(() => {
-						globalThis.localStorage.removeItem(STORAGE_KEYS.accessToken);
-						globalThis.localStorage.removeItem(STORAGE_KEYS.refreshToken);
-						globalThis.localStorage.removeItem(STORAGE_KEYS.authStore);
+						clearAuthStorage();
 						setUser(undefined);
 					})
 					.finally(() => setIsLoading(false));
@@ -67,10 +77,12 @@ export const AuthProvider = React.memo(
 			setUser(response.user);
 		}, []);
 
-		const logout = React.useCallback(() => {
-			globalThis.localStorage.removeItem(STORAGE_KEYS.accessToken);
-			globalThis.localStorage.removeItem(STORAGE_KEYS.refreshToken);
-			globalThis.localStorage.removeItem(STORAGE_KEYS.authStore);
+		const logout = React.useCallback(async () => {
+			const refreshToken = getStoredRefreshToken();
+			if (refreshToken) {
+				await api.post("/auth/logout", { refreshToken }).catch(() => {});
+			}
+			clearAuthStorage();
 			setUser(undefined);
 		}, []);
 
@@ -84,11 +96,12 @@ export const AuthProvider = React.memo(
 				user,
 				isAuthenticated,
 				isLoading,
+				requirePasswordChange,
 				login,
 				logout,
 				updateUser,
 			}),
-			[user, isAuthenticated, isLoading, login, logout, updateUser],
+			[user, isAuthenticated, isLoading, requirePasswordChange, login, logout, updateUser],
 		);
 
 		return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

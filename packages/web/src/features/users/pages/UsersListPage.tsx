@@ -1,11 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { KeyRound, LockOpen, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { KeyRound, LockOpen, MoreHorizontal, Pencil, Plus, UserX } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
+	useChangeUserStatus,
 	useCreateUserFromEmployee,
-	useDeleteUser,
 	useResetPassword,
 	useUnlockUser,
 	useUpdateUser,
@@ -24,13 +24,16 @@ import {
 	DropdownMenuTrigger,
 } from "#web/components/ui/dropdown-menu.tsx";
 import { UserFormDialog } from "#web/features/users/components/UserFormDialog.tsx";
-import type { CreateUserFromEmployeeRequest, UpdateUserRequest, User } from "#web/types/user.ts";
+import { UserStatusChangeDialog } from "#web/features/users/components/UserStatusChangeDialog.tsx";
+import type { CreateUserFromEmployeeRequest, UpdateUserRequest, User, UserStatus } from "#web/types/user.ts";
 
 const STATUS_VARIANTS = {
 	ACTIVE: "default",
 	INACTIVE: "secondary",
 	LOCKED: "destructive",
 	PENDING: "outline",
+	TRANSFERRED: "secondary",
+	TERMINATED: "destructive",
 } as const;
 
 export const UsersListPage = React.memo(
@@ -39,7 +42,7 @@ export const UsersListPage = React.memo(
 		const { t: tCommon } = useTranslation("common");
 
 		const [formOpen, setFormOpen] = React.useState(false);
-		const [deleteOpen, setDeleteOpen] = React.useState(false);
+		const [statusChangeOpen, setStatusChangeOpen] = React.useState(false);
 		const [resetPasswordOpen, setResetPasswordOpen] = React.useState(false);
 		const [selectedUser, setSelectedUser] = React.useState<User | undefined>();
 		const [createdCredentials, setCreatedCredentials] = React.useState<
@@ -49,7 +52,7 @@ export const UsersListPage = React.memo(
 		const { data, isLoading } = useUsers();
 		const createMutation = useCreateUserFromEmployee();
 		const updateMutation = useUpdateUser();
-		const deleteMutation = useDeleteUser();
+		const changeStatusMutation = useChangeUserStatus();
 		const resetPasswordMutation = useResetPassword();
 		const unlockMutation = useUnlockUser();
 
@@ -67,9 +70,9 @@ export const UsersListPage = React.memo(
 			setFormOpen(true);
 		}, []);
 
-		const handleDeleteClick = React.useCallback((user: User) => {
+		const handleStatusChangeClick = React.useCallback((user: User) => {
 			setSelectedUser(user);
-			setDeleteOpen(true);
+			setStatusChangeOpen(true);
 		}, []);
 
 		const handleResetPasswordClick = React.useCallback((user: User) => {
@@ -89,6 +92,23 @@ export const UsersListPage = React.memo(
 				});
 			},
 			[unlockMutation, t, tCommon],
+		);
+
+		const handleReactivate = React.useCallback(
+			(user: User) => {
+				changeStatusMutation.mutate(
+					{ id: user.id, data: { status: "ACTIVE", reason: "Reactivated by administrator" } },
+					{
+						onSuccess: () => {
+							toast.success(t("statusChange.reactivated"));
+						},
+						onError: () => {
+							toast.error(tCommon("error"));
+						},
+					},
+				);
+			},
+			[changeStatusMutation, t, tCommon],
 		);
 
 		const handleFormSubmit = React.useCallback(
@@ -133,20 +153,26 @@ export const UsersListPage = React.memo(
 			}
 		}, []);
 
-		const handleDeleteConfirm = React.useCallback(() => {
-			if (selectedUser) {
-				deleteMutation.mutate(selectedUser.id, {
-					onSuccess: () => {
-						toast.success(tCommon("success"));
-						setDeleteOpen(false);
-						setSelectedUser(undefined);
-					},
-					onError: () => {
-						toast.error(tCommon("error"));
-					},
-				});
-			}
-		}, [selectedUser, deleteMutation, tCommon]);
+		const handleStatusChangeConfirm = React.useCallback(
+			(status: UserStatus, reason: string) => {
+				if (selectedUser) {
+					changeStatusMutation.mutate(
+						{ id: selectedUser.id, data: { status, reason } },
+						{
+							onSuccess: () => {
+								toast.success(t("statusChange.success"));
+								setStatusChangeOpen(false);
+								setSelectedUser(undefined);
+							},
+							onError: () => {
+								toast.error(tCommon("error"));
+							},
+						},
+					);
+				}
+			},
+			[selectedUser, changeStatusMutation, t, tCommon],
+		);
 
 		const handleResetPasswordConfirm = React.useCallback(() => {
 			if (selectedUser) {
@@ -194,10 +220,27 @@ export const UsersListPage = React.memo(
 					},
 				},
 				{
+					accessorKey: "statusChangeReason",
+					header: t("statusReason"),
+					cell: ({ row }) => {
+						const reason = row.original.statusChangeReason;
+						if (!reason) return "-";
+						return (
+							<span className="max-w-[200px] truncate text-muted-foreground text-sm" title={reason}>
+								{reason}
+							</span>
+						);
+					},
+				},
+				{
 					id: "actions",
 					header: tCommon("actions"),
 					cell: ({ row }) => {
 						const user = row.original;
+						const isActive = user.status === "ACTIVE";
+						const isLocked = user.status === "LOCKED";
+						const isInactiveOrTerminated = ["INACTIVE", "TRANSFERRED", "TERMINATED"].includes(user.status);
+
 						return (
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>
@@ -215,24 +258,34 @@ export const UsersListPage = React.memo(
 										<KeyRound className="mr-2 h-4 w-4" />
 										{t("resetPassword")}
 									</DropdownMenuItem>
-									{user.status === "LOCKED" && (
+									{isLocked && (
 										<DropdownMenuItem onClick={() => handleUnlock(user)}>
 											<LockOpen className="mr-2 h-4 w-4" />
 											{t("unlock")}
 										</DropdownMenuItem>
 									)}
-									<DropdownMenuSeparator />
-									<DropdownMenuItem onClick={() => handleDeleteClick(user)} className="text-destructive">
-										<Trash2 className="mr-2 h-4 w-4" />
-										{tCommon("delete")}
-									</DropdownMenuItem>
+									{isInactiveOrTerminated && (
+										<DropdownMenuItem onClick={() => handleReactivate(user)}>
+											<LockOpen className="mr-2 h-4 w-4" />
+											{t("statusChange.reactivate")}
+										</DropdownMenuItem>
+									)}
+									{isActive && (
+										<>
+											<DropdownMenuSeparator />
+											<DropdownMenuItem onClick={() => handleStatusChangeClick(user)} className="text-destructive">
+												<UserX className="mr-2 h-4 w-4" />
+												{t("statusChange.deactivate")}
+											</DropdownMenuItem>
+										</>
+									)}
 								</DropdownMenuContent>
 							</DropdownMenu>
 						);
 					},
 				},
 			],
-			[t, tCommon, handleEdit, handleDeleteClick, handleResetPasswordClick, handleUnlock],
+			[t, tCommon, handleEdit, handleStatusChangeClick, handleResetPasswordClick, handleUnlock, handleReactivate],
 		);
 
 		return (
@@ -265,14 +318,12 @@ export const UsersListPage = React.memo(
 					createdCredentials={createdCredentials}
 				/>
 
-				<ConfirmDialog
-					open={deleteOpen}
-					onOpenChange={setDeleteOpen}
-					title={tCommon("confirm")}
-					description={t("deleteConfirm")}
-					onConfirm={handleDeleteConfirm}
-					isLoading={deleteMutation.isPending}
-					variant="destructive"
+				<UserStatusChangeDialog
+					open={statusChangeOpen}
+					onOpenChange={setStatusChangeOpen}
+					onConfirm={handleStatusChangeConfirm}
+					user={selectedUser}
+					isLoading={changeStatusMutation.isPending}
 				/>
 
 				<ConfirmDialog
