@@ -17,6 +17,7 @@ import {
 	Pencil,
 	Phone,
 	Shield,
+	Stethoscope,
 	Trash2,
 	TrendingUp,
 	User,
@@ -27,10 +28,15 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useFamilyMembers } from "#web/api/employees/employee-family.queries.ts";
+import { useMaritalStatusHistory } from "#web/api/employees/employee-marital-status.queries.ts";
+import { useMedicalRecords } from "#web/api/employees/employee-medical.queries.ts";
+import { employeePhotoApi } from "#web/api/employees/employee-photo.api.ts";
+import { useActivePhoto } from "#web/api/employees/employee-photo.queries.ts";
 import { useDeleteEmployee } from "#web/api/employees/employees.mutations.ts";
 import { useEmployee } from "#web/api/employees/employees.queries.ts";
 import { ConfirmDialog } from "#web/components/common/ConfirmDialog.tsx";
-import { Avatar, AvatarFallback } from "#web/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "#web/components/ui/avatar.tsx";
 import { Badge } from "#web/components/ui/badge.tsx";
 import { Button } from "#web/components/ui/button.tsx";
 import {
@@ -42,7 +48,11 @@ import {
 } from "#web/components/ui/dropdown-menu.tsx";
 import { Skeleton } from "#web/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#web/components/ui/tabs.tsx";
+import { STORAGE_KEYS } from "#web/config/constants.ts";
 import type { Employee } from "#web/types/employee.ts";
+import type { FamilyMember } from "#web/types/employee-family.ts";
+import type { MaritalStatusRecord } from "#web/types/employee-marital-status.ts";
+import type { MedicalRecord } from "#web/types/employee-medical.ts";
 
 const STATUS_VARIANTS = {
 	ACTIVE: "default",
@@ -135,16 +145,20 @@ interface EmployeeHeaderProps {
 	onDelete: () => void;
 	t: (key: string) => string;
 	tCommon: (key: string) => string;
+	photoId?: string;
 }
 
 const EmployeeHeader = React.memo(
-	({ employee, isAmharic, onEdit, onDelete, t, tCommon }: EmployeeHeaderProps) => {
+	({ employee, isAmharic, onEdit, onDelete, t, tCommon, photoId }: EmployeeHeaderProps) => {
 		const displayName = isAmharic && employee.fullNameAm ? employee.fullNameAm : employee.fullName;
 		const initials = `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`.toUpperCase();
+		const token = globalThis.localStorage.getItem(STORAGE_KEYS.accessToken);
+		const photoUrl = photoId ? `${employeePhotoApi.getPhotoUrl(photoId)}?token=${token}` : undefined;
 
 		return (
 			<div className="flex flex-col lg:flex-row gap-5 items-start">
 				<Avatar className="h-24 w-24 border-4 border-border shadow-md shrink-0">
+					{photoUrl && <AvatarImage src={photoUrl} alt={displayName} />}
 					<AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">{initials}</AvatarFallback>
 				</Avatar>
 
@@ -213,7 +227,8 @@ const EmployeeHeader = React.memo(
 			</div>
 		);
 	},
-	(prev, next) => prev.employee.id === next.employee.id && prev.isAmharic === next.isAmharic,
+	(prev, next) =>
+		prev.employee.id === next.employee.id && prev.isAmharic === next.isAmharic && prev.photoId === next.photoId,
 );
 EmployeeHeader.displayName = "EmployeeHeader";
 
@@ -389,6 +404,175 @@ const PlaceholderTab = React.memo(
 );
 PlaceholderTab.displayName = "PlaceholderTab";
 
+interface FamilyTabProps {
+	familyMembers: FamilyMember[];
+	isLoading: boolean;
+	t: (key: string) => string;
+}
+
+const FamilyTab = React.memo(
+	({ familyMembers, isLoading, t }: FamilyTabProps) => {
+		if (isLoading) {
+			return (
+				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+					<Skeleton className="h-48" />
+					<Skeleton className="h-48" />
+					<Skeleton className="h-48" />
+				</div>
+			);
+		}
+
+		if (familyMembers.length === 0) {
+			return (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<Users className="h-12 w-12 text-muted-foreground mb-4" />
+					<p className="text-muted-foreground">{t("family.noRecords")}</p>
+				</div>
+			);
+		}
+
+		return (
+			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+				{familyMembers.map((member) => (
+					<div key={member.id} className="rounded-lg border bg-card p-4">
+						<div className="flex items-start justify-between mb-3">
+							<div>
+								<h4 className="font-semibold">{member.fullName}</h4>
+								{member.fullNameAm && <p className="text-sm text-muted-foreground">{member.fullNameAm}</p>}
+							</div>
+							<Badge variant="outline">{t(`family.relationships.${member.relationship}`)}</Badge>
+						</div>
+						<div className="grid grid-cols-2 gap-2 text-sm">
+							{member.gender && <DataField label={t("gender")} value={t(`genders.${member.gender}`)} />}
+							{member.dateOfBirth && <DataField label={t("dateOfBirth")} value={formatDate(member.dateOfBirth)} />}
+							{member.phone && <DataField label={t("phone")} value={member.phone} />}
+							{member.occupation && <DataField label={t("family.occupation")} value={member.occupation} />}
+							{member.nationalId && <DataField label={t("family.nationalId")} value={member.nationalId} />}
+							{member.schoolName && <DataField label={t("family.schoolName")} value={member.schoolName} />}
+						</div>
+						<div className="mt-2 pt-2 border-t">
+							<Badge variant={member.isAlive ? "default" : "secondary"}>
+								{member.isAlive ? t("family.alive") : t("family.deceased")}
+							</Badge>
+						</div>
+					</div>
+				))}
+			</div>
+		);
+	},
+	(prev, next) => prev.familyMembers === next.familyMembers && prev.isLoading === next.isLoading,
+);
+FamilyTab.displayName = "FamilyTab";
+
+interface HealthTabProps {
+	medicalRecords: MedicalRecord[];
+	isLoading: boolean;
+	t: (key: string) => string;
+}
+
+const HealthTab = React.memo(
+	({ medicalRecords, isLoading, t }: HealthTabProps) => {
+		if (isLoading) {
+			return (
+				<div className="space-y-4">
+					<Skeleton className="h-32" />
+					<Skeleton className="h-32" />
+				</div>
+			);
+		}
+
+		if (medicalRecords.length === 0) {
+			return (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<Stethoscope className="h-12 w-12 text-muted-foreground mb-4" />
+					<p className="text-muted-foreground">{t("medical.noRecords")}</p>
+				</div>
+			);
+		}
+
+		return (
+			<div className="space-y-4">
+				{medicalRecords.map((record) => (
+					<div key={record.id} className="rounded-lg border bg-card p-4">
+						<div className="flex items-start justify-between mb-3">
+							<div>
+								<h4 className="font-semibold">{record.institutionName}</h4>
+								<p className="text-sm text-muted-foreground">{formatDate(record.visitDate)}</p>
+							</div>
+							<div className="flex gap-2">
+								{record.isForSelf ? (
+									<Badge variant="default">{t("medical.self")}</Badge>
+								) : (
+									<Badge variant="secondary">{record.familyMember?.fullName ?? t("medical.familyMember")}</Badge>
+								)}
+								{record.amountCovered !== null && record.amountCovered > 0 && (
+									<Badge variant="outline">{record.amountCovered.toLocaleString()} ETB</Badge>
+								)}
+							</div>
+						</div>
+						<div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+							{record.visitType && (
+								<DataField label={t("medical.visitType")} value={t(`medical.visitTypes.${record.visitType}`)} />
+							)}
+							{record.diagnosis && <DataField label={t("medical.diagnosis")} value={record.diagnosis} />}
+							{record.treatment && <DataField label={t("medical.treatment")} value={record.treatment} />}
+							{record.doctorName && <DataField label={t("medical.doctorName")} value={record.doctorName} />}
+							{record.insuranceProvider && (
+								<DataField label={t("medical.insuranceProvider")} value={record.insuranceProvider} />
+							)}
+							{record.totalBillAmount !== null && (
+								<DataField
+									label={t("medical.totalBillAmount")}
+									value={`${record.totalBillAmount.toLocaleString()} ETB`}
+								/>
+							)}
+						</div>
+						{record.notes && <p className="mt-3 text-sm text-muted-foreground border-t pt-3">{record.notes}</p>}
+					</div>
+				))}
+			</div>
+		);
+	},
+	(prev, next) => prev.medicalRecords === next.medicalRecords && prev.isLoading === next.isLoading,
+);
+HealthTab.displayName = "HealthTab";
+
+interface MaritalStatusSectionProps {
+	statuses: MaritalStatusRecord[];
+	isLoading: boolean;
+	t: (key: string) => string;
+}
+
+const MaritalStatusSection = React.memo(
+	({ statuses, isLoading, t }: MaritalStatusSectionProps) => {
+		if (isLoading) {
+			return <Skeleton className="h-24" />;
+		}
+
+		if (statuses.length === 0) {
+			return null;
+		}
+
+		return (
+			<Section title={t("maritalStatus.history")} icon={<Heart className="h-4 w-4" />}>
+				<div className="space-y-3">
+					{statuses.map((status, index) => (
+						<div key={status.id} className="flex items-center justify-between p-2 rounded border bg-muted/30">
+							<div className="flex items-center gap-2">
+								<Badge variant={index === 0 ? "default" : "secondary"}>{t(`maritalStatuses.${status.status}`)}</Badge>
+								{index === 0 && <Badge variant="outline">{t("maritalStatus.current")}</Badge>}
+							</div>
+							<span className="text-sm text-muted-foreground">{formatDate(status.effectiveDate)}</span>
+						</div>
+					))}
+				</div>
+			</Section>
+		);
+	},
+	(prev, next) => prev.statuses === next.statuses && prev.isLoading === next.isLoading,
+);
+MaritalStatusSection.displayName = "MaritalStatusSection";
+
 export const EmployeeDetailPage = React.memo(
 	() => {
 		const { t } = useTranslation("employees");
@@ -400,6 +584,10 @@ export const EmployeeDetailPage = React.memo(
 		const [deleteOpen, setDeleteOpen] = React.useState(false);
 
 		const { data: employee, isLoading, error } = useEmployee(id ?? "");
+		const { data: activePhoto } = useActivePhoto(id ?? "");
+		const { data: familyMembers, isLoading: familyLoading } = useFamilyMembers(id ?? "");
+		const { data: medicalRecords, isLoading: medicalLoading } = useMedicalRecords(id ?? "");
+		const { data: maritalStatuses, isLoading: maritalLoading } = useMaritalStatusHistory(id ?? "");
 		const deleteMutation = useDeleteEmployee();
 
 		const isAmharic = i18n.language === "am";
@@ -473,6 +661,7 @@ export const EmployeeDetailPage = React.memo(
 					onDelete={handleDeleteClick}
 					t={t}
 					tCommon={tCommon}
+					photoId={activePhoto?.id}
 				/>
 
 				<Tabs defaultValue="basic" className="w-full">
@@ -483,6 +672,13 @@ export const EmployeeDetailPage = React.memo(
 						>
 							<User className="h-3.5 w-3.5" />
 							{t("tabs.basic")}
+						</TabsTrigger>
+						<TabsTrigger
+							value="family"
+							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+						>
+							<Users className="h-3.5 w-3.5" />
+							{t("tabs.family")}
 						</TabsTrigger>
 						<TabsTrigger
 							value="education"
@@ -558,6 +754,13 @@ export const EmployeeDetailPage = React.memo(
 
 					<TabsContent value="basic" className="mt-5">
 						<BasicInfoTab employee={employee} t={t} />
+						<div className="mt-4">
+							<MaritalStatusSection statuses={maritalStatuses ?? []} isLoading={maritalLoading} t={t} />
+						</div>
+					</TabsContent>
+
+					<TabsContent value="family" className="mt-5">
+						<FamilyTab familyMembers={familyMembers ?? []} isLoading={familyLoading} t={t} />
 					</TabsContent>
 
 					<TabsContent value="education" className="mt-5">
@@ -593,7 +796,7 @@ export const EmployeeDetailPage = React.memo(
 					</TabsContent>
 
 					<TabsContent value="health" className="mt-5">
-						<PlaceholderTab title={t("tabs.health")} icon={<Heart className="h-8 w-8 text-muted-foreground" />} t={t} />
+						<HealthTab medicalRecords={medicalRecords ?? []} isLoading={medicalLoading} t={t} />
 					</TabsContent>
 
 					<TabsContent value="retirement" className="mt-5">

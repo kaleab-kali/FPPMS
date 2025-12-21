@@ -7,9 +7,14 @@ import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
 import { EmployeeDetailPage } from "#web/features/employees/pages/EmployeeDetailPage.tsx";
 import { EmployeeEditPage } from "#web/features/employees/pages/EmployeeEditPage.tsx";
+import { EmployeeFamilyPage } from "#web/features/employees/pages/EmployeeFamilyPage.tsx";
+import { EmployeeMaritalStatusPage } from "#web/features/employees/pages/EmployeeMaritalStatusPage.tsx";
+import { EmployeeMedicalPage } from "#web/features/employees/pages/EmployeeMedicalPage.tsx";
+import { EmployeePhotoPage } from "#web/features/employees/pages/EmployeePhotoPage.tsx";
 import { EmployeeRegisterFormPage } from "#web/features/employees/pages/EmployeeRegisterFormPage.tsx";
 import { EmployeeRegisterSelectPage } from "#web/features/employees/pages/EmployeeRegisterSelectPage.tsx";
 import { EmployeesListPage } from "#web/features/employees/pages/EmployeesListPage.tsx";
+import { EmployeeTransferPage } from "#web/features/employees/pages/EmployeeTransferPage.tsx";
 import { FormerEmployeesPage } from "#web/features/employees/pages/FormerEmployeesPage.tsx";
 import { RanksListPage } from "#web/features/lookups/pages/RanksListPage.tsx";
 import { RegionsListPage } from "#web/features/lookups/pages/RegionsListPage.tsx";
@@ -82,19 +87,19 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/employees/photo",
-				element: <ComingSoonPage />,
+				element: <EmployeePhotoPage />,
 			},
 			{
 				path: "/employees/medical",
-				element: <ComingSoonPage />,
+				element: <EmployeeMedicalPage />,
 			},
 			{
 				path: "/employees/family",
-				element: <ComingSoonPage />,
+				element: <EmployeeFamilyPage />,
 			},
 			{
 				path: "/employees/marital",
-				element: <ComingSoonPage />,
+				element: <EmployeeMaritalStatusPage />,
 			},
 			{
 				path: "/employees/health",
@@ -102,7 +107,7 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/employees/transfer",
-				element: <ComingSoonPage />,
+				element: <EmployeeTransferPage />,
 			},
 			{
 				path: "/organization/tenants",
