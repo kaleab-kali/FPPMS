@@ -152,31 +152,31 @@ enum AuditAction {
 // ============================================================================
 
 model Tenant {
-  id        String    @id @default(cuid())
-  code      String    @unique
+  id        String   @id @default(cuid())
+  code      String   @unique
   name      String
-  nameAm    String?   @map("name_am")
-  type      String    @default("CENTER")
-  settings  Json      @default("{}")
-  isActive  Boolean   @default(true) @map("is_active")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  nameAm    String?  @map("name_am")
+  type      String   @default("CENTER")
+  settings  Json     @default("{}")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  centers     Center[]
-  users       User[]
-  employees   Employee[]
-  roles       Role[]
-  regions     Region[]
-  subCities   SubCity[]
-  woredas     Woreda[]
-  departments Department[]
-  positions   Position[]
+  centers       Center[]
+  users         User[]
+  employees     Employee[]
+  roles         Role[]
+  regions       Region[]
+  subCities     SubCity[]
+  woredas       Woreda[]
+  departments   Department[]
+  positions     Position[]
   militaryRanks MilitaryRank[]
-  leaveTypes  LeaveType[]
-  holidays    Holiday[]
+  leaveTypes    LeaveType[]
+  holidays      Holiday[]
 
-  @@map("tenants")
   @@index([code])
+  @@map("tenants")
 }
 
 // ============================================================================
@@ -203,16 +203,16 @@ model Center {
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
 
-  tenant       Tenant    @relation(fields: [tenantId], references: [id])
-  parentCenter Center?   @relation("CenterHierarchy", fields: [parentCenterId], references: [id])
-  childCenters Center[]  @relation("CenterHierarchy")
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  parentCenter Center?    @relation("CenterHierarchy", fields: [parentCenterId], references: [id])
+  childCenters Center[]   @relation("CenterHierarchy")
   users        User[]
   employees    Employee[]
 
   @@unique([tenantId, code])
-  @@map("centers")
   @@index([tenantId])
   @@index([parentCenterId])
+  @@map("centers")
 }
 
 // ============================================================================
@@ -220,30 +220,30 @@ model Center {
 // ============================================================================
 
 model User {
-  id                  String      @id @default(cuid())
-  tenantId            String      @map("tenant_id")
-  centerId            String?     @map("center_id")
-  employeeId          String?     @map("employee_id")
+  id                  String     @id @default(cuid())
+  tenantId            String     @map("tenant_id")
+  centerId            String?    @map("center_id")
+  employeeId          String?    @map("employee_id")
   username            String
   email               String?
-  passwordHash        String      @map("password_hash")
-  passwordSalt        String?     @map("password_salt")
-  passwordChangedAt   DateTime?   @map("password_changed_at")
-  mustChangePassword  Boolean     @default(true) @map("must_change_password")
-  status              UserStatus  @default(PENDING)
-  failedLoginAttempts Int         @default(0) @map("failed_login_attempts")
-  lockedUntil         DateTime?   @map("locked_until")
-  lastLoginAt         DateTime?   @map("last_login_at")
-  lastLoginIp         String?     @map("last_login_ip")
-  currentSessionId    String?     @map("current_session_id")
-  sessionExpiresAt    DateTime?   @map("session_expires_at")
-  createdAt           DateTime    @default(now()) @map("created_at")
-  updatedAt           DateTime    @updatedAt @map("updated_at")
-  createdBy           String?     @map("created_by")
-  updatedBy           String?     @map("updated_by")
-  deletedAt           DateTime?   @map("deleted_at")
-  statusChangedAt     DateTime?   @map("status_changed_at")
-  statusChangeReason  String?     @map("status_change_reason")
+  passwordHash        String     @map("password_hash")
+  passwordSalt        String?    @map("password_salt")
+  passwordChangedAt   DateTime?  @map("password_changed_at")
+  mustChangePassword  Boolean    @default(true) @map("must_change_password")
+  status              UserStatus @default(PENDING)
+  failedLoginAttempts Int        @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime?  @map("locked_until")
+  lastLoginAt         DateTime?  @map("last_login_at")
+  lastLoginIp         String?    @map("last_login_ip")
+  currentSessionId    String?    @map("current_session_id")
+  sessionExpiresAt    DateTime?  @map("session_expires_at")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+  createdBy           String?    @map("created_by")
+  updatedBy           String?    @map("updated_by")
+  deletedAt           DateTime?  @map("deleted_at")
+  statusChangedAt     DateTime?  @map("status_changed_at")
+  statusChangeReason  String?    @map("status_change_reason")
 
   tenant        Tenant         @relation(fields: [tenantId], references: [id])
   center        Center?        @relation(fields: [centerId], references: [id])
@@ -251,11 +251,11 @@ model User {
   refreshTokens RefreshToken[]
 
   @@unique([tenantId, username])
-  @@map("users")
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([centerId])
   @@index([employeeId])
+  @@map("users")
 }
 
 // ============================================================================
@@ -263,27 +263,27 @@ model User {
 // ============================================================================
 
 model Role {
-  id           String    @id @default(cuid())
-  tenantId     String?   @map("tenant_id")
+  id           String   @id @default(cuid())
+  tenantId     String?  @map("tenant_id")
   code         String
   name         String
-  nameAm       String?   @map("name_am")
+  nameAm       String?  @map("name_am")
   description  String?
-  isSystemRole Boolean   @default(false) @map("is_system_role")
-  level        Int       @default(0)
-  accessScope  String    @default("OWN_CENTER") @map("access_scope")
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  level        Int      @default(0)
+  accessScope  String   @default("OWN_CENTER") @map("access_scope")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   tenant          Tenant?          @relation(fields: [tenantId], references: [id])
   userRoles       UserRole[]
   rolePermissions RolePermission[]
 
   @@unique([tenantId, code])
-  @@map("roles")
   @@index([tenantId])
   @@index([code])
+  @@map("roles")
 }
 
 // ============================================================================
@@ -300,8 +300,8 @@ model Permission {
   rolePermissions RolePermission[]
 
   @@unique([module, action, resource])
-  @@map("permissions")
   @@index([module])
+  @@map("permissions")
 }
 
 // ============================================================================
@@ -343,29 +343,29 @@ model UserRole {
 // ============================================================================
 
 model Department {
-  id               String    @id @default(cuid())
-  tenantId         String    @map("tenant_id")
-  code             String
-  name             String
-  nameAm           String?   @map("name_am")
-  description      String?
-  parentId         String?   @map("parent_id")
-  headEmployeeId   String?   @map("head_employee_id")
-  sortOrder        Int       @default(0) @map("sort_order")
-  isActive         Boolean   @default(true) @map("is_active")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  code           String
+  name           String
+  nameAm         String?  @map("name_am")
+  description    String?
+  parentId       String?  @map("parent_id")
+  headEmployeeId String?  @map("head_employee_id")
+  sortOrder      Int      @default(0) @map("sort_order")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
-  tenant     Tenant       @relation(fields: [tenantId], references: [id])
-  parent     Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
-  children   Department[] @relation("DepartmentHierarchy")
-  positions  Position[]
-  employees  Employee[]
+  tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  parent    Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children  Department[] @relation("DepartmentHierarchy")
+  positions Position[]
+  employees Employee[]
 
   @@unique([tenantId, code])
-  @@map("departments")
   @@index([tenantId])
   @@index([parentId])
+  @@map("departments")
 }
 
 // ============================================================================
@@ -373,26 +373,26 @@ model Department {
 // ============================================================================
 
 model Position {
-  id           String    @id @default(cuid())
-  tenantId     String    @map("tenant_id")
-  departmentId String?   @map("department_id")
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  departmentId String?  @map("department_id")
   code         String
   name         String
-  nameAm       String?   @map("name_am")
+  nameAm       String?  @map("name_am")
   description  String?
-  sortOrder    Int       @default(0) @map("sort_order")
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  sortOrder    Int      @default(0) @map("sort_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   tenant     Tenant      @relation(fields: [tenantId], references: [id])
   department Department? @relation(fields: [departmentId], references: [id])
   employees  Employee[]
 
   @@unique([tenantId, code])
-  @@map("positions")
   @@index([tenantId])
   @@index([departmentId])
+  @@map("positions")
 }
 
 // ============================================================================
@@ -400,67 +400,67 @@ model Position {
 // ============================================================================
 
 model Region {
-  id        String    @id @default(cuid())
-  tenantId  String    @map("tenant_id")
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
   code      String
   name      String
-  nameAm    String    @map("name_am")
-  sortOrder Int       @default(0) @map("sort_order")
-  isActive  Boolean   @default(true) @map("is_active")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  nameAm    String   @map("name_am")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   tenant    Tenant    @relation(fields: [tenantId], references: [id])
   subCities SubCity[]
 
   @@unique([tenantId, code])
-  @@map("regions")
   @@index([tenantId])
   @@index([tenantId, isActive])
+  @@map("regions")
 }
 
 model SubCity {
-  id        String    @id @default(cuid())
-  tenantId  String    @map("tenant_id")
-  regionId  String    @map("region_id")
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  regionId  String   @map("region_id")
   code      String
   name      String
-  nameAm    String    @map("name_am")
-  sortOrder Int       @default(0) @map("sort_order")
-  isActive  Boolean   @default(true) @map("is_active")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  nameAm    String   @map("name_am")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   tenant  Tenant   @relation(fields: [tenantId], references: [id])
   region  Region   @relation(fields: [regionId], references: [id])
   woredas Woreda[]
 
   @@unique([tenantId, code])
-  @@map("sub_cities")
   @@index([tenantId])
   @@index([regionId])
   @@index([tenantId, regionId, isActive])
+  @@map("sub_cities")
 }
 
 model Woreda {
-  id        String    @id @default(cuid())
-  tenantId  String    @map("tenant_id")
-  subCityId String    @map("sub_city_id")
+  id        String   @id @default(cuid())
+  tenantId  String   @map("tenant_id")
+  subCityId String   @map("sub_city_id")
   code      String
   name      String
-  nameAm    String    @map("name_am")
-  sortOrder Int       @default(0) @map("sort_order")
-  isActive  Boolean   @default(true) @map("is_active")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  nameAm    String   @map("name_am")
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   tenant  Tenant  @relation(fields: [tenantId], references: [id])
   subCity SubCity @relation(fields: [subCityId], references: [id])
 
   @@unique([tenantId, code])
-  @@map("woredas")
   @@index([tenantId])
   @@index([subCityId])
+  @@map("woredas")
 }
 
 // ============================================================================
@@ -468,25 +468,25 @@ model Woreda {
 // ============================================================================
 
 model MilitaryRank {
-  id                   String    @id @default(cuid())
-  tenantId             String?   @map("tenant_id")
+  id                   String   @id @default(cuid())
+  tenantId             String?  @map("tenant_id")
   code                 String
   name                 String
-  nameAm               String    @map("name_am")
+  nameAm               String   @map("name_am")
   level                Int
   category             String
-  baseSalary           Decimal   @map("base_salary") @db.Decimal(12, 2)
-  ceilingSalary        Decimal   @map("ceiling_salary") @db.Decimal(12, 2)
-  stepCount            Int       @default(9) @map("step_count")
-  stepPeriodYears      Int       @default(2) @map("step_period_years")
-  retirementAge        Int       @map("retirement_age")
-  minYearsForPromotion Int?      @map("min_years_for_promotion")
-  minAppraisalScore    Int?      @map("min_appraisal_score")
-  badgePath            String?   @map("badge_path")
-  sortOrder            Int       @default(0) @map("sort_order")
-  isActive             Boolean   @default(true) @map("is_active")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
+  baseSalary           Decimal  @map("base_salary") @db.Decimal(12, 2)
+  ceilingSalary        Decimal  @map("ceiling_salary") @db.Decimal(12, 2)
+  stepCount            Int      @default(9) @map("step_count")
+  stepPeriodYears      Int      @default(2) @map("step_period_years")
+  retirementAge        Int      @map("retirement_age")
+  minYearsForPromotion Int?     @map("min_years_for_promotion")
+  minAppraisalScore    Int?     @map("min_appraisal_score")
+  badgePath            String?  @map("badge_path")
+  sortOrder            Int      @default(0) @map("sort_order")
+  isActive             Boolean  @default(true) @map("is_active")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
   tenant      Tenant?                  @relation(fields: [tenantId], references: [id])
   salarySteps MilitaryRankSalaryStep[]
@@ -494,9 +494,9 @@ model MilitaryRank {
 
   @@unique([tenantId, code])
   @@unique([tenantId, level])
-  @@map("military_ranks")
   @@index([level])
   @@index([category])
+  @@map("military_ranks")
 }
 
 model MilitaryRankSalaryStep {
@@ -509,8 +509,8 @@ model MilitaryRankSalaryStep {
   rank MilitaryRank @relation(fields: [rankId], references: [id], onDelete: Cascade)
 
   @@unique([rankId, stepNumber])
-  @@map("military_rank_salary_steps")
   @@index([rankId])
+  @@map("military_rank_salary_steps")
 }
 
 // ============================================================================
@@ -577,31 +577,31 @@ model Employee {
   updatedBy              String?          @map("updated_by")
   deletedAt              DateTime?        @map("deleted_at")
 
-  tenant              Tenant                       @relation(fields: [tenantId], references: [id])
-  center              Center?                      @relation(fields: [centerId], references: [id])
-  department          Department?                  @relation(fields: [departmentId], references: [id])
-  position            Position?                    @relation(fields: [positionId], references: [id])
-  rank                MilitaryRank?                @relation(fields: [rankId], references: [id])
-  addresses           EmployeeAddress[]
-  motherInfo          EmployeeMotherInfo?
-  emergencyContacts   EmployeeEmergencyContact[]
-  education           EmployeeEducation[]
-  workExperience      EmployeeWorkExperience[]
-  familyMembers       EmployeeFamilyMember[]
-  medicalDependents   EmployeeMedicalDependent[]
-  photos              EmployeePhoto[]
-  documents           EmployeeDocument[]
-  leaveBalances       EmployeeLeaveBalance[]
-  leaveRequests       LeaveRequest[]
-  appraisals          Appraisal[]
-  disciplinaryRecords DisciplinaryRecord[]
-  investigations      Investigation[]
-  serviceRewards      ServiceReward[]
-  attendanceRecords   AttendanceRecord[]
-  shiftAssignments    ShiftAssignment[]
+  tenant               Tenant                     @relation(fields: [tenantId], references: [id])
+  center               Center?                    @relation(fields: [centerId], references: [id])
+  department           Department?                @relation(fields: [departmentId], references: [id])
+  position             Position?                  @relation(fields: [positionId], references: [id])
+  rank                 MilitaryRank?              @relation(fields: [rankId], references: [id])
+  addresses            EmployeeAddress[]
+  motherInfo           EmployeeMotherInfo?
+  emergencyContacts    EmployeeEmergencyContact[]
+  education            EmployeeEducation[]
+  workExperience       EmployeeWorkExperience[]
+  familyMembers        EmployeeFamilyMember[]
+  medicalRecords       EmployeeMedicalRecord[]
+  maritalStatuses      EmployeeMaritalStatus[]
+  photos               EmployeePhoto[]
+  documents            EmployeeDocument[]
+  leaveBalances        EmployeeLeaveBalance[]
+  leaveRequests        LeaveRequest[]
+  appraisals           Appraisal[]
+  disciplinaryRecords  DisciplinaryRecord[]
+  investigations       Investigation[]
+  serviceRewards       ServiceReward[]
+  attendanceRecords    AttendanceRecord[]
+  shiftAssignments     ShiftAssignment[]
   inventoryAssignments InventoryAssignment[]
 
-  @@map("employees")
   @@index([tenantId])
   @@index([tenantId, centerId])
   @@index([tenantId, status])
@@ -612,6 +612,7 @@ model Employee {
   @@index([fullName])
   @@index([primaryPhone])
   @@index([faydaId])
+  @@map("employees")
 }
 
 // ============================================================================
@@ -619,39 +620,39 @@ model Employee {
 // ============================================================================
 
 model EmployeeAddress {
-  id             String    @id @default(cuid())
-  tenantId       String    @map("tenant_id")
-  employeeId     String    @map("employee_id")
-  addressType    String    @map("address_type")
-  regionId       String    @map("region_id")
-  subCityId      String    @map("sub_city_id")
-  woredaId       String    @map("woreda_id")
-  houseNumber    String?   @map("house_number")
-  uniqueAreaName String?   @map("unique_area_name")
-  fullAddress    String?   @map("full_address")
-  fullAddressAm  String?   @map("full_address_am")
-  isPrimary      Boolean   @default(false) @map("is_primary")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  employeeId     String   @map("employee_id")
+  addressType    String   @map("address_type")
+  regionId       String   @map("region_id")
+  subCityId      String   @map("sub_city_id")
+  woredaId       String   @map("woreda_id")
+  houseNumber    String?  @map("house_number")
+  uniqueAreaName String?  @map("unique_area_name")
+  fullAddress    String?  @map("full_address")
+  fullAddressAm  String?  @map("full_address_am")
+  isPrimary      Boolean  @default(false) @map("is_primary")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, addressType])
-  @@map("employee_addresses")
   @@index([employeeId])
+  @@map("employee_addresses")
 }
 
 model EmployeeMotherInfo {
-  id         String    @id @default(cuid())
-  tenantId   String    @map("tenant_id")
-  employeeId String    @unique @map("employee_id")
-  fullName   String    @map("full_name")
-  fullNameAm String    @map("full_name_am")
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  employeeId String   @unique @map("employee_id")
+  fullName   String   @map("full_name")
+  fullNameAm String   @map("full_name_am")
   phone      String?
-  isAlive    Boolean   @default(true) @map("is_alive")
+  isAlive    Boolean  @default(true) @map("is_alive")
   address    String?
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
@@ -659,28 +660,28 @@ model EmployeeMotherInfo {
 }
 
 model EmployeeEmergencyContact {
-  id               String    @id @default(cuid())
-  tenantId         String    @map("tenant_id")
-  employeeId       String    @map("employee_id")
-  fullName         String    @map("full_name")
-  fullNameAm       String    @map("full_name_am")
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  employeeId       String   @map("employee_id")
+  fullName         String   @map("full_name")
+  fullNameAm       String   @map("full_name_am")
   relationship     String
   phone            String
-  alternativePhone String?   @map("alternative_phone")
+  alternativePhone String?  @map("alternative_phone")
   email            String?
-  regionId         String?   @map("region_id")
-  subCityId        String?   @map("sub_city_id")
-  woredaId         String?   @map("woreda_id")
-  houseNumber      String?   @map("house_number")
-  uniqueAreaName   String?   @map("unique_area_name")
-  priority         Int       @default(1)
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  regionId         String?  @map("region_id")
+  subCityId        String?  @map("sub_city_id")
+  woredaId         String?  @map("woreda_id")
+  houseNumber      String?  @map("house_number")
+  uniqueAreaName   String?  @map("unique_area_name")
+  priority         Int      @default(1)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@map("employee_emergency_contacts")
   @@index([employeeId])
+  @@map("employee_emergency_contacts")
 }
 
 model EmployeeEducation {
@@ -702,8 +703,8 @@ model EmployeeEducation {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@map("employee_education")
   @@index([employeeId])
+  @@map("employee_education")
 }
 
 model EmployeeWorkExperience {
@@ -727,8 +728,8 @@ model EmployeeWorkExperience {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@map("employee_work_experience")
   @@index([employeeId])
+  @@map("employee_work_experience")
 }
 
 model EmployeeFamilyMember {
@@ -744,6 +745,8 @@ model EmployeeFamilyMember {
   phone                   String?
   occupation              String?
   marriageDate            DateTime? @map("marriage_date") @db.Date
+  divorceDate             DateTime? @map("divorce_date") @db.Date
+  deathDate               DateTime? @map("death_date") @db.Date
   marriageCertificatePath String?   @map("marriage_certificate_path")
   birthCertificatePath    String?   @map("birth_certificate_path")
   schoolName              String?   @map("school_name")
@@ -752,71 +755,97 @@ model EmployeeFamilyMember {
   updatedAt               DateTime  @updatedAt @map("updated_at")
   deletedAt               DateTime? @map("deleted_at")
 
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee       Employee                @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  medicalRecords EmployeeMedicalRecord[]
 
-  @@map("employee_family_members")
   @@index([employeeId])
+  @@map("employee_family_members")
 }
 
-model EmployeeMedicalDependent {
-  id                String    @id @default(cuid())
-  tenantId          String    @map("tenant_id")
-  employeeId        String    @map("employee_id")
-  fullName          String    @map("full_name")
-  fullNameAm        String?   @map("full_name_am")
-  relationship      String
-  dateOfBirth       DateTime  @map("date_of_birth") @db.Date
-  nationalId        String?   @map("national_id")
-  isEligible        Boolean   @default(true) @map("is_eligible")
-  eligibilityReason String?   @map("eligibility_reason")
-  ageCheckDate      DateTime? @map("age_check_date")
-  documentPath      String?   @map("document_path")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-  deletedAt         DateTime? @map("deleted_at")
+model EmployeeMaritalStatus {
+  id              String    @id @default(cuid())
+  tenantId        String    @map("tenant_id")
+  employeeId      String    @map("employee_id")
+  status          String
+  effectiveDate   DateTime  @map("effective_date") @db.Date
+  certificatePath String?   @map("certificate_path")
+  courtOrderPath  String?   @map("court_order_path")
+  remarks         String?
+  recordedBy      String?   @map("recorded_by")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@map("employee_medical_dependents")
   @@index([employeeId])
-  @@index([employeeId, isEligible])
+  @@index([employeeId, effectiveDate])
+  @@map("employee_marital_statuses")
+}
+
+model EmployeeMedicalRecord {
+  id                   String    @id @default(cuid())
+  tenantId             String    @map("tenant_id")
+  employeeId           String    @map("employee_id")
+  familyMemberId       String?   @map("family_member_id")
+  isForSelf            Boolean   @default(true) @map("is_for_self")
+  visitDate            DateTime  @map("visit_date") @db.Date
+  institutionName      String    @map("institution_name")
+  institutionNameAm    String?   @map("institution_name_am")
+  institutionAddress   String?   @map("institution_address")
+  institutionCity      String?   @map("institution_city")
+  visitType            String?   @map("visit_type")
+  diagnosis            String?
+  diagnosisAm          String?   @map("diagnosis_am")
+  treatment            String?
+  treatmentAm          String?   @map("treatment_am")
+  prescribedMedication String?   @map("prescribed_medication")
+  doctorName           String?   @map("doctor_name")
+  amountCovered        Decimal?  @map("amount_covered") @db.Decimal(15, 2)
+  amountPaidByEmployee Decimal?  @map("amount_paid_by_employee") @db.Decimal(15, 2)
+  totalBillAmount      Decimal?  @map("total_bill_amount") @db.Decimal(15, 2)
+  insuranceClaimNumber String?   @map("insurance_claim_number")
+  insuranceProvider    String?   @map("insurance_provider")
+  receiptPath          String?   @map("receipt_path")
+  medicalReportPath    String?   @map("medical_report_path")
+  followUpDate         DateTime? @map("follow_up_date") @db.Date
+  notes                String?
+  recordedBy           String?   @map("recorded_by")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  deletedAt            DateTime? @map("deleted_at")
+
+  employee     Employee              @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  familyMember EmployeeFamilyMember? @relation(fields: [familyMemberId], references: [id], onDelete: SetNull)
+
+  @@index([employeeId])
+  @@index([employeeId, familyMemberId])
+  @@index([employeeId, visitDate])
+  @@map("employee_medical_records")
 }
 
 model EmployeePhoto {
-  id              String      @id @default(cuid())
-  tenantId        String      @map("tenant_id")
-  employeeId      String      @map("employee_id")
-  filePath        String      @map("file_path")
-  fileName        String      @map("file_name")
-  fileSize        Int         @map("file_size")
-  mimeType        String      @map("mime_type")
-  fileHash        String      @map("file_hash")
-  width           Int?
-  height          Int?
-  thumbnailPath   String?     @map("thumbnail_path")
-  mediumPath      String?     @map("medium_path")
-  largePath       String?     @map("large_path")
-  photoType       String      @map("photo_type")
-  photoReason     String?     @map("photo_reason")
-  captureMethod   String      @map("capture_method")
-  capturedAt      DateTime    @default(now()) @map("captured_at")
-  capturedBy      String      @map("captured_by")
-  status          PhotoStatus @default(PENDING_APPROVAL)
-  approvedAt      DateTime?   @map("approved_at")
-  approvedBy      String?     @map("approved_by")
-  rejectionReason String?     @map("rejection_reason")
-  isActive        Boolean     @default(false) @map("is_active")
-  activatedAt     DateTime?   @map("activated_at")
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
-  deletedAt       DateTime?   @map("deleted_at")
+  id            String    @id @default(cuid())
+  tenantId      String    @map("tenant_id")
+  employeeId    String    @map("employee_id")
+  filePath      String    @map("file_path")
+  fileName      String    @map("file_name")
+  fileSize      Int       @map("file_size")
+  mimeType      String    @map("mime_type")
+  fileHash      String    @map("file_hash")
+  captureMethod String    @map("capture_method")
+  capturedAt    DateTime  @default(now()) @map("captured_at")
+  capturedBy    String    @map("captured_by")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@map("employee_photos")
   @@index([employeeId])
-  @@index([tenantId, status])
   @@index([employeeId, isActive])
+  @@map("employee_photos")
 }
 
 model EmployeeDocument {
@@ -844,9 +873,9 @@ model EmployeeDocument {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@map("employee_documents")
   @@index([employeeId])
   @@index([tenantId, documentCategory])
+  @@map("employee_documents")
 }
 
 // ============================================================================
@@ -854,36 +883,36 @@ model EmployeeDocument {
 // ============================================================================
 
 model LeaveType {
-  id                     String    @id @default(cuid())
-  tenantId               String    @map("tenant_id")
-  code                   String
-  name                   String
-  nameAm                 String    @map("name_am")
-  description            String?
-  defaultDays            Int       @map("default_days")
-  isPaid                 Boolean   @default(true) @map("is_paid")
-  accrualMethod          String    @default("YEARLY") @map("accrual_method")
-  allowCarryOver         Boolean   @default(false) @map("allow_carry_over")
-  maxCarryOverDays       Int?      @map("max_carry_over_days")
-  carryOverExpiryYears   Int?      @map("carry_over_expiry_years")
+  id                      String   @id @default(cuid())
+  tenantId                String   @map("tenant_id")
+  code                    String
+  name                    String
+  nameAm                  String   @map("name_am")
+  description             String?
+  defaultDays             Int      @map("default_days")
+  isPaid                  Boolean  @default(true) @map("is_paid")
+  accrualMethod           String   @default("YEARLY") @map("accrual_method")
+  allowCarryOver          Boolean  @default(false) @map("allow_carry_over")
+  maxCarryOverDays        Int?     @map("max_carry_over_days")
+  carryOverExpiryYears    Int?     @map("carry_over_expiry_years")
   applicableEmployeeTypes String[] @default(["MILITARY", "CIVILIAN", "TEMPORARY"]) @map("applicable_employee_types")
-  applicableGender       String?   @map("applicable_gender")
-  requiresDocument       Boolean   @default(false) @map("requires_document")
-  minNoticeDays          Int       @default(0) @map("min_notice_days")
-  holidayExtendsLeave    Boolean   @default(true) @map("holiday_extends_leave")
-  shiftWorkerException   Boolean   @default(true) @map("shift_worker_exception")
-  sortOrder              Int       @default(0) @map("sort_order")
-  isActive               Boolean   @default(true) @map("is_active")
-  createdAt              DateTime  @default(now()) @map("created_at")
-  updatedAt              DateTime  @updatedAt @map("updated_at")
+  applicableGender        String?  @map("applicable_gender")
+  requiresDocument        Boolean  @default(false) @map("requires_document")
+  minNoticeDays           Int      @default(0) @map("min_notice_days")
+  holidayExtendsLeave     Boolean  @default(true) @map("holiday_extends_leave")
+  shiftWorkerException    Boolean  @default(true) @map("shift_worker_exception")
+  sortOrder               Int      @default(0) @map("sort_order")
+  isActive                Boolean  @default(true) @map("is_active")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
 
   tenant        Tenant                 @relation(fields: [tenantId], references: [id])
   balances      EmployeeLeaveBalance[]
   leaveRequests LeaveRequest[]
 
   @@unique([tenantId, code])
-  @@map("leave_types")
   @@index([tenantId])
+  @@map("leave_types")
 }
 
 model EmployeeLeaveBalance {
@@ -901,14 +930,14 @@ model EmployeeLeaveBalance {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  employee  Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  leaveType LeaveType          @relation(fields: [leaveTypeId], references: [id])
+  employee  Employee             @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType LeaveType            @relation(fields: [leaveTypeId], references: [id])
   details   LeaveBalanceDetail[]
 
   @@unique([employeeId, leaveTypeId, year])
-  @@map("employee_leave_balances")
   @@index([employeeId])
   @@index([tenantId, year])
+  @@map("employee_leave_balances")
 }
 
 model LeaveBalanceDetail {
@@ -963,11 +992,11 @@ model LeaveRequest {
   employee  Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
 
-  @@map("leave_requests")
   @@index([tenantId])
   @@index([employeeId])
   @@index([tenantId, status])
   @@index([tenantId, startDate, endDate])
+  @@map("leave_requests")
 }
 
 // ============================================================================
@@ -975,29 +1004,29 @@ model LeaveRequest {
 // ============================================================================
 
 model Holiday {
-  id             String    @id @default(cuid())
-  tenantId       String    @map("tenant_id")
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
   name           String
-  nameAm         String    @map("name_am")
-  holidayDate    DateTime  @map("holiday_date") @db.Date
-  holidayType    String    @map("holiday_type")
-  isHalfDay      Boolean   @default(false) @map("is_half_day")
-  isRecurring    Boolean   @default(false) @map("is_recurring")
-  recurrenceType String?   @map("recurrence_type")
-  ethiopianMonth Int?      @map("ethiopian_month")
-  ethiopianDay   Int?      @map("ethiopian_day")
-  appliesTo      String[]  @default(["ALL"]) @map("applies_to")
+  nameAm         String   @map("name_am")
+  holidayDate    DateTime @map("holiday_date") @db.Date
+  holidayType    String   @map("holiday_type")
+  isHalfDay      Boolean  @default(false) @map("is_half_day")
+  isRecurring    Boolean  @default(false) @map("is_recurring")
+  recurrenceType String?  @map("recurrence_type")
+  ethiopianMonth Int?     @map("ethiopian_month")
+  ethiopianDay   Int?     @map("ethiopian_day")
+  appliesTo      String[] @default(["ALL"]) @map("applies_to")
   description    String?
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
-  createdBy      String?   @map("created_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdBy      String?  @map("created_by")
 
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@unique([tenantId, holidayDate])
-  @@map("holidays")
   @@index([tenantId])
   @@index([tenantId, holidayDate])
+  @@map("holidays")
 }
 
 // ============================================================================
@@ -1005,48 +1034,48 @@ model Holiday {
 // ============================================================================
 
 model AppraisalPeriod {
-  id                      String    @id @default(cuid())
-  tenantId                String    @map("tenant_id")
+  id                      String   @id @default(cuid())
+  tenantId                String   @map("tenant_id")
   name                    String
-  nameAm                  String?   @map("name_am")
-  startDate               DateTime  @map("start_date") @db.Date
-  endDate                 DateTime  @map("end_date") @db.Date
-  reviewDeadline          DateTime  @map("review_deadline") @db.Date
-  applicableEmployeeTypes String[]  @default(["MILITARY", "CIVILIAN"]) @map("applicable_employee_types")
-  status                  String    @default("DRAFT")
-  createdAt               DateTime  @default(now()) @map("created_at")
-  updatedAt               DateTime  @updatedAt @map("updated_at")
-  createdBy               String?   @map("created_by")
+  nameAm                  String?  @map("name_am")
+  startDate               DateTime @map("start_date") @db.Date
+  endDate                 DateTime @map("end_date") @db.Date
+  reviewDeadline          DateTime @map("review_deadline") @db.Date
+  applicableEmployeeTypes String[] @default(["MILITARY", "CIVILIAN"]) @map("applicable_employee_types")
+  status                  String   @default("DRAFT")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  createdBy               String?  @map("created_by")
 
   criteria   AppraisalCriteria[]
   appraisals Appraisal[]
 
-  @@map("appraisal_periods")
   @@index([tenantId])
+  @@map("appraisal_periods")
 }
 
 model AppraisalCriteria {
-  id                      String    @id @default(cuid())
-  tenantId                String    @map("tenant_id")
-  periodId                String?   @map("period_id")
+  id                      String   @id @default(cuid())
+  tenantId                String   @map("tenant_id")
+  periodId                String?  @map("period_id")
   code                    String
   name                    String
-  nameAm                  String?   @map("name_am")
+  nameAm                  String?  @map("name_am")
   description             String?
-  maxScore                Int       @map("max_score")
-  weightPercentage        Decimal   @map("weight_percentage") @db.Decimal(5, 2)
+  maxScore                Int      @map("max_score")
+  weightPercentage        Decimal  @map("weight_percentage") @db.Decimal(5, 2)
   category                String?
-  applicableEmployeeTypes String[]  @default(["ALL"]) @map("applicable_employee_types")
-  sortOrder               Int       @default(0) @map("sort_order")
-  isActive                Boolean   @default(true) @map("is_active")
-  createdAt               DateTime  @default(now()) @map("created_at")
-  updatedAt               DateTime  @updatedAt @map("updated_at")
+  applicableEmployeeTypes String[] @default(["ALL"]) @map("applicable_employee_types")
+  sortOrder               Int      @default(0) @map("sort_order")
+  isActive                Boolean  @default(true) @map("is_active")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
 
   period AppraisalPeriod? @relation(fields: [periodId], references: [id])
 
   @@unique([tenantId, code])
-  @@map("appraisal_criteria")
   @@index([tenantId])
+  @@map("appraisal_criteria")
 }
 
 model Appraisal {
@@ -1074,9 +1103,9 @@ model Appraisal {
   period   AppraisalPeriod @relation(fields: [periodId], references: [id])
 
   @@unique([employeeId, periodId])
-  @@map("appraisals")
   @@index([tenantId])
   @@index([employeeId])
+  @@map("appraisals")
 }
 
 model DisciplinaryRecord {
@@ -1100,10 +1129,10 @@ model DisciplinaryRecord {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@map("disciplinary_records")
   @@index([employeeId])
   @@index([tenantId, status])
   @@index([employeeId, status])
+  @@map("disciplinary_records")
 }
 
 model Investigation {
@@ -1124,9 +1153,9 @@ model Investigation {
 
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
-  @@map("investigations")
   @@index([employeeId])
   @@index([tenantId, status])
+  @@map("investigations")
 }
 
 // ============================================================================
@@ -1134,23 +1163,23 @@ model Investigation {
 // ============================================================================
 
 model RewardMilestone {
-  id             String    @id @default(cuid())
-  tenantId       String    @map("tenant_id")
-  yearsOfService Int       @map("years_of_service")
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  yearsOfService Int      @map("years_of_service")
   name           String
-  nameAm         String?   @map("name_am")
+  nameAm         String?  @map("name_am")
   description    String?
-  rewardType     String    @map("reward_type")
-  monetaryValue  Decimal?  @map("monetary_value") @db.Decimal(12, 2)
-  isActive       Boolean   @default(true) @map("is_active")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  rewardType     String   @map("reward_type")
+  monetaryValue  Decimal? @map("monetary_value") @db.Decimal(12, 2)
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   serviceRewards ServiceReward[]
 
   @@unique([tenantId, yearsOfService])
-  @@map("reward_milestones")
   @@index([tenantId])
+  @@map("reward_milestones")
 }
 
 model ServiceReward {
@@ -1178,10 +1207,10 @@ model ServiceReward {
   milestone RewardMilestone @relation(fields: [milestoneId], references: [id])
 
   @@unique([employeeId, milestoneId])
-  @@map("service_rewards")
   @@index([tenantId])
   @@index([employeeId])
   @@index([tenantId, eligibilityStatus])
+  @@map("service_rewards")
 }
 
 // ============================================================================
@@ -1214,10 +1243,10 @@ model Retirement {
 
   clearances RetirementClearance[]
 
-  @@map("retirements")
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([tenantId, retirementDate])
+  @@map("retirements")
 }
 
 model RetirementClearance {
@@ -1263,30 +1292,30 @@ model ShiftDefinition {
   attendanceRecords AttendanceRecord[]
 
   @@unique([tenantId, code])
-  @@map("shift_definitions")
   @@index([tenantId])
+  @@map("shift_definitions")
 }
 
 model ShiftAssignment {
-  id                    String    @id @default(cuid())
-  tenantId              String    @map("tenant_id")
-  employeeId            String    @map("employee_id")
-  shiftId               String    @map("shift_id")
-  shiftDate             DateTime  @map("shift_date") @db.Date
-  status                String    @default("SCHEDULED")
-  swappedWithEmployeeId String?   @map("swapped_with_employee_id")
-  swapApprovedBy        String?   @map("swap_approved_by")
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
+  id                    String   @id @default(cuid())
+  tenantId              String   @map("tenant_id")
+  employeeId            String   @map("employee_id")
+  shiftId               String   @map("shift_id")
+  shiftDate             DateTime @map("shift_date") @db.Date
+  status                String   @default("SCHEDULED")
+  swappedWithEmployeeId String?  @map("swapped_with_employee_id")
+  swapApprovedBy        String?  @map("swap_approved_by")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
 
   employee Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   shift    ShiftDefinition @relation(fields: [shiftId], references: [id])
 
   @@unique([employeeId, shiftDate])
-  @@map("shift_assignments")
   @@index([tenantId])
   @@index([employeeId])
   @@index([tenantId, shiftDate])
+  @@map("shift_assignments")
 }
 
 model AttendanceRecord {
@@ -1314,10 +1343,10 @@ model AttendanceRecord {
   shift    ShiftDefinition? @relation(fields: [shiftId], references: [id])
 
   @@unique([employeeId, attendanceDate])
-  @@map("attendance_records")
   @@index([tenantId])
   @@index([employeeId])
   @@index([tenantId, attendanceDate])
+  @@map("attendance_records")
 }
 
 // ============================================================================
@@ -1325,46 +1354,46 @@ model AttendanceRecord {
 // ============================================================================
 
 model InventoryCategory {
-  id                   String    @id @default(cuid())
-  tenantId             String    @map("tenant_id")
+  id                   String   @id @default(cuid())
+  tenantId             String   @map("tenant_id")
   code                 String
   name                 String
-  nameAm               String?   @map("name_am")
-  requiresSerialNumber Boolean   @default(false) @map("requires_serial_number")
-  requiresLicense      Boolean   @default(false) @map("requires_license")
-  requiresInspection   Boolean   @default(false) @map("requires_inspection")
-  isHighSecurity       Boolean   @default(false) @map("is_high_security")
-  returnRequired       Boolean   @default(true) @map("return_required")
-  isActive             Boolean   @default(true) @map("is_active")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
+  nameAm               String?  @map("name_am")
+  requiresSerialNumber Boolean  @default(false) @map("requires_serial_number")
+  requiresLicense      Boolean  @default(false) @map("requires_license")
+  requiresInspection   Boolean  @default(false) @map("requires_inspection")
+  isHighSecurity       Boolean  @default(false) @map("is_high_security")
+  returnRequired       Boolean  @default(true) @map("return_required")
+  isActive             Boolean  @default(true) @map("is_active")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
   itemTypes InventoryItemType[]
 
   @@unique([tenantId, code])
-  @@map("inventory_categories")
   @@index([tenantId])
+  @@map("inventory_categories")
 }
 
 model InventoryItemType {
-  id          String    @id @default(cuid())
-  tenantId    String    @map("tenant_id")
-  categoryId  String    @map("category_id")
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  categoryId  String   @map("category_id")
   code        String
   name        String
-  nameAm      String?   @map("name_am")
+  nameAm      String?  @map("name_am")
   description String?
-  isActive    Boolean   @default(true) @map("is_active")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   category    InventoryCategory     @relation(fields: [categoryId], references: [id])
   assignments InventoryAssignment[]
 
   @@unique([tenantId, code])
-  @@map("inventory_item_types")
   @@index([tenantId])
   @@index([categoryId])
+  @@map("inventory_item_types")
 }
 
 model InventoryAssignment {
@@ -1394,10 +1423,10 @@ model InventoryAssignment {
   employee Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   itemType InventoryItemType @relation(fields: [itemTypeId], references: [id])
 
-  @@map("inventory_assignments")
   @@index([tenantId])
   @@index([employeeId])
   @@index([employeeId, isReturned])
+  @@map("inventory_assignments")
 }
 
 // ============================================================================
@@ -1420,8 +1449,8 @@ model DocumentType {
   documents Document[]
 
   @@unique([tenantId, code])
-  @@map("document_types")
   @@index([tenantId])
+  @@map("document_types")
 }
 
 model Document {
@@ -1450,11 +1479,11 @@ model Document {
 
   documentType DocumentType @relation(fields: [documentTypeId], references: [id])
 
-  @@map("documents")
   @@index([tenantId])
   @@index([tenantId, direction])
   @@index([tenantId, status])
   @@index([tenantId, documentDate])
+  @@map("documents")
 }
 
 // ============================================================================
@@ -1462,38 +1491,38 @@ model Document {
 // ============================================================================
 
 model AuditLog {
-  id            String      @id @default(cuid())
-  tenantId      String      @map("tenant_id")
-  timestamp     DateTime    @default(now())
-  userId        String?     @map("user_id")
-  username      String?
-  userRole      String?     @map("user_role")
-  userCenter    String?     @map("user_center")
-  action        AuditAction
-  module        String
-  resource      String
-  resourceId    String?     @map("resource_id")
-  ipAddress     String      @map("ip_address")
-  userAgent     String?     @map("user_agent")
-  deviceType    String?     @map("device_type")
-  browser       String?
-  os            String?
-  sessionId     String?     @map("session_id")
-  requestId     String?     @map("request_id")
-  previousValue Json?       @map("previous_value")
-  newValue      Json?       @map("new_value")
-  changedFields String[]    @default([]) @map("changed_fields")
-  description   String?
-  reason        String?
-  relatedAuditId String?    @map("related_audit_id")
+  id             String      @id @default(cuid())
+  tenantId       String      @map("tenant_id")
+  timestamp      DateTime    @default(now())
+  userId         String?     @map("user_id")
+  username       String?
+  userRole       String?     @map("user_role")
+  userCenter     String?     @map("user_center")
+  action         AuditAction
+  module         String
+  resource       String
+  resourceId     String?     @map("resource_id")
+  ipAddress      String      @map("ip_address")
+  userAgent      String?     @map("user_agent")
+  deviceType     String?     @map("device_type")
+  browser        String?
+  os             String?
+  sessionId      String?     @map("session_id")
+  requestId      String?     @map("request_id")
+  previousValue  Json?       @map("previous_value")
+  newValue       Json?       @map("new_value")
+  changedFields  String[]    @default([]) @map("changed_fields")
+  description    String?
+  reason         String?
+  relatedAuditId String?     @map("related_audit_id")
 
-  @@map("audit_logs")
   @@index([tenantId])
   @@index([timestamp])
   @@index([userId])
   @@index([module, resource])
   @@index([resourceId])
   @@index([ipAddress])
+  @@map("audit_logs")
 }
 
 model LoginHistory {
@@ -1511,26 +1540,26 @@ model LoginHistory {
   isSuccessful  Boolean   @default(true) @map("is_successful")
   failureReason String?   @map("failure_reason")
 
-  @@map("login_history")
   @@index([userId])
   @@index([loginAt])
   @@index([ipAddress])
+  @@map("login_history")
 }
 
 model RefreshToken {
-  id          String    @id @default(cuid())
-  userId      String    @map("user_id")
-  tokenHash   String    @unique @map("token_hash")
-  deviceInfo  String?   @map("device_info")
-  ipAddress   String?   @map("ip_address")
-  expiresAt   DateTime  @map("expires_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  revokedAt   DateTime? @map("revoked_at")
-  replacedBy  String?   @map("replaced_by")
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  tokenHash  String    @unique @map("token_hash")
+  deviceInfo String?   @map("device_info")
+  ipAddress  String?   @map("ip_address")
+  expiresAt  DateTime  @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  revokedAt  DateTime? @map("revoked_at")
+  replacedBy String?   @map("replaced_by")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("refresh_tokens")
   @@index([userId])
   @@index([expiresAt])
+  @@map("refresh_tokens")
 }
