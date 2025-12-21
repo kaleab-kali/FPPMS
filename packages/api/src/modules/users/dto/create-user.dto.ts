@@ -1,29 +1,36 @@
-import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class CreateUserDto {
+export class CreateUserFromEmployeeDto {
 	@IsString()
 	@IsNotEmpty()
-	@MaxLength(50)
-	username: string;
-
-	@IsEmail()
-	@IsOptional()
-	@MaxLength(100)
-	email?: string;
-
-	@IsString()
-	@IsNotEmpty()
-	@MinLength(8)
-	@MaxLength(100)
-	password: string;
+	employeeId: string;
 
 	@IsString()
 	@IsOptional()
 	centerId?: string;
 
+	@IsArray()
+	@IsString({ each: true })
+	@IsOptional()
+	roleIds?: string[];
+}
+
+export class CreateUserDto {
+	@IsString()
+	@IsNotEmpty()
+	employeeId: string;
+
+	@IsString()
+	@IsNotEmpty()
+	username: string;
+
+	@IsString()
+	@IsNotEmpty()
+	password: string;
+
 	@IsString()
 	@IsOptional()
-	employeeId?: string;
+	centerId?: string;
 
 	@IsArray()
 	@IsString({ each: true })
