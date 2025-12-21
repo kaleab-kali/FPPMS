@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usersApi } from "#web/api/users/users.api.ts";
 import { userKeys } from "#web/api/users/users.queries.ts";
-import type { CreateUserRequest, ResetPasswordRequest, UpdateUserRequest } from "#web/types/user.ts";
+import type { CreateUserFromEmployeeRequest, CreateUserRequest, UpdateUserRequest } from "#web/types/user.ts";
 
 export const useCreateUser = () => {
 	const queryClient = useQueryClient();
@@ -10,6 +10,18 @@ export const useCreateUser = () => {
 		mutationFn: (data: CreateUserRequest) => usersApi.create(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: userKeys.all });
+		},
+	});
+};
+
+export const useCreateUserFromEmployee = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (data: CreateUserFromEmployeeRequest) => usersApi.createFromEmployee(data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: userKeys.all });
+			queryClient.invalidateQueries({ queryKey: userKeys.availableEmployees() });
 		},
 	});
 };
@@ -36,11 +48,22 @@ export const useDeleteUser = () => {
 	});
 };
 
+export const useUnlockUser = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (id: string) => usersApi.unlock(id),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: userKeys.all });
+		},
+	});
+};
+
 export const useResetPassword = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: ({ id, data }: { id: string; data: ResetPasswordRequest }) => usersApi.resetPassword(id, data),
+		mutationFn: (id: string) => usersApi.resetPassword(id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: userKeys.all });
 		},

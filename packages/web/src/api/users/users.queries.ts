@@ -7,6 +7,7 @@ export const userKeys = {
 	list: () => [...userKeys.lists()] as const,
 	details: () => [...userKeys.all, "detail"] as const,
 	detail: (id: string) => [...userKeys.details(), id] as const,
+	availableEmployees: (search?: string) => [...userKeys.all, "available-employees", search] as const,
 } as const;
 
 export const useUsers = () =>
@@ -20,4 +21,10 @@ export const useUser = (id: string) =>
 		queryKey: userKeys.detail(id),
 		queryFn: () => usersApi.getById(id),
 		enabled: !!id,
+	});
+
+export const useAvailableEmployees = (search?: string) =>
+	useQuery({
+		queryKey: userKeys.availableEmployees(search),
+		queryFn: () => usersApi.getAvailableEmployees(search),
 	});
