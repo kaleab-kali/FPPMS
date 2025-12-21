@@ -44,12 +44,17 @@ This checklist provides a step-by-step, testable implementation plan for the EPP
 # PHASE 1: AUTHENTICATION - COMPLETED
 
 - [x] Create Auth Module (auth.module.ts, auth.controller.ts, auth.service.ts)
-- [x] Create Auth DTOs (login.dto.ts, change-password.dto.ts, reset-password.dto.ts, login-response.dto.ts)
+- [x] Create Auth DTOs (login.dto.ts, change-password.dto.ts, reset-password.dto.ts, login-response.dto.ts, refresh-token.dto.ts)
 - [x] Create Auth Strategies (local.strategy.ts, jwt.strategy.ts)
 - [x] Implement Auth Service (validateUser, login, changePassword, resetPassword, checkAccountLock)
-- [x] Implement Auth Controller (POST /auth/login, /logout, /change-password, /reset-password/:userId, GET /me)
+- [x] Implement Auth Controller (POST /auth/login, /logout, /change-password, /reset-password/:userId, /refresh, GET /me)
 - [x] LocalAuthGuard, JwtAuthGuard
 - [x] Frontend Login Page (LoginPage.tsx)
+- [x] Refresh Token System (RefreshToken model, token rotation, automatic refresh)
+- [x] Session Management (device tracking, IP/user-agent logging)
+- [x] Inactivity Timeout (15-minute warning dialog, auto-logout)
+- [x] Force Password Change on First Login (mustChangePassword flag, ChangePasswordPage.tsx)
+- [x] Deactivated User Login Message (proper error handling for inactive users)
 
 ---
 
@@ -75,7 +80,34 @@ This checklist provides a step-by-step, testable implementation plan for the EPP
 - [x] Departments management pages (DepartmentsListPage, DepartmentFormDialog)
 - [x] Positions management pages (PositionsListPage, PositionFormDialog)
 - [x] Users management pages (UsersListPage, UserFormDialog)
+- [x] User Status Management (activate/deactivate with dialog, UserStatusChangeDialog.tsx)
+- [x] User Creation from Employee (auto-generated credentials, employee selection)
 - [x] Roles management pages (RolesListPage, RoleFormDialog)
+
+---
+
+# UI/LAYOUT - COMPLETED
+
+- [x] Sidebar Navigation (shadcn sidebar-08 template)
+  - [x] AppSidebar.tsx with collapsible menu groups
+  - [x] NavUser.tsx with user dropdown (profile, settings, logout)
+  - [x] Mobile responsive toggle
+  - [x] Language Toggle (English/Amharic) in user dropdown
+- [x] Dynamic Breadcrumb Navigation (AppLayout.tsx)
+- [x] All menu structure implemented:
+  - [x] Dashboard
+  - [x] Organization (Departments, Positions, Centers, Tenants, Roles, Users, Ranks, Regions, Sub-Cities, Woredas)
+  - [x] Employees (All, Former, Registration, Photo Capture, Medical History, Family, Marital Status, Health Records, Transfer)
+  - [x] Leave (Types, Requests, Balance, Calendar, Permit)
+  - [x] Holidays (List, Calendar)
+  - [x] Appraisal (Reviews, Periods, Criteria, Disciplinary, Promotions)
+  - [x] Salary (Scale, Increment, Payroll)
+  - [x] Attendance (Clock In/Out, Records, Shifts, Overtime)
+  - [x] Inventory (Weapons, Equipment, Uniforms, Assignments)
+  - [x] Documents (Types, All Documents)
+  - [x] Reports (Employee, Leave, Attendance, Salary)
+  - [x] Settings (General, Notifications)
+- [x] ComingSoonPage.tsx placeholder for unimplemented features
 
 ---
 
@@ -250,6 +282,7 @@ This checklist provides a step-by-step, testable implementation plan for the EPP
 | Phase 0: Foundation | Completed | 100% |
 | Phase 1: Authentication | Completed | 100% |
 | Phase 2: Organization Core | Completed | 100% |
+| UI/Layout | Completed | 100% |
 | Phase 3: Employee Management | In Progress | 70% |
 | Phase 4: Leave Management | Not Started | 0% |
 | Phase 5: Holiday Management | Not Started | 0% |
@@ -281,4 +314,4 @@ This checklist provides a step-by-step, testable implementation plan for the EPP
 
 **Last Updated**: 2025-12-21
 **Total Tasks**: 200+
-**Completed**: ~85
+**Completed**: ~100
