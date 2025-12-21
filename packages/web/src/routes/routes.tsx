@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import { ComingSoonPage } from "#web/components/common/ComingSoonPage.tsx";
 import { AppLayout } from "#web/components/layout/AppLayout.tsx";
 import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
@@ -80,6 +81,30 @@ export const router = createBrowserRouter([
 				element: <EmployeeEditPage />,
 			},
 			{
+				path: "/employees/photo",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/employees/medical",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/employees/family",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/employees/marital",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/employees/health",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/employees/transfer",
+				element: <ComingSoonPage />,
+			},
+			{
 				path: "/organization/tenants",
 				element: <TenantsListPage />,
 			},
@@ -118,6 +143,42 @@ export const router = createBrowserRouter([
 			{
 				path: "/lookups/ranks",
 				element: <RanksListPage />,
+			},
+			{
+				path: "/leave/*",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/holidays/*",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/appraisal/*",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/salary/*",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/attendance/*",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/inventory/*",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/documents/*",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/reports/*",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/settings/*",
+				element: <ComingSoonPage />,
 			},
 		],
 	},
