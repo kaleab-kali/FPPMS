@@ -70,6 +70,12 @@ const mockPrismaService = {
 	auditLog: {
 		create: jest.fn(),
 	},
+	refreshToken: {
+		create: jest.fn(),
+		findUnique: jest.fn(),
+		update: jest.fn(),
+		updateMany: jest.fn(),
+	},
 };
 
 const mockJwtService = {
@@ -156,9 +162,12 @@ describe("AuthService", () => {
 				requirePasswordChange: false,
 			};
 
+			prisma.refreshToken.create.mockResolvedValue({ id: "token-123" });
+
 			const result = await service.login(loginUser);
 
 			expect(result.accessToken).toBe("mock-jwt-token");
+			expect(result.refreshToken).toBeDefined();
 			expect(result.user).toEqual(loginUser);
 			expect(mockJwtService.sign).toHaveBeenCalled();
 		});
@@ -213,6 +222,7 @@ describe("AuthService", () => {
 			jest.spyOn(hashUtil, "hashPassword").mockResolvedValue("new-hashed-password");
 			prisma.user.update.mockResolvedValue(mockUser);
 			prisma.auditLog.create.mockResolvedValue({});
+			prisma.refreshToken.updateMany.mockResolvedValue({ count: 1 });
 
 			const result = await service.resetPassword(MOCK_USER_ID, resetPasswordDto, "admin-123");
 
