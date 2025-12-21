@@ -1,5 +1,6 @@
 import { api } from "#web/lib/api-client.ts";
 import type {
+	ChangeStatusRequest,
 	CreateCivilianEmployeeRequest,
 	CreateMilitaryEmployeeRequest,
 	CreateTemporaryEmployeeRequest,
@@ -47,4 +48,8 @@ export const employeesApi = {
 	update: (id: string, data: UpdateEmployeeRequest) => api.patch<Employee>(`${BASE_URL}/${id}`, data),
 
 	delete: (id: string) => api.delete<{ message: string }>(`${BASE_URL}/${id}`),
+
+	changeStatus: (id: string, data: ChangeStatusRequest) => api.patch<Employee>(`${BASE_URL}/${id}/status`, data),
+
+	returnToActive: (id: string) => api.patch<Employee>(`${BASE_URL}/${id}/return-to-active`, {}),
 } as const;

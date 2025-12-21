@@ -1,12 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Plus, UserMinus, Users } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useDeleteEmployee } from "#web/api/employees/employees.mutations.ts";
+import { useChangeEmployeeStatus, useReturnToActive } from "#web/api/employees/employees.mutations.ts";
 import { useEmployeeStatistics, useEmployees } from "#web/api/employees/employees.queries.ts";
-import { ConfirmDialog } from "#web/components/common/ConfirmDialog.tsx";
 import { DataTable } from "#web/components/common/DataTable.tsx";
 import { Badge } from "#web/components/ui/badge.tsx";
 import { Button } from "#web/components/ui/button.tsx";
@@ -18,9 +17,13 @@ import {
 	DropdownMenuTrigger,
 } from "#web/components/ui/dropdown-menu.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
-import type { EmployeeFilter, EmployeeListItem, EmployeeType } from "#web/types/employee.ts";
+import type { StatusChangeData } from "#web/features/employees/components/StatusChangeDialog.tsx";
+import { StatusChangeDialog } from "#web/features/employees/components/StatusChangeDialog.tsx";
+import type { EmployeeFilter, EmployeeListItem, EmployeeStatus, EmployeeType } from "#web/types/employee.ts";
 
 const EMPLOYEE_TYPE_ALL = "__all__";
+const EMPLOYEE_STATUS_ALL = "__all__";
+const ACTIVE_STATUSES: EmployeeStatus[] = ["ACTIVE", "ON_LEAVE", "SUSPENDED"];
 
 const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
 	const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -50,15 +53,30 @@ export const EmployeesListPage = React.memo(
 		const { t: tCommon } = useTranslation("common");
 		const navigate = useNavigate();
 
-		const [deleteOpen, setDeleteOpen] = React.useState(false);
+		const [statusChangeOpen, setStatusChangeOpen] = React.useState(false);
 		const [selectedEmployee, setSelectedEmployee] = React.useState<EmployeeListItem | undefined>();
 		const [filter, setFilter] = React.useState<EmployeeFilter>({});
+		const [statusFilter, setStatusFilter] = React.useState<string>(EMPLOYEE_STATUS_ALL);
 
-		const { data: employeesData, isLoading } = useEmployees(filter);
+		const effectiveFilter = React.useMemo(() => {
+			if (statusFilter === EMPLOYEE_STATUS_ALL) {
+				return filter;
+			}
+			return { ...filter, status: statusFilter as EmployeeStatus };
+		}, [filter, statusFilter]);
+
+		const { data: employeesData, isLoading } = useEmployees(effectiveFilter);
 		const { data: statistics } = useEmployeeStatistics();
-		const deleteMutation = useDeleteEmployee();
+		const changeStatusMutation = useChangeEmployeeStatus();
+		const returnToActiveMutation = useReturnToActive();
 
-		const employees = employeesData?.data ?? [];
+		const employees = React.useMemo(() => {
+			const data = employeesData?.data ?? [];
+			if (statusFilter === EMPLOYEE_STATUS_ALL) {
+				return data.filter((emp) => ACTIVE_STATUSES.includes(emp.status));
+			}
+			return data;
+		}, [employeesData?.data, statusFilter]);
 
 		const handleCreate = React.useCallback(() => {
 			navigate("/employees/register");
@@ -78,17 +96,47 @@ export const EmployeesListPage = React.memo(
 			[navigate],
 		);
 
-		const handleDeleteClick = React.useCallback((employee: EmployeeListItem) => {
+		const handleStatusChangeClick = React.useCallback((employee: EmployeeListItem) => {
 			setSelectedEmployee(employee);
-			setDeleteOpen(true);
+			setStatusChangeOpen(true);
 		}, []);
 
-		const handleDeleteConfirm = React.useCallback(() => {
+		const handleStatusChangeConfirm = React.useCallback(
+			(data: StatusChangeData) => {
+				if (selectedEmployee) {
+					changeStatusMutation.mutate(
+						{
+							id: selectedEmployee.id,
+							data: {
+								status: data.status,
+								reason: data.reason,
+								effectiveDate: data.effectiveDate,
+								endDate: data.endDate,
+								notes: data.notes,
+							},
+						},
+						{
+							onSuccess: () => {
+								toast.success(tCommon("success"));
+								setStatusChangeOpen(false);
+								setSelectedEmployee(undefined);
+							},
+							onError: () => {
+								toast.error(tCommon("error"));
+							},
+						},
+					);
+				}
+			},
+			[selectedEmployee, changeStatusMutation, tCommon],
+		);
+
+		const handleReturnToActive = React.useCallback(() => {
 			if (selectedEmployee) {
-				deleteMutation.mutate(selectedEmployee.id, {
+				returnToActiveMutation.mutate(selectedEmployee.id, {
 					onSuccess: () => {
 						toast.success(tCommon("success"));
-						setDeleteOpen(false);
+						setStatusChangeOpen(false);
 						setSelectedEmployee(undefined);
 					},
 					onError: () => {
@@ -96,7 +144,11 @@ export const EmployeesListPage = React.memo(
 					},
 				});
 			}
-		}, [selectedEmployee, deleteMutation, tCommon]);
+		}, [selectedEmployee, returnToActiveMutation, tCommon]);
+
+		const handleStatusFilterChange = React.useCallback((value: string) => {
+			setStatusFilter(value);
+		}, []);
 
 		const handleTypeFilterChange = React.useCallback((value: string) => {
 			setFilter((prev) => ({
@@ -182,9 +234,9 @@ export const EmployeesListPage = React.memo(
 										<Pencil className="mr-2 h-4 w-4" />
 										{tCommon("edit")}
 									</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => handleDeleteClick(employee)} className="text-destructive">
-										<Trash2 className="mr-2 h-4 w-4" />
-										{tCommon("delete")}
+									<DropdownMenuItem onClick={() => handleStatusChangeClick(employee)} className="text-destructive">
+										<UserMinus className="mr-2 h-4 w-4" />
+										{t("changeEmployeeStatus")}
 									</DropdownMenuItem>
 								</DropdownMenuContent>
 							</DropdownMenu>
@@ -192,7 +244,7 @@ export const EmployeesListPage = React.memo(
 					},
 				},
 			],
-			[t, tCommon, handleView, handleEdit, handleDeleteClick, isAmharic],
+			[t, tCommon, handleView, handleEdit, handleStatusChangeClick, isAmharic],
 		);
 
 		return (
@@ -252,7 +304,7 @@ export const EmployeesListPage = React.memo(
 							<CardTitle>{t("title")}</CardTitle>
 							<div className="flex gap-2">
 								<Select value={filter.employeeType ?? EMPLOYEE_TYPE_ALL} onValueChange={handleTypeFilterChange}>
-									<SelectTrigger className="w-[180px]">
+									<SelectTrigger className="w-[150px]">
 										<SelectValue placeholder={t("selectType")} />
 									</SelectTrigger>
 									<SelectContent>
@@ -260,6 +312,17 @@ export const EmployeesListPage = React.memo(
 										<SelectItem value="MILITARY">{t("types.MILITARY")}</SelectItem>
 										<SelectItem value="CIVILIAN">{t("types.CIVILIAN")}</SelectItem>
 										<SelectItem value="TEMPORARY">{t("types.TEMPORARY")}</SelectItem>
+									</SelectContent>
+								</Select>
+								<Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+									<SelectTrigger className="w-[150px]">
+										<SelectValue placeholder={t("selectStatus")} />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value={EMPLOYEE_STATUS_ALL}>{tCommon("all")}</SelectItem>
+										<SelectItem value="ACTIVE">{t("statuses.ACTIVE")}</SelectItem>
+										<SelectItem value="ON_LEAVE">{t("statuses.ON_LEAVE")}</SelectItem>
+										<SelectItem value="SUSPENDED">{t("statuses.SUSPENDED")}</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
@@ -270,14 +333,14 @@ export const EmployeesListPage = React.memo(
 					</CardContent>
 				</Card>
 
-				<ConfirmDialog
-					open={deleteOpen}
-					onOpenChange={setDeleteOpen}
-					title={tCommon("confirm")}
-					description={t("deleteConfirm")}
-					onConfirm={handleDeleteConfirm}
-					isLoading={deleteMutation.isPending}
-					variant="destructive"
+				<StatusChangeDialog
+					open={statusChangeOpen}
+					onOpenChange={setStatusChangeOpen}
+					employeeName={selectedEmployee?.fullName ?? ""}
+					currentStatus={selectedEmployee?.status}
+					onConfirm={handleStatusChangeConfirm}
+					onReturnToActive={handleReturnToActive}
+					isLoading={changeStatusMutation.isPending || returnToActiveMutation.isPending}
 				/>
 			</div>
 		);

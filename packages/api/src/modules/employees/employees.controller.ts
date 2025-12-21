@@ -5,6 +5,7 @@ import { CurrentUser } from "#api/common/decorators/current-user.decorator";
 import { Roles } from "#api/common/decorators/roles.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import {
+	ChangeEmployeeStatusDto,
 	CreateCivilianEmployeeDto,
 	CreateMilitaryEmployeeDto,
 	CreateTemporaryEmployeeDto,
@@ -132,5 +133,28 @@ export class EmployeesController {
 	@ApiResponse({ status: 404, description: "Employee not found" })
 	remove(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<{ message: string }> {
 		return this.employeesService.remove(user.tenantId, id, user.id);
+	}
+
+	@Patch(":id/status")
+	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR)
+	@ApiOperation({ summary: "Change employee status", description: "Change employee status with reason" })
+	@ApiResponse({ status: 200, description: "Employee status changed", type: EmployeeResponseDto })
+	@ApiResponse({ status: 404, description: "Employee not found" })
+	changeStatus(
+		@CurrentUser() user: AuthUserDto,
+		@Param("id") id: string,
+		@Body() dto: ChangeEmployeeStatusDto,
+	): Promise<EmployeeResponseDto> {
+		return this.employeesService.changeStatus(user.tenantId, id, dto, user.id);
+	}
+
+	@Patch(":id/return-to-active")
+	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR)
+	@ApiOperation({ summary: "Return employee to active", description: "Return a suspended employee to active status" })
+	@ApiResponse({ status: 200, description: "Employee returned to active", type: EmployeeResponseDto })
+	@ApiResponse({ status: 404, description: "Employee not found" })
+	@ApiResponse({ status: 400, description: "Employee is already active or deceased" })
+	returnToActive(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<EmployeeResponseDto> {
+		return this.employeesService.returnToActive(user.tenantId, id, user.id);
 	}
 }
