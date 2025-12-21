@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "#web/components/layout/AppLayout.tsx";
 import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
+import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
 import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
 import { EmployeeDetailPage } from "#web/features/employees/pages/EmployeeDetailPage.tsx";
@@ -34,6 +35,14 @@ export const router = createBrowserRouter([
 				element: <LoginPage />,
 			},
 		],
+	},
+	{
+		path: "/change-password",
+		element: (
+			<ProtectedRoute allowPasswordChange>
+				<ChangePasswordPage />
+			</ProtectedRoute>
+		),
 	},
 	{
 		element: (

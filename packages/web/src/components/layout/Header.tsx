@@ -23,9 +23,7 @@ export const Header = React.memo(
 
 		const userInitials = React.useMemo(() => {
 			if (!user) return "U";
-			const first = user.firstName?.[0] || "";
-			const last = user.lastName?.[0] || "";
-			return (first + last).toUpperCase() || "U";
+			return user.username.substring(0, 2).toUpperCase();
 		}, [user]);
 
 		const handleLogout = React.useCallback(() => {
@@ -65,10 +63,8 @@ export const Header = React.memo(
 						</DropdownMenuTrigger>
 						<DropdownMenuContent className="w-56" align="end" forceMount>
 							<div className="flex flex-col space-y-1 p-2">
-								<p className="text-sm font-medium leading-none">
-									{user?.firstName} {user?.lastName}
-								</p>
-								<p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+								<p className="text-sm font-medium leading-none">{user?.username}</p>
+								<p className="text-xs leading-none text-muted-foreground">{user?.roles.join(", ")}</p>
 							</div>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem onClick={handleProfileClick}>

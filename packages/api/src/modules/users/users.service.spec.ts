@@ -8,12 +8,13 @@ const MOCK_TENANT_ID = "tenant-123";
 const MOCK_USER_ID = "user-123";
 const MOCK_CENTER_ID = "center-123";
 const MOCK_ROLE_ID = "role-123";
+const MOCK_EMPLOYEE_ID = "employee-123";
 
 const mockUser = {
 	id: MOCK_USER_ID,
 	tenantId: MOCK_TENANT_ID,
 	centerId: MOCK_CENTER_ID,
-	employeeId: null,
+	employeeId: MOCK_EMPLOYEE_ID,
 	username: "testuser",
 	email: "test@example.com",
 	passwordHash: "hashed-password",
@@ -35,6 +36,17 @@ const mockUser = {
 			},
 		},
 	],
+};
+
+const mockEmployee = {
+	id: MOCK_EMPLOYEE_ID,
+	tenantId: MOCK_TENANT_ID,
+	centerId: MOCK_CENTER_ID,
+	employeeId: "EMP-001",
+	email: "employee@example.com",
+	firstName: "John",
+	middleName: "D",
+	lastName: "Doe",
 };
 
 const mockPrismaService = {
@@ -76,14 +88,15 @@ describe("UsersService", () => {
 
 	describe("create", () => {
 		const createDto = {
+			employeeId: MOCK_EMPLOYEE_ID,
 			username: "newuser",
-			email: "new@example.com",
 			password: "Password123!",
 			roleIds: [MOCK_ROLE_ID],
 		};
 
 		it("should create a new user", async () => {
-			prisma.user.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockUser);
+			prisma.employee.findFirst.mockResolvedValue(mockEmployee);
+			prisma.user.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null).mockResolvedValueOnce(mockUser);
 			prisma.user.create.mockResolvedValue(mockUser);
 			prisma.role.findMany.mockResolvedValue([{ id: MOCK_ROLE_ID }]);
 			prisma.userRole.createMany.mockResolvedValue({ count: 1 });
@@ -94,8 +107,22 @@ describe("UsersService", () => {
 			expect(prisma.user.create).toHaveBeenCalled();
 		});
 
-		it("should throw BadRequestException if username exists", async () => {
+		it("should throw BadRequestException if employee not found", async () => {
+			prisma.employee.findFirst.mockResolvedValue(null);
+
+			await expect(service.create(MOCK_TENANT_ID, createDto, "admin")).rejects.toThrow(BadRequestException);
+		});
+
+		it("should throw BadRequestException if employee already has user account", async () => {
+			prisma.employee.findFirst.mockResolvedValue(mockEmployee);
 			prisma.user.findFirst.mockResolvedValue(mockUser);
+
+			await expect(service.create(MOCK_TENANT_ID, createDto, "admin")).rejects.toThrow(BadRequestException);
+		});
+
+		it("should throw BadRequestException if username exists", async () => {
+			prisma.employee.findFirst.mockResolvedValue(mockEmployee);
+			prisma.user.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(mockUser);
 
 			await expect(service.create(MOCK_TENANT_ID, { ...createDto, username: "testuser" }, "admin")).rejects.toThrow(
 				BadRequestException,
@@ -103,7 +130,8 @@ describe("UsersService", () => {
 		});
 
 		it("should throw BadRequestException if center not found", async () => {
-			prisma.user.findFirst.mockResolvedValue(null);
+			prisma.employee.findFirst.mockResolvedValue(mockEmployee);
+			prisma.user.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
 			prisma.center.findFirst.mockResolvedValue(null);
 
 			await expect(
@@ -136,7 +164,7 @@ describe("UsersService", () => {
 
 	describe("findOne", () => {
 		it("should return a user by id", async () => {
-			prisma.user.findFirst.mockResolvedValue(mockUser);
+			prisma.user.findFirst.mockResolvedValueOnce(mockUser);
 
 			const result = await service.findOne(MOCK_TENANT_ID, MOCK_USER_ID);
 
@@ -144,7 +172,7 @@ describe("UsersService", () => {
 		});
 
 		it("should throw NotFoundException if user not found", async () => {
-			prisma.user.findFirst.mockResolvedValue(null);
+			prisma.user.findFirst.mockResolvedValueOnce(null);
 
 			await expect(service.findOne(MOCK_TENANT_ID, "nonexistent")).rejects.toThrow(NotFoundException);
 		});

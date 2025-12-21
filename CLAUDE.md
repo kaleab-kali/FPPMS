@@ -77,6 +77,8 @@ import { cn } from "#web/lib/utils";
 - NEVER include "Co-Authored-By" or "Generated with Claude Code" in commit messages.
 - ALWAYS use conventional commit format: type(scope): description
 - Example: feat(auth): add login endpoint
+- ALWAYS test and commit when changes exceed 8 new files created OR 10 files edited.
+- NEVER let a single commit grow too large - keep PRs clean and reviewable.
 
 ## Code Style
 

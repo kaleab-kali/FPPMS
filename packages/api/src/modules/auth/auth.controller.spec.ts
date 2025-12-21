@@ -47,14 +47,20 @@ describe("AuthController", () => {
 		it("should return login response with token", async () => {
 			const expectedResponse = {
 				accessToken: "mock-token",
+				refreshToken: "mock-refresh-token",
 				user: mockLoginUser,
 			};
 			authService.login.mockResolvedValue(expectedResponse);
 
-			const result = await controller.login({ user: mockLoginUser }, { username: "testuser", password: "password" });
+			const mockRequest = {
+				user: mockLoginUser,
+				headers: { "user-agent": "test-agent" },
+			};
+
+			const result = await controller.login(mockRequest, { username: "testuser", password: "password" }, "127.0.0.1");
 
 			expect(result).toEqual(expectedResponse);
-			expect(authService.login).toHaveBeenCalledWith(mockLoginUser);
+			expect(authService.login).toHaveBeenCalledWith(mockLoginUser, "127.0.0.1", "test-agent");
 		});
 	});
 

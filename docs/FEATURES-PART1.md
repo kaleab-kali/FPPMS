@@ -183,7 +183,7 @@
 - 1.2.10.2 Submission
   - 1.2.10.2.1 Save as Draft Button
   - 1.2.10.2.2 Register Employee Button
-  - 1.2.10.2.3 Employee ID Generation (FPC-NNNNNN)
+  - 1.2.10.2.3 Employee ID Generation (FPC-NNNN/NN)
   - 1.2.10.2.4 Success Message with Employee ID
   - 1.2.10.2.5 Redirect to Photo Capture
   - 1.2.10.2.6 Print Registration Summary

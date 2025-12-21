@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
+import { PrismaService } from "#api/database/prisma.service";
 
 interface JwtPayloadData {
 	sub: string;
@@ -21,9 +22,14 @@ interface ValidatedUser {
 	permissions: string[];
 }
 
+const ACTIVE_STATUSES = ["ACTIVE", "PENDING"] as const;
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-	constructor(configService: ConfigService) {
+	constructor(
+		configService: ConfigService,
+		private prisma: PrismaService,
+	) {
 		const secret = configService.get<string>("auth.jwtSecret") || "default-secret-change-in-production";
 		super({
 			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -32,7 +38,26 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 		});
 	}
 
-	validate(payload: JwtPayloadData): ValidatedUser {
+	async validate(payload: JwtPayloadData): Promise<ValidatedUser> {
+		const user = await this.prisma.user.findFirst({
+			where: {
+				id: payload.sub,
+				deletedAt: null,
+			},
+			select: {
+				id: true,
+				status: true,
+			},
+		});
+
+		if (!user) {
+			throw new UnauthorizedException("User not found");
+		}
+
+		if (!ACTIVE_STATUSES.includes(user.status as (typeof ACTIVE_STATUSES)[number])) {
+			throw new UnauthorizedException("Account is not active. Please contact administrator.");
+		}
+
 		return {
 			id: payload.sub,
 			username: payload.username,

@@ -1,10 +1,11 @@
+import { createHash, randomBytes } from "node:crypto";
 import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { v4 as uuidv4 } from "uuid";
 import { comparePassword, hashPassword } from "#api/common/utils/hash.util";
 import { PrismaService } from "#api/database/prisma.service";
 import { ChangePasswordDto } from "#api/modules/auth/dto/change-password.dto";
-import { LoginResponseDto, LoginUserDto } from "#api/modules/auth/dto/login-response.dto";
+import { LoginResponseDto, LoginUserDto, RefreshTokenResponseDto } from "#api/modules/auth/dto/login-response.dto";
 import { ResetPasswordDto } from "#api/modules/auth/dto/reset-password.dto";
 
 interface JwtPayloadData {
@@ -20,6 +21,8 @@ const AUTH_CONFIG = {
 	MAX_FAILED_LOGIN_ATTEMPTS: 5,
 	LOCK_DURATION_MINUTES: 30,
 	MILLISECONDS_PER_MINUTE: 60 * 1000,
+	ACCESS_TOKEN_EXPIRY_MINUTES: 15,
+	REFRESH_TOKEN_EXPIRY_DAYS: 7,
 } as const;
 
 @Injectable()
@@ -63,6 +66,14 @@ export class AuthService {
 			throw new ForbiddenException("Account is inactive. Please contact IT Administrator.");
 		}
 
+		if (user.status === "TRANSFERRED") {
+			throw new ForbiddenException("Your account has been transferred. Please contact IT Administrator for access.");
+		}
+
+		if (user.status === "TERMINATED") {
+			throw new ForbiddenException("Your account has been terminated. Access is no longer available.");
+		}
+
 		const isPasswordValid = await comparePassword(password, user.passwordHash);
 
 		if (!isPasswordValid) {
@@ -95,7 +106,7 @@ export class AuthService {
 		};
 	}
 
-	async login(user: LoginUserDto): Promise<LoginResponseDto> {
+	async login(user: LoginUserDto, ipAddress?: string, deviceInfo?: string): Promise<LoginResponseDto> {
 		const payload: JwtPayloadData = {
 			sub: user.id,
 			username: user.username,
@@ -105,10 +116,115 @@ export class AuthService {
 			permissions: user.permissions,
 		};
 
+		const accessToken = this.jwtService.sign(payload, {
+			expiresIn: `${AUTH_CONFIG.ACCESS_TOKEN_EXPIRY_MINUTES}m`,
+		});
+
+		const refreshToken = await this.generateRefreshToken(user.id, ipAddress, deviceInfo);
+
 		return {
-			accessToken: this.jwtService.sign(payload),
+			accessToken,
+			refreshToken,
 			user,
 		};
+	}
+
+	async refreshTokens(refreshToken: string, ipAddress?: string, deviceInfo?: string): Promise<RefreshTokenResponseDto> {
+		const tokenHash = this.hashToken(refreshToken);
+
+		const storedToken = await this.prisma.refreshToken.findUnique({
+			where: { tokenHash },
+			include: {
+				user: {
+					include: {
+						userRoles: {
+							include: {
+								role: {
+									include: {
+										rolePermissions: {
+											include: {
+												permission: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		});
+
+		if (!storedToken) {
+			throw new UnauthorizedException("Invalid refresh token");
+		}
+
+		if (storedToken.revokedAt) {
+			await this.revokeAllUserTokens(storedToken.userId);
+			throw new UnauthorizedException("Token has been revoked. Please login again.");
+		}
+
+		if (storedToken.expiresAt < new Date()) {
+			throw new UnauthorizedException("Refresh token expired. Please login again.");
+		}
+
+		const user = storedToken.user;
+
+		if (!user || user.deletedAt || user.status === "LOCKED" || user.status === "INACTIVE") {
+			throw new UnauthorizedException("User account is not active");
+		}
+
+		await this.prisma.refreshToken.update({
+			where: { id: storedToken.id },
+			data: { revokedAt: new Date() },
+		});
+
+		const roles = user.userRoles.map((ur) => ur.role.code);
+		const permissions = [
+			...new Set(
+				user.userRoles.flatMap((ur) =>
+					ur.role.rolePermissions.map(
+						(rp) => `${rp.permission.module}.${rp.permission.action}.${rp.permission.resource}`,
+					),
+				),
+			),
+		];
+
+		const payload: JwtPayloadData = {
+			sub: user.id,
+			username: user.username,
+			tenantId: user.tenantId,
+			centerId: user.centerId || undefined,
+			roles,
+			permissions,
+		};
+
+		const newAccessToken = this.jwtService.sign(payload, {
+			expiresIn: `${AUTH_CONFIG.ACCESS_TOKEN_EXPIRY_MINUTES}m`,
+		});
+
+		const newRefreshToken = await this.generateRefreshToken(user.id, ipAddress, deviceInfo, storedToken.id);
+
+		return {
+			accessToken: newAccessToken,
+			refreshToken: newRefreshToken,
+		};
+	}
+
+	async logout(refreshToken: string): Promise<{ message: string }> {
+		const tokenHash = this.hashToken(refreshToken);
+
+		await this.prisma.refreshToken.updateMany({
+			where: { tokenHash, revokedAt: null },
+			data: { revokedAt: new Date() },
+		});
+
+		return { message: "Logged out successfully" };
+	}
+
+	async logoutAll(userId: string): Promise<{ message: string }> {
+		await this.revokeAllUserTokens(userId);
+		return { message: "Logged out from all devices successfully" };
 	}
 
 	async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ message: string }> {
@@ -170,6 +286,8 @@ export class AuthService {
 				lockedUntil: null,
 			},
 		});
+
+		await this.revokeAllUserTokens(userId);
 
 		await this.prisma.auditLog.create({
 			data: {
@@ -233,6 +351,41 @@ export class AuthService {
 			permissions,
 			requirePasswordChange: user.mustChangePassword,
 		};
+	}
+
+	private async generateRefreshToken(
+		userId: string,
+		ipAddress?: string,
+		deviceInfo?: string,
+		replacedById?: string,
+	): Promise<string> {
+		const token = randomBytes(64).toString("hex");
+		const tokenHash = this.hashToken(token);
+		const expiresAt = new Date(Date.now() + AUTH_CONFIG.REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+
+		await this.prisma.refreshToken.create({
+			data: {
+				userId,
+				tokenHash,
+				ipAddress,
+				deviceInfo,
+				expiresAt,
+				replacedBy: replacedById,
+			},
+		});
+
+		return token;
+	}
+
+	private hashToken(token: string): string {
+		return createHash("sha256").update(token).digest("hex");
+	}
+
+	private async revokeAllUserTokens(userId: string): Promise<void> {
+		await this.prisma.refreshToken.updateMany({
+			where: { userId, revokedAt: null },
+			data: { revokedAt: new Date() },
+		});
 	}
 
 	private async incrementFailedAttempts(userId: string): Promise<void> {

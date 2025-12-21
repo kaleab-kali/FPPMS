@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#web/
 import { Input } from "#web/components/ui/input.tsx";
 import { Label } from "#web/components/ui/label.tsx";
 import { useAuth } from "#web/context/AuthContext.tsx";
+import { ACCOUNT_DEACTIVATED_KEY } from "#web/lib/api-client.ts";
 
 const loginSchema = z.object({
 	username: z.string().min(1, "Username is required"),
@@ -29,6 +30,14 @@ export const LoginPage = React.memo(
 		const [isSubmitting, setIsSubmitting] = React.useState(false);
 
 		const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
+
+		React.useEffect(() => {
+			const deactivatedMessage = globalThis.localStorage.getItem(ACCOUNT_DEACTIVATED_KEY);
+			if (deactivatedMessage) {
+				setError(deactivatedMessage);
+				globalThis.localStorage.removeItem(ACCOUNT_DEACTIVATED_KEY);
+			}
+		}, []);
 
 		React.useEffect(() => {
 			if (isAuthenticated) {
@@ -52,8 +61,16 @@ export const LoginPage = React.memo(
 					.then(() => {
 						navigate(from, { replace: true });
 					})
-					.catch(() => {
-						setError(t("invalidCredentials"));
+					.catch((err: unknown) => {
+						const axiosError = err as { response?: { data?: { message?: string }; status?: number } };
+						const apiMessage = axiosError.response?.data?.message;
+						const statusCode = axiosError.response?.status;
+
+						if (statusCode === 403 && apiMessage) {
+							setError(apiMessage);
+						} else {
+							setError(t("invalidCredentials"));
+						}
 					})
 					.finally(() => {
 						setIsSubmitting(false);

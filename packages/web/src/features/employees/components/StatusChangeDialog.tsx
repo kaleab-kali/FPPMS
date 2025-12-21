@@ -208,7 +208,7 @@ export const StatusChangeDialog = React.memo(
 										value={reason}
 										onChange={(e) => setReason(e.target.value)}
 										placeholder={t("enterReason")}
-										className="min-h-[80px]"
+										className="min-h-20"
 									/>
 								</div>
 
