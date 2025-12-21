@@ -96,10 +96,7 @@ describe("UsersService", () => {
 
 		it("should create a new user", async () => {
 			prisma.employee.findFirst.mockResolvedValue(mockEmployee);
-			prisma.user.findFirst
-				.mockResolvedValueOnce(null)
-				.mockResolvedValueOnce(null)
-				.mockResolvedValueOnce(mockUser);
+			prisma.user.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null).mockResolvedValueOnce(mockUser);
 			prisma.user.create.mockResolvedValue(mockUser);
 			prisma.role.findMany.mockResolvedValue([{ id: MOCK_ROLE_ID }]);
 			prisma.userRole.createMany.mockResolvedValue({ count: 1 });
