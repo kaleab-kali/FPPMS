@@ -30,5 +30,12 @@ export {
 	EmployeePhotoResponseDto,
 } from "#api/modules/employees/dto/employee-photo.dto";
 export { EmployeeListResponseDto, EmployeeResponseDto } from "#api/modules/employees/dto/employee-response.dto";
-export { CreateTransferDto, ExternalTransferDto } from "#api/modules/employees/dto/employee-transfer.dto";
+export {
+	AcceptTransferDto,
+	CancelTransferDto,
+	CreateDepartureDto,
+	CreateTransferRequestDto,
+	RejectTransferDto,
+	UpdateDepartureDto,
+} from "#api/modules/employees/dto/employee-transfer.dto";
 export { UpdateEmployeeDto } from "#api/modules/employees/dto/update-employee.dto";
