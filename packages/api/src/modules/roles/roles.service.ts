@@ -143,6 +143,7 @@ export class RolesService {
 			if (dto.permissionIds.length > 0) {
 				await this.assignPermissions(id, dto.permissionIds);
 			}
+			await this.incrementPermissionVersionForRole(id);
 		}
 
 		return this.findOne(tenantId, id);
@@ -189,6 +190,23 @@ export class RolesService {
 		}));
 
 		await this.prisma.rolePermission.createMany({ data: rolePermissionData });
+	}
+
+	private async incrementPermissionVersionForRole(roleId: string): Promise<void> {
+		const userRoles = await this.prisma.userRole.findMany({
+			where: { roleId },
+			select: { userId: true },
+		});
+
+		if (userRoles.length === 0) {
+			return;
+		}
+
+		const userIds = userRoles.map((ur) => ur.userId);
+		await this.prisma.user.updateMany({
+			where: { id: { in: userIds } },
+			data: { permissionVersion: { increment: 1 } },
+		});
 	}
 
 	private mapToResponse(role: {

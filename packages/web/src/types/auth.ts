@@ -17,6 +17,7 @@ export interface AuthUser {
 	roles: string[];
 	permissions: string[];
 	requirePasswordChange: boolean;
+	permissionVersion: number;
 }
 
 export interface ChangePasswordRequest {

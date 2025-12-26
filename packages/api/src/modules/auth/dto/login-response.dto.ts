@@ -6,6 +6,7 @@ export class LoginUserDto {
 	roles: string[];
 	permissions: string[];
 	requirePasswordChange: boolean;
+	permissionVersion: number;
 }
 
 export class LoginResponseDto {

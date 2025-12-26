@@ -258,6 +258,7 @@ model User {
   deletedAt           DateTime?  @map("deleted_at")
   statusChangedAt     DateTime?  @map("status_changed_at")
   statusChangeReason  String?    @map("status_change_reason")
+  permissionVersion   Int        @default(1) @map("permission_version")
 
   tenant        Tenant         @relation(fields: [tenantId], references: [id])
   center        Center?        @relation(fields: [centerId], references: [id])
@@ -586,6 +587,7 @@ model Employee {
   contractEndDate        DateTime?        @map("contract_end_date") @db.Date
   contractAmount         Decimal?         @map("contract_amount") @db.Decimal(12, 2)
   retirementDate         DateTime?        @map("retirement_date") @db.Date
+  directSuperiorId       String?          @map("direct_superior_id")
   status                 EmployeeStatus   @default(ACTIVE)
   statusChangedAt        DateTime?        @map("status_changed_at")
   statusReason           String?          @map("status_reason")
@@ -600,6 +602,10 @@ model Employee {
   department           Department?                @relation(fields: [departmentId], references: [id])
   position             Position?                  @relation(fields: [positionId], references: [id])
   rank                 MilitaryRank?              @relation(fields: [rankId], references: [id])
+  directSuperior       Employee?                  @relation("DirectSuperior", fields: [directSuperiorId], references: [id])
+  subordinates         Employee[]                 @relation("DirectSuperior")
+  superiorHistory      SuperiorAssignmentHistory[] @relation("SuperiorHistoryEmployee")
+  superiorOfHistory    SuperiorAssignmentHistory[] @relation("SuperiorHistorySuperior")
   addresses            EmployeeAddress[]
   motherInfo           EmployeeMotherInfo?
   emergencyContacts    EmployeeEmergencyContact[]
@@ -632,6 +638,7 @@ model Employee {
   @@index([fullName])
   @@index([primaryPhone])
   @@index([faydaId])
+  @@index([directSuperiorId])
   @@map("employees")
 }
 
@@ -978,6 +985,32 @@ model DepartureAttachment {
 
   @@index([departureId])
   @@map("departure_attachments")
+}
+
+// ============================================================================
+// SUPERIOR ASSIGNMENT HISTORY
+// ============================================================================
+
+model SuperiorAssignmentHistory {
+  id                 String    @id @default(cuid())
+  tenantId           String    @map("tenant_id")
+  employeeId         String    @map("employee_id")
+  previousSuperiorId String?   @map("previous_superior_id")
+  newSuperiorId      String?   @map("new_superior_id")
+  assignedDate       DateTime  @map("assigned_date") @db.Date
+  endDate            DateTime? @map("end_date") @db.Date
+  reason             String?
+  remarks            String?
+  assignedBy         String    @map("assigned_by")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  employee         Employee  @relation("SuperiorHistoryEmployee", fields: [employeeId], references: [id], onDelete: Cascade)
+  previousSuperior Employee? @relation("SuperiorHistorySuperior", fields: [previousSuperiorId], references: [id])
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([newSuperiorId])
+  @@map("superior_assignment_history")
 }
 
 // ============================================================================
