@@ -57,6 +57,14 @@ const OrgChartNodeComponent = React.memo(
 				<div
 					className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 cursor-pointer"
 					onClick={toggleExpand}
+					onKeyDown={(e) => {
+						if (e.key === "Enter" || e.key === " ") {
+							e.preventDefault();
+							toggleExpand();
+						}
+					}}
+					role="button"
+					tabIndex={0}
 				>
 					{hasChildren ? (
 						expanded ? (
@@ -131,7 +139,7 @@ export const DirectSuperiorPage = React.memo(
 				(emp) =>
 					emp.fullName.toLowerCase().includes(term) ||
 					emp.employeeId.toLowerCase().includes(term) ||
-					(emp.fullNameAm && emp.fullNameAm.includes(term)),
+					emp.fullNameAm?.includes(term),
 			);
 		}, [employees, searchTerm]);
 
@@ -290,10 +298,7 @@ export const DirectSuperiorPage = React.memo(
 
 		const renderEmployeeRow = React.useCallback(
 			(emp: EmployeeWithSuperior) => (
-				<div
-					key={emp.id}
-					className="flex items-center gap-4 p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-				>
+				<div key={emp.id} className="flex items-center gap-4 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
 					<input
 						type="checkbox"
 						checked={selectedEmployees.includes(emp.id)}
@@ -539,9 +544,7 @@ export const DirectSuperiorPage = React.memo(
 					<DialogContent className="sm:max-w-lg">
 						<DialogHeader>
 							<DialogTitle>{t("superior.bulkAssign")}</DialogTitle>
-							<DialogDescription>
-								{t("superior.bulkAssignDesc", { count: selectedEmployees.length })}
-							</DialogDescription>
+							<DialogDescription>{t("superior.bulkAssignDesc", { count: selectedEmployees.length })}</DialogDescription>
 						</DialogHeader>
 						<div className="space-y-4">
 							<div className="space-y-2">

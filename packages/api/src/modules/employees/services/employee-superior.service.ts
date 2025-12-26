@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "#api/database/prisma.service";
-import { AssignSuperiorDto, BulkAssignSuperiorDto, RemoveSuperiorDto } from "#api/modules/employees/dto/employee-superior.dto";
+import {
+	AssignSuperiorDto,
+	BulkAssignSuperiorDto,
+	RemoveSuperiorDto,
+} from "#api/modules/employees/dto/employee-superior.dto";
 
 const EMPLOYEE_BASIC_SELECT = {
 	id: true,
@@ -253,7 +257,8 @@ export class EmployeeSuperiorService {
 		const idsToCheck = [superiorId];
 
 		for (let i = 0; i < 20 && idsToCheck.length > 0; i++) {
-			const checkId = idsToCheck.shift()!;
+			const checkId = idsToCheck.shift();
+			if (!checkId) break;
 			if (checkId === employeeId) return true;
 			if (visited.has(checkId)) continue;
 			visited.add(checkId);

@@ -22,8 +22,7 @@ export const employeeSuperiorApi = {
 			params: { ...(centerId && { centerId }), ...(rootEmployeeId && { rootEmployeeId }) },
 		}),
 
-	bulkAssignSuperior: (data: BulkAssignSuperiorDto) =>
-		api.post<{ updated: number }>(`${BASE_URL}/bulk-assign`, data),
+	bulkAssignSuperior: (data: BulkAssignSuperiorDto) => api.post<{ updated: number }>(`${BASE_URL}/bulk-assign`, data),
 
 	getDirectSuperior: (employeeId: string) => api.get<EmployeeBasicInfo | null>(`${BASE_URL}/${employeeId}`),
 

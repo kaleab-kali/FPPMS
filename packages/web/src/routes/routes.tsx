@@ -5,6 +5,7 @@ import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
 import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
+import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
 import { EmployeeDetailPage } from "#web/features/employees/pages/EmployeeDetailPage.tsx";
 import { EmployeeEditPage } from "#web/features/employees/pages/EmployeeEditPage.tsx";
 import { EmployeeFamilyPage } from "#web/features/employees/pages/EmployeeFamilyPage.tsx";
@@ -15,7 +16,6 @@ import { EmployeeRegisterFormPage } from "#web/features/employees/pages/Employee
 import { EmployeeRegisterSelectPage } from "#web/features/employees/pages/EmployeeRegisterSelectPage.tsx";
 import { EmployeesListPage } from "#web/features/employees/pages/EmployeesListPage.tsx";
 import { EmployeeTransferPage } from "#web/features/employees/pages/EmployeeTransferPage.tsx";
-import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
 import { FormerEmployeesPage } from "#web/features/employees/pages/FormerEmployeesPage.tsx";
 import { RanksListPage } from "#web/features/lookups/pages/RanksListPage.tsx";
 import { RegionsListPage } from "#web/features/lookups/pages/RegionsListPage.tsx";

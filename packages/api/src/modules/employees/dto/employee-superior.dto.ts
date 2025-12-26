@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsString, IsOptional, IsUUID, IsArray, IsNotEmpty } from "class-validator";
+import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export class AssignSuperiorDto {
 	@ApiProperty({ description: "Employee ID of the superior (e.g., FPC-0001/25)" })
