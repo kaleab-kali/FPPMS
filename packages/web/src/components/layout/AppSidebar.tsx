@@ -13,6 +13,7 @@ import {
 	Star,
 	UserCheck,
 	Users,
+	UsersRound,
 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -83,6 +84,15 @@ const NAV_ITEMS_CONFIG: NavItemConfig[] = [
 			{ titleKey: "healthRecords", url: "/employees/health" },
 			{ titleKey: "transfer", url: "/employees/transfer" },
 			{ titleKey: "directSuperior", url: "/employees/superior" },
+		],
+	},
+	{
+		titleKey: "committees",
+		url: "#",
+		icon: UsersRound,
+		items: [
+			{ titleKey: "allCommittees", url: "/committees" },
+			{ titleKey: "committeeTypes", url: "/committees/types" },
 		],
 	},
 	{

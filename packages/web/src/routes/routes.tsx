@@ -4,6 +4,9 @@ import { AppLayout } from "#web/components/layout/AppLayout.tsx";
 import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
 import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
+import { CommitteeDetailPage } from "#web/features/committees/pages/CommitteeDetailPage.tsx";
+import { CommitteesListPage } from "#web/features/committees/pages/CommitteesListPage.tsx";
+import { CommitteeTypesListPage } from "#web/features/committees/pages/CommitteeTypesListPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
 import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
 import { EmployeeDetailPage } from "#web/features/employees/pages/EmployeeDetailPage.tsx";
@@ -153,6 +156,18 @@ export const router = createBrowserRouter([
 			{
 				path: "/lookups/ranks",
 				element: <RanksListPage />,
+			},
+			{
+				path: "/committees",
+				element: <CommitteesListPage />,
+			},
+			{
+				path: "/committees/types",
+				element: <CommitteeTypesListPage />,
+			},
+			{
+				path: "/committees/:id",
+				element: <CommitteeDetailPage />,
 			},
 			{
 				path: "/leave/*",

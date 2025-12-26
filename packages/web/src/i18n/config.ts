@@ -3,6 +3,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 import { APP_CONFIG, STORAGE_KEYS } from "#web/config/constants.ts";
 import amAuth from "#web/i18n/locales/am/auth.json";
+import amCommittees from "#web/i18n/locales/am/committees.json";
 import amCommon from "#web/i18n/locales/am/common.json";
 import amDashboard from "#web/i18n/locales/am/dashboard.json";
 import amEmployees from "#web/i18n/locales/am/employees.json";
@@ -14,6 +15,7 @@ import amRoles from "#web/i18n/locales/am/roles.json";
 import amUsers from "#web/i18n/locales/am/users.json";
 import amValidation from "#web/i18n/locales/am/validation.json";
 import enAuth from "#web/i18n/locales/en/auth.json";
+import enCommittees from "#web/i18n/locales/en/committees.json";
 import enCommon from "#web/i18n/locales/en/common.json";
 import enDashboard from "#web/i18n/locales/en/dashboard.json";
 import enEmployees from "#web/i18n/locales/en/employees.json";
@@ -29,6 +31,7 @@ const resources = {
 	en: {
 		common: enCommon,
 		auth: enAuth,
+		committees: enCommittees,
 		navigation: enNavigation,
 		validation: enValidation,
 		errors: enErrors,
@@ -42,6 +45,7 @@ const resources = {
 	am: {
 		common: amCommon,
 		auth: amAuth,
+		committees: amCommittees,
 		navigation: amNavigation,
 		validation: amValidation,
 		errors: amErrors,
@@ -65,6 +69,7 @@ i18n
 		ns: [
 			"common",
 			"auth",
+			"committees",
 			"navigation",
 			"validation",
 			"errors",

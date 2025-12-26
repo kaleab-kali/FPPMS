@@ -1,0 +1,103 @@
+{
+	"type": {
+		"title": "Committee Types",
+		"list": "Committee Types List",
+		"description": "Define and manage committee type definitions",
+		"create": "Create Committee Type",
+		"edit": "Edit Committee Type",
+		"deleteConfirm": "Are you sure you want to deactivate this committee type?",
+		"code": "Code",
+		"name": "Name (English)",
+		"nameAm": "Name (Amharic)",
+		"description": "Description (English)",
+		"descriptionAm": "Description (Amharic)",
+		"minMembers": "Minimum Members",
+		"maxMembers": "Maximum Members",
+		"unlimited": "Unlimited",
+		"isPermanent": "Permanent Committee",
+		"isPermanentHelp": "Permanent committees cannot be dissolved",
+		"requiresCenter": "Requires Center",
+		"requiresCenterHelp": "Each center must have this type of committee",
+		"committeeCount": "Committees",
+		"minMax": "Min: {{min}}, Max: {{max}}"
+	},
+	"committee": {
+		"title": "Committees",
+		"list": "Committees List",
+		"description": "Manage organizational committees",
+		"create": "Create Committee",
+		"edit": "Edit Committee",
+		"notFound": "Committee not found",
+		"code": "Code",
+		"name": "Name (English)",
+		"nameAm": "Name (Amharic)",
+		"type": "Committee Type",
+		"selectType": "Select committee type",
+		"center": "Center",
+		"selectCenter": "Select center",
+		"hqLevel": "Headquarters Level",
+		"establishedDate": "Established Date",
+		"description": "Description (English)",
+		"descriptionAm": "Description (Amharic)",
+		"memberCount": "Members"
+	},
+	"member": {
+		"title": "Committee Members",
+		"description": "Manage committee membership",
+		"add": "Add Member",
+		"addDescription": "Add a new member to the committee",
+		"selectEmployee": "Employee",
+		"selectEmployeePlaceholder": "Select an employee",
+		"selectRole": "Select role",
+		"employeeId": "Employee ID",
+		"name": "Name",
+		"position": "Position",
+		"role": "Role",
+		"appointedDate": "Appointed Date"
+	},
+	"role": {
+		"chairman": "Chairman",
+		"vice_chairman": "Vice Chairman",
+		"secretary": "Secretary",
+		"member": "Member",
+		"advisor": "Advisor"
+	},
+	"status": {
+		"active": "Active",
+		"suspended": "Suspended",
+		"dissolved": "Dissolved"
+	},
+	"action": {
+		"suspend": "Suspend",
+		"reactivate": "Reactivate",
+		"dissolve": "Dissolve",
+		"suspendTitle": "Suspend Committee",
+		"suspendDescription": "Are you sure you want to suspend this committee?",
+		"reactivateTitle": "Reactivate Committee",
+		"reactivateDescription": "Are you sure you want to reactivate this committee?",
+		"dissolveTitle": "Dissolve Committee",
+		"dissolveDescription": "Are you sure you want to permanently dissolve this committee? This action cannot be undone.",
+		"makeChairman": "Make Chairman",
+		"makeViceChairman": "Make Vice Chairman",
+		"makeSecretary": "Make Secretary",
+		"makeMember": "Make Member",
+		"removeMember": "Remove Member",
+		"removeMemberTitle": "Remove Member",
+		"removeMemberDescription": "Are you sure you want to remove this member from the committee?"
+	},
+	"filter": {
+		"byType": "Filter by type",
+		"allTypes": "All Types",
+		"byCenter": "Filter by center",
+		"allCenters": "All Centers",
+		"byStatus": "Filter by status",
+		"allStatuses": "All Statuses"
+	},
+	"history": {
+		"title": "History",
+		"description": "Committee activity history and audit trail",
+		"date": "Date",
+		"action": "Action",
+		"notes": "Notes"
+	}
+}

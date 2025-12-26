@@ -1,0 +1,103 @@
+{
+	"type": {
+		"title": "የኮሚቴ ዓይነቶች",
+		"list": "የኮሚቴ ዓይነቶች ዝርዝር",
+		"description": "የኮሚቴ ዓይነት ትርጓሜዎችን ይግለጹ እና ያስተዳድሩ",
+		"create": "የኮሚቴ ዓይነት ፍጠር",
+		"edit": "የኮሚቴ ዓይነት አርትዕ",
+		"deleteConfirm": "ይህን የኮሚቴ ዓይነት ማቦዘን እንደሚፈልጉ እርግጠኛ ነዎት?",
+		"code": "ኮድ",
+		"name": "ስም (እንግሊዝኛ)",
+		"nameAm": "ስም (አማርኛ)",
+		"description": "መግለጫ (እንግሊዝኛ)",
+		"descriptionAm": "መግለጫ (አማርኛ)",
+		"minMembers": "ዝቅተኛ አባላት",
+		"maxMembers": "ከፍተኛ አባላት",
+		"unlimited": "ያልተገደበ",
+		"isPermanent": "ቋሚ ኮሚቴ",
+		"isPermanentHelp": "ቋሚ ኮሚቴዎች ሊፈርሱ አይችሉም",
+		"requiresCenter": "ማዕከል ያስፈልጋል",
+		"requiresCenterHelp": "እያንዳንዱ ማዕከል ይህን ዓይነት ኮሚቴ ሊኖረው ይገባል",
+		"committeeCount": "ኮሚቴዎች",
+		"minMax": "ዝቅተኛ: {{min}}, ከፍተኛ: {{max}}"
+	},
+	"committee": {
+		"title": "ኮሚቴዎች",
+		"list": "የኮሚቴዎች ዝርዝር",
+		"description": "ድርጅታዊ ኮሚቴዎችን ያስተዳድሩ",
+		"create": "ኮሚቴ ፍጠር",
+		"edit": "ኮሚቴ አርትዕ",
+		"notFound": "ኮሚቴ አልተገኘም",
+		"code": "ኮድ",
+		"name": "ስም (እንግሊዝኛ)",
+		"nameAm": "ስም (አማርኛ)",
+		"type": "የኮሚቴ ዓይነት",
+		"selectType": "የኮሚቴ ዓይነት ይምረጡ",
+		"center": "ማዕከል",
+		"selectCenter": "ማዕከል ይምረጡ",
+		"hqLevel": "ዋና መስሪያ ቤት ደረጃ",
+		"establishedDate": "የተቋቋመበት ቀን",
+		"description": "መግለጫ (እንግሊዝኛ)",
+		"descriptionAm": "መግለጫ (አማርኛ)",
+		"memberCount": "አባላት"
+	},
+	"member": {
+		"title": "የኮሚቴ አባላት",
+		"description": "የኮሚቴ አባልነትን ያስተዳድሩ",
+		"add": "አባል ጨምር",
+		"addDescription": "ለኮሚቴው አዲስ አባል ይጨምሩ",
+		"selectEmployee": "ሰራተኛ",
+		"selectEmployeePlaceholder": "ሰራተኛ ይምረጡ",
+		"selectRole": "ሚና ይምረጡ",
+		"employeeId": "የሰራተኛ መለያ",
+		"name": "ስም",
+		"position": "የስራ ቦታ",
+		"role": "ሚና",
+		"appointedDate": "የተሾመበት ቀን"
+	},
+	"role": {
+		"chairman": "ሰብሳቢ",
+		"vice_chairman": "ምክትል ሰብሳቢ",
+		"secretary": "ፀሐፊ",
+		"member": "አባል",
+		"advisor": "አማካሪ"
+	},
+	"status": {
+		"active": "ገቢር",
+		"suspended": "የታገደ",
+		"dissolved": "የፈረሰ"
+	},
+	"action": {
+		"suspend": "አግድ",
+		"reactivate": "እንደገና አንቃ",
+		"dissolve": "ፍርስ",
+		"suspendTitle": "ኮሚቴ አግድ",
+		"suspendDescription": "ይህን ኮሚቴ ማገድ እንደሚፈልጉ እርግጠኛ ነዎት?",
+		"reactivateTitle": "ኮሚቴ እንደገና አንቃ",
+		"reactivateDescription": "ይህን ኮሚቴ እንደገና ማንቃት እንደሚፈልጉ እርግጠኛ ነዎት?",
+		"dissolveTitle": "ኮሚቴ ፍርስ",
+		"dissolveDescription": "ይህን ኮሚቴ በቋሚነት መፍረስ እንደሚፈልጉ እርግጠኛ ነዎት? ይህ እርምጃ ሊቀለበስ አይችልም።",
+		"makeChairman": "ሰብሳቢ አድርግ",
+		"makeViceChairman": "ምክትል ሰብሳቢ አድርግ",
+		"makeSecretary": "ፀሐፊ አድርግ",
+		"makeMember": "አባል አድርግ",
+		"removeMember": "አባል አስወግድ",
+		"removeMemberTitle": "አባል አስወግድ",
+		"removeMemberDescription": "ይህን አባል ከኮሚቴው ማስወገድ እንደሚፈልጉ እርግጠኛ ነዎት?"
+	},
+	"filter": {
+		"byType": "በዓይነት አጣራ",
+		"allTypes": "ሁሉም ዓይነቶች",
+		"byCenter": "በማዕከል አጣራ",
+		"allCenters": "ሁሉም ማዕከሎች",
+		"byStatus": "በሁኔታ አጣራ",
+		"allStatuses": "ሁሉም ሁኔታዎች"
+	},
+	"history": {
+		"title": "ታሪክ",
+		"description": "የኮሚቴ እንቅስቃሴ ታሪክ እና የኦዲት ዱካ",
+		"date": "ቀን",
+		"action": "እርምጃ",
+		"notes": "ማስታወሻዎች"
+	}
+}
