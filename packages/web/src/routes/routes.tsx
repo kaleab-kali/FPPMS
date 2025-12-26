@@ -5,6 +5,7 @@ import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
 import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
+import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
 import { EmployeeDetailPage } from "#web/features/employees/pages/EmployeeDetailPage.tsx";
 import { EmployeeEditPage } from "#web/features/employees/pages/EmployeeEditPage.tsx";
 import { EmployeeFamilyPage } from "#web/features/employees/pages/EmployeeFamilyPage.tsx";
@@ -108,6 +109,10 @@ export const router = createBrowserRouter([
 			{
 				path: "/employees/transfer",
 				element: <EmployeeTransferPage />,
+			},
+			{
+				path: "/employees/superior",
+				element: <DirectSuperiorPage />,
 			},
 			{
 				path: "/organization/tenants",

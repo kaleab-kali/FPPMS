@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import {
 	ChangeEmployeeStatusDto,
@@ -23,7 +22,7 @@ export class EmployeesController {
 	constructor(private employeesService: EmployeesService) {}
 
 	@Post("military")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.HR_OFFICER)
+	@Permissions("employees.create.employee")
 	@ApiOperation({ summary: "Register military employee", description: "Register a new military employee" })
 	@ApiResponse({ status: 201, description: "Military employee registered", type: EmployeeResponseDto })
 	@ApiResponse({ status: 400, description: "Invalid input or rank not found" })
@@ -35,7 +34,7 @@ export class EmployeesController {
 	}
 
 	@Post("civilian")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.HR_OFFICER)
+	@Permissions("employees.create.employee")
 	@ApiOperation({ summary: "Register civilian employee", description: "Register a new civilian employee" })
 	@ApiResponse({ status: 201, description: "Civilian employee registered", type: EmployeeResponseDto })
 	@ApiResponse({ status: 400, description: "Invalid input" })
@@ -47,7 +46,7 @@ export class EmployeesController {
 	}
 
 	@Post("temporary")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.HR_OFFICER)
+	@Permissions("employees.create.employee")
 	@ApiOperation({ summary: "Register temporary employee", description: "Register a new temporary/contract employee" })
 	@ApiResponse({ status: 201, description: "Temporary employee registered", type: EmployeeResponseDto })
 	@ApiResponse({ status: 400, description: "Invalid input" })
@@ -59,6 +58,7 @@ export class EmployeesController {
 	}
 
 	@Get()
+	@Permissions("employees.read.employee")
 	@ApiOperation({ summary: "List employees", description: "Get all employees with filtering and pagination" })
 	@ApiQuery({ name: "search", required: false, description: "Search by name, employee ID, or phone" })
 	@ApiQuery({ name: "employeeType", required: false, enum: ["MILITARY", "CIVILIAN", "TEMPORARY"] })
@@ -83,6 +83,7 @@ export class EmployeesController {
 	}
 
 	@Get("statistics")
+	@Permissions("employees.read.employee")
 	@ApiOperation({ summary: "Get employee statistics", description: "Get employee counts by type, status, and gender" })
 	@ApiResponse({ status: 200, description: "Employee statistics" })
 	getStatistics(@CurrentUser() user: AuthUserDto): Promise<{
@@ -95,6 +96,7 @@ export class EmployeesController {
 	}
 
 	@Get("by-employee-id/:employeeId")
+	@Permissions("employees.read.employee")
 	@ApiOperation({ summary: "Get employee by employee ID", description: "Get employee by FPC-XXXX/YY format ID" })
 	@ApiResponse({ status: 200, description: "Employee details", type: EmployeeResponseDto })
 	@ApiResponse({ status: 404, description: "Employee not found" })
@@ -106,6 +108,7 @@ export class EmployeesController {
 	}
 
 	@Get(":id")
+	@Permissions("employees.read.employee")
 	@ApiOperation({ summary: "Get employee by ID", description: "Get a single employee by UUID" })
 	@ApiResponse({ status: 200, description: "Employee details", type: EmployeeResponseDto })
 	@ApiResponse({ status: 404, description: "Employee not found" })
@@ -114,7 +117,7 @@ export class EmployeesController {
 	}
 
 	@Patch(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.HR_OFFICER)
+	@Permissions("employees.update.employee")
 	@ApiOperation({ summary: "Update employee", description: "Update employee details" })
 	@ApiResponse({ status: 200, description: "Employee updated", type: EmployeeResponseDto })
 	@ApiResponse({ status: 404, description: "Employee not found" })
@@ -127,7 +130,7 @@ export class EmployeesController {
 	}
 
 	@Delete(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("employees.delete.employee")
 	@ApiOperation({ summary: "Delete employee", description: "Soft delete an employee" })
 	@ApiResponse({ status: 200, description: "Employee deleted" })
 	@ApiResponse({ status: 404, description: "Employee not found" })
@@ -136,7 +139,7 @@ export class EmployeesController {
 	}
 
 	@Patch(":id/status")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR)
+	@Permissions("employees.manage.status")
 	@ApiOperation({ summary: "Change employee status", description: "Change employee status with reason" })
 	@ApiResponse({ status: 200, description: "Employee status changed", type: EmployeeResponseDto })
 	@ApiResponse({ status: 404, description: "Employee not found" })
@@ -149,7 +152,7 @@ export class EmployeesController {
 	}
 
 	@Patch(":id/return-to-active")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR)
+	@Permissions("employees.manage.status")
 	@ApiOperation({ summary: "Return employee to active", description: "Return a suspended employee to active status" })
 	@ApiResponse({ status: 200, description: "Employee returned to active", type: EmployeeResponseDto })
 	@ApiResponse({ status: 404, description: "Employee not found" })

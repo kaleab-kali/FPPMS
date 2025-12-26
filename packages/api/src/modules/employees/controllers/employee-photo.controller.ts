@@ -18,10 +18,9 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { memoryStorage } from "multer";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { Public } from "#api/common/decorators/public.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import { CreateEmployeePhotoDto } from "#api/modules/employees/dto";
 import { EmployeePhotoService } from "#api/modules/employees/services/employee-photo.service";
@@ -40,7 +39,7 @@ export class EmployeePhotoController {
 	) {}
 
 	@Post("upload")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.HR_OFFICER)
+	@Permissions("employees.manage.photo")
 	@UseInterceptors(
 		FileInterceptor("file", {
 			storage: memoryStorage(),
@@ -92,6 +91,7 @@ export class EmployeePhotoController {
 	}
 
 	@Get("employee/:employeeId/active")
+	@Permissions("employees.read.photo")
 	@ApiOperation({ summary: "Get active photo for employee" })
 	@ApiResponse({ status: 200, description: "Active photo" })
 	getActivePhoto(@CurrentUser() user: AuthUserDto, @Param("employeeId") employeeId: string) {
@@ -120,6 +120,7 @@ export class EmployeePhotoController {
 	}
 
 	@Get("employee/:employeeId/history")
+	@Permissions("employees.read.photo")
 	@ApiOperation({ summary: "Get photo history for employee" })
 	@ApiResponse({ status: 200, description: "Photo history" })
 	getPhotoHistory(@CurrentUser() user: AuthUserDto, @Param("employeeId") employeeId: string) {
@@ -127,7 +128,7 @@ export class EmployeePhotoController {
 	}
 
 	@Delete(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR)
+	@Permissions("employees.delete.photo")
 	@ApiOperation({ summary: "Delete photo" })
 	@ApiResponse({ status: 200, description: "Photo deleted" })
 	delete(@CurrentUser() user: AuthUserDto, @Param("id") id: string) {

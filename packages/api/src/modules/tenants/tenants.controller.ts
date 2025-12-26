@@ -1,7 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
-import { Roles } from "#api/common/decorators/roles.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { CreateTenantDto } from "#api/modules/tenants/dto/create-tenant.dto";
 import { TenantResponseDto } from "#api/modules/tenants/dto/tenant-response.dto";
 import { UpdateTenantDto } from "#api/modules/tenants/dto/update-tenant.dto";
@@ -10,11 +9,11 @@ import { TenantsService } from "#api/modules/tenants/tenants.service";
 @ApiTags("tenants")
 @ApiBearerAuth("JWT-auth")
 @Controller("tenants")
-@Roles(SYSTEM_ROLES.IT_ADMIN)
 export class TenantsController {
 	constructor(private tenantsService: TenantsService) {}
 
 	@Post()
+	@Permissions("tenants.create.tenant")
 	@ApiOperation({ summary: "Create tenant", description: "Create a new tenant organization" })
 	@ApiResponse({ status: 201, description: "Tenant created", type: TenantResponseDto })
 	create(@Body() dto: CreateTenantDto): Promise<TenantResponseDto> {
@@ -22,6 +21,7 @@ export class TenantsController {
 	}
 
 	@Get()
+	@Permissions("tenants.read.tenant")
 	@ApiOperation({ summary: "List all tenants", description: "Get all tenant organizations" })
 	@ApiResponse({ status: 200, description: "List of tenants", type: [TenantResponseDto] })
 	findAll(): Promise<TenantResponseDto[]> {
@@ -29,6 +29,7 @@ export class TenantsController {
 	}
 
 	@Get(":id")
+	@Permissions("tenants.read.tenant")
 	@ApiOperation({ summary: "Get tenant by ID", description: "Get a single tenant by ID" })
 	@ApiResponse({ status: 200, description: "Tenant details", type: TenantResponseDto })
 	@ApiResponse({ status: 404, description: "Tenant not found" })
@@ -37,6 +38,7 @@ export class TenantsController {
 	}
 
 	@Get("code/:code")
+	@Permissions("tenants.read.tenant")
 	@ApiOperation({ summary: "Get tenant by code", description: "Get a single tenant by code" })
 	@ApiResponse({ status: 200, description: "Tenant details", type: TenantResponseDto })
 	@ApiResponse({ status: 404, description: "Tenant not found" })
@@ -45,6 +47,7 @@ export class TenantsController {
 	}
 
 	@Patch(":id")
+	@Permissions("tenants.update.tenant")
 	@ApiOperation({ summary: "Update tenant", description: "Update tenant details" })
 	@ApiResponse({ status: 200, description: "Tenant updated", type: TenantResponseDto })
 	@ApiResponse({ status: 404, description: "Tenant not found" })
@@ -53,6 +56,7 @@ export class TenantsController {
 	}
 
 	@Delete(":id")
+	@Permissions("tenants.delete.tenant")
 	@ApiOperation({ summary: "Delete tenant", description: "Delete a tenant organization" })
 	@ApiResponse({ status: 200, description: "Tenant deleted" })
 	@ApiResponse({ status: 404, description: "Tenant not found" })

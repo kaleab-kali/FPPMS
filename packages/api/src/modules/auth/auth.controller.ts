@@ -1,9 +1,8 @@
 import { Body, Controller, Get, Ip, Param, Post, Request, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { Public } from "#api/common/decorators/public.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import { AuthService } from "#api/modules/auth/auth.service";
 import { ChangePasswordDto } from "#api/modules/auth/dto/change-password.dto";
@@ -84,8 +83,8 @@ export class AuthController {
 		return this.authService.changePassword(user.id, dto);
 	}
 
-	@Roles(SYSTEM_ROLES.IT_ADMIN)
 	@Post("reset-password/:userId")
+	@Permissions("auth.manage.password")
 	@ApiBearerAuth("JWT-auth")
 	@ApiOperation({ summary: "Reset user password (IT Admin)", description: "Reset password for a user - IT Admin only" })
 	@ApiResponse({ status: 200, description: "Password reset successfully" })

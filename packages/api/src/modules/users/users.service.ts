@@ -377,6 +377,10 @@ export class UsersService {
 			if (dto.roleIds.length > 0) {
 				await this.assignRoles(tenantId, id, dto.roleIds);
 			}
+			await this.prisma.user.update({
+				where: { id },
+				data: { permissionVersion: { increment: 1 } },
+			});
 		}
 
 		return this.findOne(tenantId, id);

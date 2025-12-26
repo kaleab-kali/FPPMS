@@ -11,6 +11,7 @@ interface JwtPayloadData {
 	centerId?: string;
 	roles: string[];
 	permissions: string[];
+	permissionVersion?: number;
 }
 
 interface ValidatedUser {
@@ -20,6 +21,7 @@ interface ValidatedUser {
 	centerId?: string;
 	roles: string[];
 	permissions: string[];
+	permissionVersion: number;
 }
 
 const ACTIVE_STATUSES = ["ACTIVE", "PENDING"] as const;
@@ -47,6 +49,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			select: {
 				id: true,
 				status: true,
+				permissionVersion: true,
 			},
 		});
 
@@ -58,6 +61,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			throw new UnauthorizedException("Account is not active. Please contact administrator.");
 		}
 
+		const tokenVersion = payload.permissionVersion ?? 1;
+		if (user.permissionVersion > tokenVersion) {
+			throw new UnauthorizedException({
+				message: "Your permissions have changed. Please login again.",
+				code: "PERMISSIONS_CHANGED",
+			});
+		}
+
 		return {
 			id: payload.sub,
 			username: payload.username,
@@ -65,6 +76,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			centerId: payload.centerId,
 			roles: payload.roles,
 			permissions: payload.permissions,
+			permissionVersion: user.permissionVersion,
 		};
 	}
 }

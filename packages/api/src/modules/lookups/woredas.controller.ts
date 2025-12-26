@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import { CreateWoredaDto } from "#api/modules/lookups/dto/create-woreda.dto";
 import { UpdateWoredaDto } from "#api/modules/lookups/dto/update-woreda.dto";
@@ -16,7 +15,7 @@ export class WoredasController {
 	constructor(private woredasService: WoredasService) {}
 
 	@Post()
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("lookups.create.woreda")
 	@ApiOperation({ summary: "Create woreda", description: "Create a new woreda" })
 	@ApiResponse({ status: 201, description: "Woreda created", type: WoredaResponseDto })
 	create(@CurrentUser() user: AuthUserDto, @Body() dto: CreateWoredaDto): Promise<WoredaResponseDto> {
@@ -24,6 +23,7 @@ export class WoredasController {
 	}
 
 	@Get()
+	@Permissions("lookups.read.woreda")
 	@ApiOperation({ summary: "List all woredas", description: "Get all woredas, optionally filtered by sub-city" })
 	@ApiQuery({ name: "subCityId", required: false, description: "Filter by sub-city ID" })
 	@ApiResponse({ status: 200, description: "List of woredas", type: [WoredaResponseDto] })
@@ -35,6 +35,7 @@ export class WoredasController {
 	}
 
 	@Get(":id")
+	@Permissions("lookups.read.woreda")
 	@ApiOperation({ summary: "Get woreda by ID", description: "Get a single woreda by ID" })
 	@ApiResponse({ status: 200, description: "Woreda details", type: WoredaResponseDto })
 	@ApiResponse({ status: 404, description: "Woreda not found" })
@@ -43,7 +44,7 @@ export class WoredasController {
 	}
 
 	@Patch(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("lookups.update.woreda")
 	@ApiOperation({ summary: "Update woreda", description: "Update woreda details" })
 	@ApiResponse({ status: 200, description: "Woreda updated", type: WoredaResponseDto })
 	@ApiResponse({ status: 404, description: "Woreda not found" })
@@ -56,7 +57,7 @@ export class WoredasController {
 	}
 
 	@Delete(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("lookups.delete.woreda")
 	@ApiOperation({ summary: "Delete woreda", description: "Delete a woreda" })
 	@ApiResponse({ status: 200, description: "Woreda deleted" })
 	@ApiResponse({ status: 404, description: "Woreda not found" })

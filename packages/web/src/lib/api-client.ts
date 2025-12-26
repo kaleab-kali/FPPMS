@@ -62,11 +62,28 @@ const isAccountDeactivatedError = (errorData: unknown): boolean => {
 	);
 };
 
+const isPermissionsChangedError = (errorData: unknown): boolean => {
+	const data = errorData as { code?: string };
+	return data?.code === "PERMISSIONS_CHANGED";
+};
+
+export const PERMISSIONS_CHANGED_KEY = "permissionsChanged";
+
 const handleResponseError = async (error: AxiosError) => {
 	const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
 	if (error.response?.status === HTTP_STATUS.unauthorized && !originalRequest._retry) {
-		const errorData = error.response?.data as { message?: string } | undefined;
+		const errorData = error.response?.data as { message?: string; code?: string } | undefined;
+
+		if (isPermissionsChangedError(errorData)) {
+			clearTokens();
+			globalThis.localStorage.setItem(
+				PERMISSIONS_CHANGED_KEY,
+				errorData?.message ?? "Your permissions have changed. Please login again.",
+			);
+			globalThis.location.href = "/login";
+			return Promise.reject(error);
+		}
 
 		if (isAccountDeactivatedError(errorData)) {
 			clearTokens();

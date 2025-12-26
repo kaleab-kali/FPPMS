@@ -15,6 +15,7 @@ interface JwtPayloadData {
 	centerId?: string;
 	roles: string[];
 	permissions: string[];
+	permissionVersion: number;
 }
 
 const AUTH_CONFIG = {
@@ -103,6 +104,7 @@ export class AuthService {
 			roles,
 			permissions,
 			requirePasswordChange: user.mustChangePassword,
+			permissionVersion: user.permissionVersion,
 		};
 	}
 
@@ -114,6 +116,7 @@ export class AuthService {
 			centerId: user.centerId,
 			roles: user.roles,
 			permissions: user.permissions,
+			permissionVersion: user.permissionVersion,
 		};
 
 		const accessToken = this.jwtService.sign(payload, {
@@ -197,6 +200,7 @@ export class AuthService {
 			centerId: user.centerId || undefined,
 			roles,
 			permissions,
+			permissionVersion: user.permissionVersion,
 		};
 
 		const newAccessToken = this.jwtService.sign(payload, {
@@ -350,6 +354,7 @@ export class AuthService {
 			roles,
 			permissions,
 			requirePasswordChange: user.mustChangePassword,
+			permissionVersion: user.permissionVersion,
 		};
 	}
 
