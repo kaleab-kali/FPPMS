@@ -7,6 +7,7 @@ import { EmployeeFamilyController } from "#api/modules/employees/controllers/emp
 import { EmployeeMaritalStatusController } from "#api/modules/employees/controllers/employee-marital-status.controller";
 import { EmployeeMedicalController } from "#api/modules/employees/controllers/employee-medical.controller";
 import { EmployeePhotoController } from "#api/modules/employees/controllers/employee-photo.controller";
+import { EmployeeSuperiorController } from "#api/modules/employees/controllers/employee-superior.controller";
 import { EmployeeTransferController } from "#api/modules/employees/controllers/employee-transfer.controller";
 import { EmployeesController } from "#api/modules/employees/employees.controller";
 import { EmployeesService } from "#api/modules/employees/employees.service";
@@ -15,6 +16,7 @@ import { EmployeeIdGeneratorService } from "#api/modules/employees/services/empl
 import { EmployeeMaritalStatusService } from "#api/modules/employees/services/employee-marital-status.service";
 import { EmployeeMedicalService } from "#api/modules/employees/services/employee-medical.service";
 import { EmployeePhotoService } from "#api/modules/employees/services/employee-photo.service";
+import { EmployeeSuperiorService } from "#api/modules/employees/services/employee-superior.service";
 import { EmployeeTransferService } from "#api/modules/employees/services/employee-transfer.service";
 import { RetirementCalculationService } from "#api/modules/employees/services/retirement-calculation.service";
 
@@ -30,12 +32,13 @@ import { RetirementCalculationService } from "#api/modules/employees/services/re
 		}),
 	],
 	controllers: [
-		EmployeesController,
+		EmployeeSuperiorController,
 		EmployeePhotoController,
 		EmployeeFamilyController,
 		EmployeeMedicalController,
 		EmployeeMaritalStatusController,
 		EmployeeTransferController,
+		EmployeesController,
 	],
 	providers: [
 		EmployeesService,
@@ -45,6 +48,7 @@ import { RetirementCalculationService } from "#api/modules/employees/services/re
 		EmployeeFamilyService,
 		EmployeeMedicalService,
 		EmployeeMaritalStatusService,
+		EmployeeSuperiorService,
 		EmployeeTransferService,
 	],
 	exports: [
@@ -55,6 +59,7 @@ import { RetirementCalculationService } from "#api/modules/employees/services/re
 		EmployeeFamilyService,
 		EmployeeMedicalService,
 		EmployeeMaritalStatusService,
+		EmployeeSuperiorService,
 		EmployeeTransferService,
 	],
 })
