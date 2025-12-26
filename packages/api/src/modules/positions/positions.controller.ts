@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import { CreatePositionDto } from "#api/modules/positions/dto/create-position.dto";
 import { PositionResponseDto } from "#api/modules/positions/dto/position-response.dto";
@@ -16,7 +15,7 @@ export class PositionsController {
 	constructor(private positionsService: PositionsService) {}
 
 	@Post()
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("positions.create.position")
 	@ApiOperation({ summary: "Create position", description: "Create a new job position" })
 	@ApiResponse({ status: 201, description: "Position created", type: PositionResponseDto })
 	create(@CurrentUser() user: AuthUserDto, @Body() dto: CreatePositionDto): Promise<PositionResponseDto> {
@@ -24,6 +23,7 @@ export class PositionsController {
 	}
 
 	@Get()
+	@Permissions("positions.read.position")
 	@ApiOperation({ summary: "List all positions", description: "Get all positions, optionally filtered by department" })
 	@ApiQuery({ name: "departmentId", required: false, description: "Filter by department ID" })
 	@ApiResponse({ status: 200, description: "List of positions", type: [PositionResponseDto] })
@@ -38,6 +38,7 @@ export class PositionsController {
 	}
 
 	@Get(":id")
+	@Permissions("positions.read.position")
 	@ApiOperation({ summary: "Get position by ID", description: "Get a single position by ID" })
 	@ApiResponse({ status: 200, description: "Position details", type: PositionResponseDto })
 	@ApiResponse({ status: 404, description: "Position not found" })
@@ -46,7 +47,7 @@ export class PositionsController {
 	}
 
 	@Patch(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("positions.update.position")
 	@ApiOperation({ summary: "Update position", description: "Update position details" })
 	@ApiResponse({ status: 200, description: "Position updated", type: PositionResponseDto })
 	@ApiResponse({ status: 404, description: "Position not found" })
@@ -59,7 +60,7 @@ export class PositionsController {
 	}
 
 	@Delete(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("positions.delete.position")
 	@ApiOperation({ summary: "Delete position", description: "Delete a position" })
 	@ApiResponse({ status: 200, description: "Position deleted" })
 	@ApiResponse({ status: 404, description: "Position not found" })

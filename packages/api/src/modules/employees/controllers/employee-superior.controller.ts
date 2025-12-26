@@ -1,15 +1,14 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
-import { EmployeeSuperiorService } from "#api/modules/employees/services/employee-superior.service";
 import {
 	AssignSuperiorDto,
 	BulkAssignSuperiorDto,
 	RemoveSuperiorDto,
 } from "#api/modules/employees/dto/employee-superior.dto";
+import { EmployeeSuperiorService } from "#api/modules/employees/services/employee-superior.service";
 
 @ApiTags("employee-superior")
 @ApiBearerAuth("JWT-auth")
@@ -18,7 +17,7 @@ export class EmployeeSuperiorController {
 	constructor(private readonly superiorService: EmployeeSuperiorService) {}
 
 	@Get("assignments")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.CENTER_ADMIN)
+	@Permissions("employees.read.superior")
 	@ApiOperation({ summary: "Get all employees with their direct superior assignments" })
 	@ApiQuery({ name: "centerId", required: false, description: "Filter by center ID" })
 	@ApiResponse({ status: 200, description: "List of employees with superior assignments" })
@@ -27,6 +26,7 @@ export class EmployeeSuperiorController {
 	}
 
 	@Get("org-chart")
+	@Permissions("employees.read.superior")
 	@ApiOperation({ summary: "Get organizational chart (hierarchical structure)" })
 	@ApiQuery({ name: "centerId", required: false, description: "Filter by center ID" })
 	@ApiQuery({ name: "rootEmployeeId", required: false, description: "Start from specific employee" })
@@ -40,7 +40,7 @@ export class EmployeeSuperiorController {
 	}
 
 	@Post("bulk-assign")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.CENTER_ADMIN)
+	@Permissions("employees.manage.superior")
 	@ApiOperation({ summary: "Assign same superior to multiple employees" })
 	@ApiResponse({ status: 201, description: "Bulk assignment completed" })
 	@ApiResponse({ status: 400, description: "Validation error or circular reference detected" })
@@ -49,6 +49,7 @@ export class EmployeeSuperiorController {
 	}
 
 	@Get(":employeeId")
+	@Permissions("employees.read.superior")
 	@ApiOperation({ summary: "Get direct superior of an employee" })
 	@ApiParam({ name: "employeeId", description: "Employee ID" })
 	@ApiResponse({ status: 200, description: "Direct superior info" })
@@ -58,7 +59,7 @@ export class EmployeeSuperiorController {
 	}
 
 	@Patch(":employeeId")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.CENTER_ADMIN)
+	@Permissions("employees.manage.superior")
 	@ApiOperation({ summary: "Assign or update direct superior for an employee" })
 	@ApiParam({ name: "employeeId", description: "Employee ID" })
 	@ApiResponse({ status: 200, description: "Superior assigned successfully" })
@@ -73,7 +74,7 @@ export class EmployeeSuperiorController {
 	}
 
 	@Delete(":employeeId")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.HR_DIRECTOR, SYSTEM_ROLES.CENTER_ADMIN)
+	@Permissions("employees.manage.superior")
 	@ApiOperation({ summary: "Remove direct superior from an employee" })
 	@ApiParam({ name: "employeeId", description: "Employee ID" })
 	@ApiResponse({ status: 200, description: "Superior removed successfully" })
@@ -88,6 +89,7 @@ export class EmployeeSuperiorController {
 	}
 
 	@Get(":employeeId/subordinates")
+	@Permissions("employees.read.superior")
 	@ApiOperation({ summary: "Get all direct subordinates of an employee" })
 	@ApiParam({ name: "employeeId", description: "Employee ID (supervisor)" })
 	@ApiResponse({ status: 200, description: "List of direct subordinates" })
@@ -97,6 +99,7 @@ export class EmployeeSuperiorController {
 	}
 
 	@Get(":employeeId/chain")
+	@Permissions("employees.read.superior")
 	@ApiOperation({ summary: "Get chain of command (all superiors up to top)" })
 	@ApiParam({ name: "employeeId", description: "Employee ID" })
 	@ApiResponse({ status: 200, description: "List of superiors in chain" })
@@ -105,6 +108,7 @@ export class EmployeeSuperiorController {
 	}
 
 	@Get(":employeeId/history")
+	@Permissions("employees.read.superior")
 	@ApiOperation({ summary: "Get superior assignment history for an employee" })
 	@ApiParam({ name: "employeeId", description: "Employee ID" })
 	@ApiResponse({ status: 200, description: "List of historical superior assignments" })
