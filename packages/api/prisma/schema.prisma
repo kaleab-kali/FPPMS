@@ -147,6 +147,18 @@ enum AuditAction {
   IMPORT
 }
 
+enum TransferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum TransferSource {
+  MANUAL
+  APPRAISAL
+}
+
 // ============================================================================
 // TENANT
 // ============================================================================
@@ -203,11 +215,13 @@ model Center {
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
 
-  tenant       Tenant     @relation(fields: [tenantId], references: [id])
-  parentCenter Center?    @relation("CenterHierarchy", fields: [parentCenterId], references: [id])
-  childCenters Center[]   @relation("CenterHierarchy")
-  users        User[]
-  employees    Employee[]
+  tenant              Tenant                    @relation(fields: [tenantId], references: [id])
+  parentCenter        Center?                   @relation("CenterHierarchy", fields: [parentCenterId], references: [id])
+  childCenters        Center[]                  @relation("CenterHierarchy")
+  users               User[]
+  employees           Employee[]
+  transfersFrom       EmployeeTransferRequest[] @relation("TransferFromCenter")
+  transfersTo         EmployeeTransferRequest[] @relation("TransferToCenter")
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -356,11 +370,13 @@ model Department {
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
-  tenant    Tenant       @relation(fields: [tenantId], references: [id])
-  parent    Department?  @relation("DepartmentHierarchy", fields: [parentId], references: [id])
-  children  Department[] @relation("DepartmentHierarchy")
-  positions Position[]
-  employees Employee[]
+  tenant        Tenant                    @relation(fields: [tenantId], references: [id])
+  parent        Department?               @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children      Department[]              @relation("DepartmentHierarchy")
+  positions     Position[]
+  employees     Employee[]
+  transfersFrom EmployeeTransferRequest[] @relation("TransferFromDepartment")
+  transfersTo   EmployeeTransferRequest[] @relation("TransferToDepartment")
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -385,9 +401,11 @@ model Position {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  tenant     Tenant      @relation(fields: [tenantId], references: [id])
-  department Department? @relation(fields: [departmentId], references: [id])
-  employees  Employee[]
+  tenant        Tenant                    @relation(fields: [tenantId], references: [id])
+  department    Department?               @relation(fields: [departmentId], references: [id])
+  employees     Employee[]
+  transfersFrom EmployeeTransferRequest[] @relation("TransferFromPosition")
+  transfersTo   EmployeeTransferRequest[] @relation("TransferToPosition")
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -592,6 +610,8 @@ model Employee {
   maritalStatuses      EmployeeMaritalStatus[]
   photos               EmployeePhoto[]
   documents            EmployeeDocument[]
+  transferRequests     EmployeeTransferRequest[]
+  departure            EmployeeDeparture?
   leaveBalances        EmployeeLeaveBalance[]
   leaveRequests        LeaveRequest[]
   appraisals           Appraisal[]
@@ -876,6 +896,88 @@ model EmployeeDocument {
   @@index([employeeId])
   @@index([tenantId, documentCategory])
   @@map("employee_documents")
+}
+
+model EmployeeTransferRequest {
+  id                 String         @id @default(cuid())
+  tenantId           String         @map("tenant_id")
+  employeeId         String         @map("employee_id")
+  transferSource     TransferSource @default(MANUAL) @map("transfer_source")
+  status             TransferStatus @default(PENDING)
+  fromCenterId       String         @map("from_center_id")
+  fromDepartmentId   String?        @map("from_department_id")
+  fromPositionId     String?        @map("from_position_id")
+  toCenterId         String         @map("to_center_id")
+  toDepartmentId     String?        @map("to_department_id")
+  toPositionId       String?        @map("to_position_id")
+  effectiveDate      DateTime       @map("effective_date") @db.Date
+  transferReason     String         @map("transfer_reason")
+  remarks            String?
+  orderNumber        String?        @map("order_number")
+  attachmentPath     String?        @map("attachment_path")
+  initiatedBy        String         @map("initiated_by")
+  initiatedAt        DateTime       @default(now()) @map("initiated_at")
+  reviewedBy         String?        @map("reviewed_by")
+  reviewedAt         DateTime?      @map("reviewed_at")
+  rejectionReason    String?        @map("rejection_reason")
+  appraisalId        String?        @map("appraisal_id")
+  completedAt        DateTime?      @map("completed_at")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+
+  employee       Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  fromCenter     Center      @relation("TransferFromCenter", fields: [fromCenterId], references: [id])
+  toCenter       Center      @relation("TransferToCenter", fields: [toCenterId], references: [id])
+  fromDepartment Department? @relation("TransferFromDepartment", fields: [fromDepartmentId], references: [id])
+  toDepartment   Department? @relation("TransferToDepartment", fields: [toDepartmentId], references: [id])
+  fromPosition   Position?   @relation("TransferFromPosition", fields: [fromPositionId], references: [id])
+  toPosition     Position?   @relation("TransferToPosition", fields: [toPositionId], references: [id])
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([tenantId, status])
+  @@index([fromCenterId, status])
+  @@index([toCenterId, status])
+  @@map("employee_transfer_requests")
+}
+
+model EmployeeDeparture {
+  id                      String    @id @default(cuid())
+  tenantId                String    @map("tenant_id")
+  employeeId              String    @unique @map("employee_id")
+  departureDate           DateTime  @map("departure_date") @db.Date
+  departureReason         String    @map("departure_reason")
+  destinationOrganization String?   @map("destination_organization")
+  remarks                 String?
+  clearanceCompleted      Boolean   @default(false) @map("clearance_completed")
+  finalSettlementAmount   Decimal?  @map("final_settlement_amount") @db.Decimal(14, 2)
+  recordedBy              String    @map("recorded_by")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  employee    Employee              @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  attachments DepartureAttachment[]
+
+  @@index([tenantId])
+  @@index([tenantId, departureDate])
+  @@map("employee_departures")
+}
+
+model DepartureAttachment {
+  id           String   @id @default(cuid())
+  departureId  String   @map("departure_id")
+  fileName     String   @map("file_name")
+  filePath     String   @map("file_path")
+  fileSize     Int      @map("file_size")
+  mimeType     String   @map("mime_type")
+  documentType String   @map("document_type")
+  uploadedBy   String   @map("uploaded_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  departure EmployeeDeparture @relation(fields: [departureId], references: [id], onDelete: Cascade)
+
+  @@index([departureId])
+  @@map("departure_attachments")
 }
 
 // ============================================================================

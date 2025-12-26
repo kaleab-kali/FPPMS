@@ -82,6 +82,7 @@ const NAV_ITEMS_CONFIG: NavItemConfig[] = [
 			{ titleKey: "maritalStatus", url: "/employees/marital" },
 			{ titleKey: "healthRecords", url: "/employees/health" },
 			{ titleKey: "transfer", url: "/employees/transfer" },
+			{ titleKey: "directSuperior", url: "/employees/superior" },
 		],
 	},
 	{

@@ -33,6 +33,7 @@ import { useMaritalStatusHistory } from "#web/api/employees/employee-marital-sta
 import { useMedicalRecords } from "#web/api/employees/employee-medical.queries.ts";
 import { employeePhotoApi } from "#web/api/employees/employee-photo.api.ts";
 import { useActivePhoto } from "#web/api/employees/employee-photo.queries.ts";
+import { useDirectSuperior, useSubordinates } from "#web/api/employees/employee-superior.queries.ts";
 import { useDeleteEmployee } from "#web/api/employees/employees.mutations.ts";
 import { useEmployee } from "#web/api/employees/employees.queries.ts";
 import { ConfirmDialog } from "#web/components/common/ConfirmDialog.tsx";
@@ -53,6 +54,7 @@ import type { Employee } from "#web/types/employee.ts";
 import type { FamilyMember } from "#web/types/employee-family.ts";
 import type { MaritalStatusRecord } from "#web/types/employee-marital-status.ts";
 import type { MedicalRecord } from "#web/types/employee-medical.ts";
+import type { EmployeeBasicInfo } from "#web/types/employee-superior.ts";
 
 const STATUS_VARIANTS = {
 	ACTIVE: "default",
@@ -235,6 +237,9 @@ EmployeeHeader.displayName = "EmployeeHeader";
 interface TabProps {
 	employee: Employee;
 	t: (key: string) => string;
+	isAmharic?: boolean;
+	directSuperior?: EmployeeBasicInfo | null;
+	subordinates?: EmployeeBasicInfo[];
 }
 
 const formatDate = (dateString: string | undefined) => {
@@ -243,7 +248,7 @@ const formatDate = (dateString: string | undefined) => {
 };
 
 const BasicInfoTab = React.memo(
-	({ employee, t }: TabProps) => (
+	({ employee, t, isAmharic, directSuperior, subordinates }: TabProps) => (
 		<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
 			<Section title={t("personalInfo")} icon={<User className="h-4 w-4" />}>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -352,6 +357,54 @@ const BasicInfoTab = React.memo(
 				</div>
 			</Section>
 
+			<Section title={t("superior.directSuperior")} icon={<UserCheck className="h-4 w-4" />}>
+				<div className="space-y-3">
+					<div className="grid grid-cols-2 gap-x-4 gap-y-3">
+						<DataField
+							label={t("superior.directSuperior")}
+							value={
+								directSuperior
+									? isAmharic && directSuperior.fullNameAm
+										? directSuperior.fullNameAm
+										: directSuperior.fullName
+									: t("superior.noSuperior")
+							}
+						/>
+						{directSuperior && (
+							<DataField
+								label={t("position")}
+								value={
+									directSuperior.position
+										? isAmharic && directSuperior.position.nameAm
+											? directSuperior.position.nameAm
+											: directSuperior.position.name
+										: "-"
+								}
+							/>
+						)}
+					</div>
+					{subordinates && subordinates.length > 0 && (
+						<div className="pt-2 border-t">
+							<p className="text-xs text-muted-foreground mb-2">
+								{t("superior.subordinates")} ({subordinates.length})
+							</p>
+							<div className="flex flex-wrap gap-1">
+								{subordinates.slice(0, 5).map((sub) => (
+									<Badge key={sub.id} variant="outline" className="text-xs">
+										{isAmharic && sub.fullNameAm ? sub.fullNameAm : sub.fullName}
+									</Badge>
+								))}
+								{subordinates.length > 5 && (
+									<Badge variant="secondary" className="text-xs">
+										+{subordinates.length - 5}
+									</Badge>
+								)}
+							</div>
+						</div>
+					)}
+				</div>
+			</Section>
+
 			<Section title={t("salaryInfo")} icon={<TrendingUp className="h-4 w-4" />}>
 				<div className="grid grid-cols-2 gap-x-4 gap-y-3">
 					<DataField label={t("salary")} value={employee.currentSalary} />
@@ -388,7 +441,11 @@ const BasicInfoTab = React.memo(
 			)}
 		</div>
 	),
-	(prev, next) => prev.employee.id === next.employee.id,
+	(prev, next) =>
+		prev.employee.id === next.employee.id &&
+		prev.isAmharic === next.isAmharic &&
+		prev.directSuperior?.id === next.directSuperior?.id &&
+		prev.subordinates?.length === next.subordinates?.length,
 );
 BasicInfoTab.displayName = "BasicInfoTab";
 
@@ -588,6 +645,8 @@ export const EmployeeDetailPage = React.memo(
 		const { data: familyMembers, isLoading: familyLoading } = useFamilyMembers(id ?? "");
 		const { data: medicalRecords, isLoading: medicalLoading } = useMedicalRecords(id ?? "");
 		const { data: maritalStatuses, isLoading: maritalLoading } = useMaritalStatusHistory(id ?? "");
+		const { data: directSuperior } = useDirectSuperior(id ?? "");
+		const { data: subordinates } = useSubordinates(id ?? "");
 		const deleteMutation = useDeleteEmployee();
 
 		const isAmharic = i18n.language === "am";
@@ -753,7 +812,13 @@ export const EmployeeDetailPage = React.memo(
 					</TabsList>
 
 					<TabsContent value="basic" className="mt-5">
-						<BasicInfoTab employee={employee} t={t} />
+						<BasicInfoTab
+							employee={employee}
+							t={t}
+							isAmharic={isAmharic}
+							directSuperior={directSuperior}
+							subordinates={subordinates ?? []}
+						/>
 						<div className="mt-4">
 							<MaritalStatusSection statuses={maritalStatuses ?? []} isLoading={maritalLoading} t={t} />
 						</div>

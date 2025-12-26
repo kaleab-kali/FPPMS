@@ -15,6 +15,7 @@ import { EmployeeRegisterFormPage } from "#web/features/employees/pages/Employee
 import { EmployeeRegisterSelectPage } from "#web/features/employees/pages/EmployeeRegisterSelectPage.tsx";
 import { EmployeesListPage } from "#web/features/employees/pages/EmployeesListPage.tsx";
 import { EmployeeTransferPage } from "#web/features/employees/pages/EmployeeTransferPage.tsx";
+import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
 import { FormerEmployeesPage } from "#web/features/employees/pages/FormerEmployeesPage.tsx";
 import { RanksListPage } from "#web/features/lookups/pages/RanksListPage.tsx";
 import { RegionsListPage } from "#web/features/lookups/pages/RegionsListPage.tsx";
@@ -108,6 +109,10 @@ export const router = createBrowserRouter([
 			{
 				path: "/employees/transfer",
 				element: <EmployeeTransferPage />,
+			},
+			{
+				path: "/employees/superior",
+				element: <DirectSuperiorPage />,
 			},
 			{
 				path: "/organization/tenants",
