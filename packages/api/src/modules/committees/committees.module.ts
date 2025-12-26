@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { DatabaseModule } from "#api/database/database.module.js";
-import { CommitteesController } from "./committees.controller.js";
-import { CommitteesService } from "./committees.service.js";
+import { DatabaseModule } from "#api/database/database.module";
+import { CommitteesController } from "./committees.controller";
+import { CommitteesService } from "./committees.service";
 
 @Module({
 	imports: [DatabaseModule],

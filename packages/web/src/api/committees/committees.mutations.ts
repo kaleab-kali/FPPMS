@@ -104,7 +104,7 @@ export const useAddCommitteeMember = () => {
 		mutationFn: ({ committeeId, data }: { committeeId: string; data: AddCommitteeMemberRequest }) =>
 			committeesApi.addMember(committeeId, data),
 		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({ queryKey: committeeKeys.members(variables.committeeId) });
+			queryClient.invalidateQueries({ queryKey: [...committeeKeys.all, "members", variables.committeeId] });
 			queryClient.invalidateQueries({ queryKey: committeeKeys.details() });
 		},
 	});
@@ -116,7 +116,7 @@ export const useBulkAddCommitteeMembers = () => {
 		mutationFn: ({ committeeId, data }: { committeeId: string; data: BulkAddMembersRequest }) =>
 			committeesApi.bulkAddMembers(committeeId, data),
 		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({ queryKey: committeeKeys.members(variables.committeeId) });
+			queryClient.invalidateQueries({ queryKey: [...committeeKeys.all, "members", variables.committeeId] });
 			queryClient.invalidateQueries({ queryKey: committeeKeys.details() });
 		},
 	});
@@ -135,7 +135,7 @@ export const useUpdateCommitteeMember = () => {
 			data: UpdateCommitteeMemberRequest;
 		}) => committeesApi.updateMember(committeeId, memberId, data),
 		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({ queryKey: committeeKeys.members(variables.committeeId) });
+			queryClient.invalidateQueries({ queryKey: [...committeeKeys.all, "members", variables.committeeId] });
 			queryClient.invalidateQueries({ queryKey: committeeKeys.details() });
 		},
 	});
@@ -154,7 +154,7 @@ export const useRemoveCommitteeMember = () => {
 			data: RemoveCommitteeMemberRequest;
 		}) => committeesApi.removeMember(committeeId, memberId, data),
 		onSuccess: (_data, variables) => {
-			queryClient.invalidateQueries({ queryKey: committeeKeys.members(variables.committeeId) });
+			queryClient.invalidateQueries({ queryKey: [...committeeKeys.all, "members", variables.committeeId] });
 			queryClient.invalidateQueries({ queryKey: committeeKeys.details() });
 		},
 	});

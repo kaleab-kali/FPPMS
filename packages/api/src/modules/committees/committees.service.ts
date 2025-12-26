@@ -1,19 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
-import { PrismaService } from "#api/database/prisma.service.js";
+import { PrismaService } from "#api/database/prisma.service";
 import {
 	CommitteeFilterDto,
 	CreateCommitteeDto,
 	DissolveCommitteeDto,
 	UpdateCommitteeDto,
-} from "./dto/committee.dto.js";
+} from "./dto/committee.dto";
 import {
 	AddCommitteeMemberDto,
 	BulkAddMembersDto,
 	RemoveCommitteeMemberDto,
 	UpdateCommitteeMemberDto,
-} from "./dto/committee-member.dto.js";
-import { CreateCommitteeTypeDto, UpdateCommitteeTypeDto } from "./dto/committee-type.dto.js";
+} from "./dto/committee-member.dto";
+import { CreateCommitteeTypeDto, UpdateCommitteeTypeDto } from "./dto/committee-type.dto";
 
 @Injectable()
 export class CommitteesService {
@@ -109,11 +109,7 @@ export class CommitteesService {
 	// ==================== COMMITTEE METHODS ====================
 
 	async createCommittee(tenantId: string, dto: CreateCommitteeDto, userId: string) {
-		const committeeType = await this.findOneCommitteeType(tenantId, dto.committeeTypeId);
-
-		if (committeeType.requiresCenter && !dto.centerId) {
-			throw new BadRequestException(`This committee type requires a center`);
-		}
+		await this.findOneCommitteeType(tenantId, dto.committeeTypeId);
 
 		const existing = await this.prisma.committee.findUnique({
 			where: { tenantId_code: { tenantId, code: dto.code } },

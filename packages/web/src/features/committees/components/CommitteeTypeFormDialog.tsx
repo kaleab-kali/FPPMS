@@ -176,7 +176,7 @@ export const CommitteeTypeFormDialog = React.memo(
 							</div>
 
 							<div className="space-y-2">
-								<Label htmlFor="name">{t("type.name")}</Label>
+								<Label htmlFor="name">{t("type.nameEn")}</Label>
 								<Input id="name" {...register("name")} aria-invalid={!!errors.name} />
 								{errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
 							</div>
@@ -188,7 +188,7 @@ export const CommitteeTypeFormDialog = React.memo(
 						</div>
 
 						<div className="space-y-2">
-							<Label htmlFor="description">{t("type.description")}</Label>
+							<Label htmlFor="description">{t("type.descriptionEn")}</Label>
 							<Textarea id="description" {...register("description")} rows={2} />
 						</div>
 

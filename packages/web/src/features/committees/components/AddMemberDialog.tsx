@@ -3,7 +3,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useEmployees } from "#web/api/employees/employees.queries.ts";
+import { EmployeeSearch } from "#web/components/common/EmployeeSearch.tsx";
 import { Button } from "#web/components/ui/button.tsx";
 import {
 	Dialog,
@@ -17,6 +17,7 @@ import { Input } from "#web/components/ui/input.tsx";
 import { Label } from "#web/components/ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
 import type { AddCommitteeMemberRequest, CommitteeMemberRole } from "#web/types/committee.ts";
+import type { Employee } from "#web/types/employee.ts";
 
 const MEMBER_ROLES: CommitteeMemberRole[] = ["CHAIRMAN", "VICE_CHAIRMAN", "SECRETARY", "MEMBER", "ADVISOR"];
 
@@ -41,8 +42,7 @@ export const AddMemberDialog = React.memo(
 		const { t } = useTranslation("committees");
 		const { t: tCommon } = useTranslation("common");
 
-		const { data: employeesData } = useEmployees({ status: "ACTIVE", page: 1, pageSize: 1000 });
-		const employees = employeesData?.data ?? [];
+		const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
 
 		const {
 			register,
@@ -60,7 +60,6 @@ export const AddMemberDialog = React.memo(
 			},
 		});
 
-		const selectedEmployeeId = watch("employeeId");
 		const selectedRole = watch("role");
 
 		React.useEffect(() => {
@@ -70,6 +69,7 @@ export const AddMemberDialog = React.memo(
 					role: "MEMBER",
 					appointedDate: new Date().toISOString().split("T")[0],
 				});
+				setSelectedEmployee(null);
 			}
 		}, [open, reset]);
 
@@ -85,12 +85,18 @@ export const AddMemberDialog = React.memo(
 			[onSubmit],
 		);
 
-		const handleEmployeeChange = React.useCallback(
-			(value: string) => {
-				setValue("employeeId", value);
+		const handleEmployeeFound = React.useCallback(
+			(employee: Employee) => {
+				setSelectedEmployee(employee);
+				setValue("employeeId", employee.id, { shouldValidate: true });
 			},
 			[setValue],
 		);
+
+		const handleEmployeeClear = React.useCallback(() => {
+			setSelectedEmployee(null);
+			setValue("employeeId", "", { shouldValidate: true });
+		}, [setValue]);
 
 		const handleRoleChange = React.useCallback(
 			(value: string) => {
@@ -98,9 +104,6 @@ export const AddMemberDialog = React.memo(
 			},
 			[setValue],
 		);
-
-		const { i18n } = useTranslation();
-		const isAmharic = i18n.language === "am";
 
 		return (
 			<Dialog open={open} onOpenChange={onOpenChange}>
@@ -111,22 +114,11 @@ export const AddMemberDialog = React.memo(
 					</DialogHeader>
 					<form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
 						<div className="space-y-2">
-							<Label htmlFor="employeeId">{t("member.selectEmployee")}</Label>
-							<Select value={selectedEmployeeId} onValueChange={handleEmployeeChange}>
-								<SelectTrigger aria-invalid={!!errors.employeeId}>
-									<SelectValue placeholder={t("member.selectEmployeePlaceholder")} />
-								</SelectTrigger>
-								<SelectContent>
-									{employees.map((emp) => {
-										const displayName = isAmharic && emp.fullNameAm ? emp.fullNameAm : emp.fullName;
-										return (
-											<SelectItem key={emp.id} value={emp.id}>
-												{emp.employeeId} - {displayName}
-											</SelectItem>
-										);
-									})}
-								</SelectContent>
-							</Select>
+							<EmployeeSearch
+								onEmployeeFound={handleEmployeeFound}
+								onClear={handleEmployeeClear}
+								selectedEmployee={selectedEmployee}
+							/>
 							{errors.employeeId && <p className="text-sm text-destructive">{errors.employeeId.message}</p>}
 						</div>
 

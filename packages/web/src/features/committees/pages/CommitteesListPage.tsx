@@ -310,7 +310,7 @@ export const CommitteesListPage = React.memo(
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<div>
 						<h1 className="text-2xl font-bold">{t("committee.title")}</h1>
-						<p className="text-muted-foreground">{t("committee.description")}</p>
+						<p className="text-muted-foreground">{t("committee.committeeDescription")}</p>
 					</div>
 					<Button onClick={handleCreate} className="w-full sm:w-auto">
 						<Plus className="mr-2 h-4 w-4" />

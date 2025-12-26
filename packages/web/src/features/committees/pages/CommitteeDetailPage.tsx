@@ -366,7 +366,6 @@ export const CommitteeDetailPage = React.memo(
 									columns={memberColumns}
 									data={members ?? []}
 									isLoading={membersLoading}
-									searchColumn="employee.fullName"
 								/>
 							</CardContent>
 						</Card>

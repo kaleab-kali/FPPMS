@@ -1,10 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CommitteeMemberRole } from "@prisma/client";
-import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class AddCommitteeMemberDto {
-	@ApiProperty({ description: "Employee ID (UUID) to add as member" })
-	@IsUUID()
+	@ApiProperty({ description: "Employee ID to add as member" })
+	@IsString()
 	@IsNotEmpty()
 	employeeId: string;
 
@@ -40,9 +40,10 @@ export class RemoveCommitteeMemberDto {
 }
 
 export class BulkAddMembersDto {
-	@ApiProperty({ description: "Array of employee IDs (UUIDs) to add as members", type: [String] })
-	@IsUUID("4", { each: true })
-	@IsNotEmpty()
+	@ApiProperty({ description: "Array of employee IDs to add as members", type: [String] })
+	@IsArray()
+	@ArrayNotEmpty()
+	@IsString({ each: true })
 	employeeIds: string[];
 
 	@ApiProperty({ description: "Member role for all added members", enum: CommitteeMemberRole })

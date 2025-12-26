@@ -1,15 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CommitteeStatus } from "@prisma/client";
-import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from "class-validator";
+import { IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 
 export class CreateCommitteeDto {
-	@ApiProperty({ description: "Committee type ID (UUID)" })
-	@IsUUID()
+	@ApiProperty({ description: "Committee type ID" })
+	@IsString()
 	@IsNotEmpty()
 	committeeTypeId: string;
 
-	@ApiPropertyOptional({ description: "Center ID (UUID) - null for HQ level committees" })
-	@IsUUID()
+	@ApiPropertyOptional({ description: "Center ID - null for HQ level committees" })
+	@IsString()
 	@IsOptional()
 	centerId?: string;
 
@@ -106,12 +106,12 @@ export class DissolveCommitteeDto {
 
 export class CommitteeFilterDto {
 	@ApiPropertyOptional({ description: "Filter by committee type ID" })
-	@IsUUID()
+	@IsString()
 	@IsOptional()
 	committeeTypeId?: string;
 
 	@ApiPropertyOptional({ description: "Filter by center ID" })
-	@IsUUID()
+	@IsString()
 	@IsOptional()
 	centerId?: string;
 

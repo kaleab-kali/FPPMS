@@ -23,11 +23,13 @@ import {
 	User,
 	UserCheck,
 	Users,
+	UsersRound,
 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useEmployeeCommittees } from "#web/api/committees/committees.queries.ts";
 import { useFamilyMembers } from "#web/api/employees/employee-family.queries.ts";
 import { useMaritalStatusHistory } from "#web/api/employees/employee-marital-status.queries.ts";
 import { useMedicalRecords } from "#web/api/employees/employee-medical.queries.ts";
@@ -50,6 +52,7 @@ import {
 import { Skeleton } from "#web/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#web/components/ui/tabs.tsx";
 import { STORAGE_KEYS } from "#web/config/constants.ts";
+import type { EmployeeCommitteeMembership } from "#web/types/committee.ts";
 import type { Employee } from "#web/types/employee.ts";
 import type { FamilyMember } from "#web/types/employee-family.ts";
 import type { MaritalStatusRecord } from "#web/types/employee-marital-status.ts";
@@ -630,10 +633,100 @@ const MaritalStatusSection = React.memo(
 );
 MaritalStatusSection.displayName = "MaritalStatusSection";
 
+interface CommitteesTabProps {
+	committees: EmployeeCommitteeMembership[];
+	isLoading: boolean;
+	t: (key: string) => string;
+	tCommittees: (key: string) => string;
+	isAmharic: boolean;
+}
+
+const ROLE_COLORS = {
+	CHAIRMAN: "default",
+	VICE_CHAIRMAN: "default",
+	SECRETARY: "secondary",
+	MEMBER: "outline",
+	ADVISOR: "outline",
+} as const;
+
+const CommitteesTab = React.memo(
+	({ committees, isLoading, t, tCommittees, isAmharic }: CommitteesTabProps) => {
+		if (isLoading) {
+			return (
+				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+					<Skeleton className="h-48" />
+					<Skeleton className="h-48" />
+					<Skeleton className="h-48" />
+				</div>
+			);
+		}
+
+		if (committees.length === 0) {
+			return (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<UsersRound className="h-12 w-12 text-muted-foreground mb-4" />
+					<p className="text-muted-foreground">{t("committees.noMemberships")}</p>
+				</div>
+			);
+		}
+
+		return (
+			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+				{committees.map((membership) => {
+					const committeeName =
+						isAmharic && membership.committee?.nameAm ? membership.committee.nameAm : membership.committee?.name;
+					const typeName =
+						isAmharic && membership.committee?.committeeType?.nameAm
+							? membership.committee.committeeType.nameAm
+							: membership.committee?.committeeType?.name;
+					const centerName = membership.committee?.center
+						? isAmharic && membership.committee.center.nameAm
+							? membership.committee.center.nameAm
+							: membership.committee.center.name
+						: tCommittees("committee.hqLevel");
+
+					return (
+						<div key={membership.id} className="rounded-lg border bg-card p-4">
+							<div className="flex items-start justify-between mb-3">
+								<div>
+									<h4 className="font-semibold">{committeeName ?? "-"}</h4>
+									<p className="text-sm text-muted-foreground">{typeName}</p>
+								</div>
+								<Badge variant={ROLE_COLORS[membership.role as keyof typeof ROLE_COLORS] ?? "outline"}>
+									{tCommittees(`role.${membership.role.toLowerCase()}`)}
+								</Badge>
+							</div>
+							<div className="grid grid-cols-2 gap-2 text-sm">
+								<DataField label={tCommittees("committee.center")} value={centerName} />
+								<DataField label={tCommittees("member.appointedDate")} value={formatDate(membership.appointedDate)} />
+								{membership.endDate && (
+									<DataField label={tCommittees("member.endDate")} value={formatDate(membership.endDate)} />
+								)}
+							</div>
+							<div className="mt-2 pt-2 border-t flex gap-2">
+								<Badge variant={membership.isActive ? "default" : "secondary"}>
+									{membership.isActive ? t("committees.active") : t("committees.inactive")}
+								</Badge>
+								{membership.committee?.status && (
+									<Badge variant="outline">{tCommittees(`status.${membership.committee.status.toLowerCase()}`)}</Badge>
+								)}
+							</div>
+						</div>
+					);
+				})}
+			</div>
+		);
+	},
+	(prev, next) =>
+		prev.committees === next.committees && prev.isLoading === next.isLoading && prev.isAmharic === next.isAmharic,
+);
+CommitteesTab.displayName = "CommitteesTab";
+
 export const EmployeeDetailPage = React.memo(
 	() => {
 		const { t } = useTranslation("employees");
 		const { t: tCommon } = useTranslation("common");
+		const { t: tCommittees } = useTranslation("committees");
 		const { i18n } = useTranslation();
 		const navigate = useNavigate();
 		const { id } = useParams<{ id: string }>();
@@ -647,6 +740,7 @@ export const EmployeeDetailPage = React.memo(
 		const { data: maritalStatuses, isLoading: maritalLoading } = useMaritalStatusHistory(id ?? "");
 		const { data: directSuperior } = useDirectSuperior(id ?? "");
 		const { data: subordinates } = useSubordinates(id ?? "");
+		const { data: employeeCommittees, isLoading: committeesLoading } = useEmployeeCommittees(id ?? "");
 		const deleteMutation = useDeleteEmployee();
 
 		const isAmharic = i18n.language === "am";
@@ -809,6 +903,13 @@ export const EmployeeDetailPage = React.memo(
 							<Package className="h-3.5 w-3.5" />
 							{t("tabs.inventory")}
 						</TabsTrigger>
+						<TabsTrigger
+							value="committees"
+							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+						>
+							<UsersRound className="h-3.5 w-3.5" />
+							{t("tabs.committees")}
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="basic" className="mt-5">
@@ -901,6 +1002,16 @@ export const EmployeeDetailPage = React.memo(
 							title={t("tabs.inventory")}
 							icon={<Package className="h-8 w-8 text-muted-foreground" />}
 							t={t}
+						/>
+					</TabsContent>
+
+					<TabsContent value="committees" className="mt-5">
+						<CommitteesTab
+							committees={employeeCommittees ?? []}
+							isLoading={committeesLoading}
+							t={t}
+							tCommittees={tCommittees}
+							isAmharic={isAmharic}
 						/>
 					</TabsContent>
 				</Tabs>

@@ -10,6 +10,7 @@ import type {
 	CreateCommitteeRequest,
 	CreateCommitteeTypeRequest,
 	DissolveCommitteeRequest,
+	EmployeeCommitteeMembership,
 	ReactivateCommitteeRequest,
 	RemoveCommitteeMemberRequest,
 	SuspendCommitteeRequest,
@@ -64,5 +65,7 @@ export const committeesApi = {
 
 	// Employee lookup
 	getEmployeeCommittees: (employeeId: string, includeInactive = false) =>
-		api.get<CommitteeMember[]>(`${BASE_URL}/employee/${employeeId}${includeInactive ? "?includeInactive=true" : ""}`),
+		api.get<EmployeeCommitteeMembership[]>(
+			`${BASE_URL}/employee/${employeeId}${includeInactive ? "?includeInactive=true" : ""}`,
+		),
 };

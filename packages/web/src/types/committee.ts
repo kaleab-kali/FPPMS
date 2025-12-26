@@ -206,3 +206,53 @@ export const COMMITTEE_STATUS_LABELS: Record<CommitteeStatus, string> = {
 	SUSPENDED: "Suspended",
 	DISSOLVED: "Dissolved",
 } as const;
+
+export interface CommitteeMinimalForEmployee {
+	id: string;
+	tenantId: string;
+	committeeTypeId: string;
+	centerId?: string;
+	code: string;
+	name: string;
+	nameAm?: string;
+	description?: string;
+	descriptionAm?: string;
+	status: CommitteeStatus;
+	establishedDate: string;
+	dissolvedDate?: string;
+	dissolvedReason?: string;
+	establishedBy: string;
+	dissolvedBy?: string;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
+	committeeType?: {
+		id: string;
+		code: string;
+		name: string;
+		nameAm?: string;
+	};
+	center?: {
+		id: string;
+		code: string;
+		name: string;
+		nameAm?: string;
+	};
+}
+
+export interface EmployeeCommitteeMembership {
+	id: string;
+	tenantId: string;
+	committeeId: string;
+	employeeId: string;
+	role: CommitteeMemberRole;
+	appointedDate: string;
+	endDate?: string;
+	appointedBy: string;
+	removedBy?: string;
+	removalReason?: string;
+	isActive: boolean;
+	createdAt: string;
+	updatedAt: string;
+	committee?: CommitteeMinimalForEmployee;
+}

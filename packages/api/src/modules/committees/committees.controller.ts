@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { CurrentTenant } from "#api/common/decorators/current-tenant.decorator.js";
-import { CurrentUser } from "#api/common/decorators/current-user.decorator.js";
-import { Permissions } from "#api/common/decorators/permissions.decorator.js";
-import { CommitteesService } from "./committees.service.js";
+import { CurrentTenant } from "#api/common/decorators/current-tenant.decorator";
+import { CurrentUser } from "#api/common/decorators/current-user.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
+import { CommitteesService } from "./committees.service";
 import {
 	CommitteeFilterDto,
 	CommitteeHistoryResponseDto,
@@ -14,14 +14,14 @@ import {
 	ReactivateCommitteeDto,
 	SuspendCommitteeDto,
 	UpdateCommitteeDto,
-} from "./dto/committee.dto.js";
+} from "./dto/committee.dto";
 import {
 	AddCommitteeMemberDto,
 	BulkAddMembersDto,
 	RemoveCommitteeMemberDto,
 	UpdateCommitteeMemberDto,
-} from "./dto/committee-member.dto.js";
-import { CommitteeTypeResponseDto, CreateCommitteeTypeDto, UpdateCommitteeTypeDto } from "./dto/committee-type.dto.js";
+} from "./dto/committee-member.dto";
+import { CommitteeTypeResponseDto, CreateCommitteeTypeDto, UpdateCommitteeTypeDto } from "./dto/committee-type.dto";
 
 @ApiTags("committees")
 @ApiBearerAuth("JWT-auth")

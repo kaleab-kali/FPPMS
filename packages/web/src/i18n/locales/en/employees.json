@@ -161,7 +161,13 @@
 		"complaint": "Complaint",
 		"performance": "Performance",
 		"salary": "Salary Raise",
-		"inventory": "Inventory"
+		"inventory": "Inventory",
+		"committees": "Committees"
+	},
+	"committees": {
+		"noMemberships": "Not a member of any committee",
+		"active": "Active",
+		"inactive": "Inactive"
 	},
 	"basicInfo": "Basic Information",
 	"identificationInfo": "Identification",

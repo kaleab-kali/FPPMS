@@ -170,7 +170,13 @@
 		"complaint": "ቅሬታ",
 		"performance": "አፈፃፀም",
 		"salary": "ደሞዝ ጭማሪ",
-		"inventory": "ንብረት"
+		"inventory": "ንብረት",
+		"committees": "ኮሚቴዎች"
+	},
+	"committees": {
+		"noMemberships": "የማንኛውም ኮሚቴ አባል አይደለም",
+		"active": "ንቁ",
+		"inactive": "ንቁ ያልሆነ"
 	},
 	"basicInfo": "መሠረታዊ መረጃ",
 	"identificationInfo": "መታወቂያ",

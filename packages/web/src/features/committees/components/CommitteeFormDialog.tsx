@@ -56,6 +56,7 @@ export const CommitteeFormDialog = React.memo(
 			reset,
 			setValue,
 			watch,
+			trigger,
 			formState: { errors },
 		} = useForm<CommitteeFormData>({
 			resolver: zodResolver(committeeSchema),
@@ -102,6 +103,9 @@ export const CommitteeFormDialog = React.memo(
 
 		const handleFormSubmit = React.useCallback(
 			(formData: CommitteeFormData) => {
+				console.log("Form Data:", formData);
+				console.log("committeeTypeId:", formData.committeeTypeId);
+				console.log("typeof committeeTypeId:", typeof formData.committeeTypeId);
 				if (isEditing) {
 					const updatePayload: UpdateCommitteeRequest = {
 						name: formData.name,
@@ -109,18 +113,28 @@ export const CommitteeFormDialog = React.memo(
 						description: formData.description || undefined,
 						descriptionAm: formData.descriptionAm || undefined,
 					};
+					console.log("Update Payload:", updatePayload);
 					onSubmit(updatePayload);
 				} else {
 					const createPayload: CreateCommitteeRequest = {
 						committeeTypeId: formData.committeeTypeId,
-						centerId: formData.centerId || undefined,
 						code: formData.code,
 						name: formData.name,
-						nameAm: formData.nameAm || undefined,
-						description: formData.description || undefined,
-						descriptionAm: formData.descriptionAm || undefined,
 						establishedDate: formData.establishedDate,
 					};
+					if (formData.centerId && formData.centerId.trim() !== "") {
+						createPayload.centerId = formData.centerId;
+					}
+					if (formData.nameAm && formData.nameAm.trim() !== "") {
+						createPayload.nameAm = formData.nameAm;
+					}
+					if (formData.description && formData.description.trim() !== "") {
+						createPayload.description = formData.description;
+					}
+					if (formData.descriptionAm && formData.descriptionAm.trim() !== "") {
+						createPayload.descriptionAm = formData.descriptionAm;
+					}
+					console.log("Create Payload:", createPayload);
 					onSubmit(createPayload);
 				}
 			},
@@ -129,9 +143,10 @@ export const CommitteeFormDialog = React.memo(
 
 		const handleTypeChange = React.useCallback(
 			(value: string) => {
-				setValue("committeeTypeId", value);
+				setValue("committeeTypeId", value, { shouldValidate: true });
+				trigger("committeeTypeId");
 			},
-			[setValue],
+			[setValue, trigger],
 		);
 
 		const handleCenterChange = React.useCallback(
@@ -222,7 +237,7 @@ export const CommitteeFormDialog = React.memo(
 
 						<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 							<div className="space-y-2">
-								<Label htmlFor="name">{t("committee.name")}</Label>
+								<Label htmlFor="name">{t("committee.nameEn")}</Label>
 								<Input id="name" {...register("name")} aria-invalid={!!errors.name} />
 								{errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
 							</div>
@@ -234,7 +249,7 @@ export const CommitteeFormDialog = React.memo(
 						</div>
 
 						<div className="space-y-2">
-							<Label htmlFor="description">{t("committee.description")}</Label>
+							<Label htmlFor="description">{t("committee.descriptionEn")}</Label>
 							<Textarea id="description" {...register("description")} rows={2} />
 						</div>
 
