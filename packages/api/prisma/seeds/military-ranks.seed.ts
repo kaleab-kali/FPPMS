@@ -17,7 +17,7 @@ const MILITARY_RANKS = [
 	{
 		code: "CONST",
 		name: "Constable",
-		nameAm: "\u12AE\u1295\u1235\u1273\u1265\u120D",
+		nameAm: "ኮንስታብል",
 		level: 1,
 		category: RANK_CATEGORIES.CONSTABLE,
 		baseSalary: 4500,
@@ -28,7 +28,7 @@ const MILITARY_RANKS = [
 	{
 		code: "ACPL",
 		name: "Assistant Corporal",
-		nameAm: "\u1228\u12F3\u1275 \u12AE\u122D\u1356\u122B\u120D",
+		nameAm: "ረዳት ኮርፖራል",
 		level: 2,
 		category: RANK_CATEGORIES.CONSTABLE,
 		baseSalary: 5000,
@@ -39,7 +39,7 @@ const MILITARY_RANKS = [
 	{
 		code: "CPL",
 		name: "Corporal",
-		nameAm: "\u12AE\u122D\u1356\u122B\u120D",
+		nameAm: "ኮርፖራል",
 		level: 3,
 		category: RANK_CATEGORIES.CONSTABLE,
 		baseSalary: 5500,
@@ -50,7 +50,7 @@ const MILITARY_RANKS = [
 	{
 		code: "SGT",
 		name: "Sergeant",
-		nameAm: "\u1233\u1300\u1295\u1275",
+		nameAm: "ሳጅንት",
 		level: 4,
 		category: RANK_CATEGORIES.NCO,
 		baseSalary: 6000,
@@ -61,7 +61,7 @@ const MILITARY_RANKS = [
 	{
 		code: "SSGT",
 		name: "Staff Sergeant",
-		nameAm: "\u1235\u1273\u134D \u1233\u1300\u1295\u1275",
+		nameAm: "ስታፍ ሳጅንት",
 		level: 5,
 		category: RANK_CATEGORIES.NCO,
 		baseSalary: 6500,
@@ -72,7 +72,7 @@ const MILITARY_RANKS = [
 	{
 		code: "MSGT",
 		name: "Master Sergeant",
-		nameAm: "\u121B\u1235\u1270\u122D \u1233\u1300\u1295\u1275",
+		nameAm: "ማስተር ሳጅንት",
 		level: 6,
 		category: RANK_CATEGORIES.NCO,
 		baseSalary: 7000,
@@ -83,7 +83,7 @@ const MILITARY_RANKS = [
 	{
 		code: "SMSGT",
 		name: "Senior Master Sergeant",
-		nameAm: "\u12A8\u134D\u1270\u129B \u121B\u1235\u1270\u122D \u1233\u1300\u1295\u1275",
+		nameAm: "ከፍተኛ ማስተር ሳጅንት",
 		level: 7,
 		category: RANK_CATEGORIES.NCO,
 		baseSalary: 7500,
@@ -94,7 +94,7 @@ const MILITARY_RANKS = [
 	{
 		code: "2LT",
 		name: "Second Lieutenant",
-		nameAm: "\u121C\u1276 \u120C\u1270\u1293\u1295\u1275",
+		nameAm: "ሜቶ ሌተናንት",
 		level: 8,
 		category: RANK_CATEGORIES.OFFICER,
 		baseSalary: 8500,
@@ -105,7 +105,7 @@ const MILITARY_RANKS = [
 	{
 		code: "1LT",
 		name: "First Lieutenant",
-		nameAm: "\u12A0\u1295\u12F0\u129B \u120C\u1270\u1293\u1295\u1275",
+		nameAm: "አንደኛ ሌተናንት",
 		level: 9,
 		category: RANK_CATEGORIES.OFFICER,
 		baseSalary: 9500,
@@ -116,7 +116,7 @@ const MILITARY_RANKS = [
 	{
 		code: "CPT",
 		name: "Captain",
-		nameAm: "\u12AB\u1355\u1274\u1295",
+		nameAm: "ካፕቴን",
 		level: 10,
 		category: RANK_CATEGORIES.OFFICER,
 		baseSalary: 10500,
@@ -126,8 +126,8 @@ const MILITARY_RANKS = [
 	},
 	{
 		code: "MAJ",
-		name: "\u121C\u1300\u122D",
-		nameAm: "\u121C\u1300\u122D",
+		name: "Major",
+		nameAm: "ሜጀር",
 		level: 11,
 		category: RANK_CATEGORIES.OFFICER,
 		baseSalary: 12000,
@@ -138,7 +138,7 @@ const MILITARY_RANKS = [
 	{
 		code: "LTCOL",
 		name: "Lieutenant Colonel",
-		nameAm: "\u120C\u1270\u1293\u1295\u1275 \u12AE\u120E\u1294\u120D",
+		nameAm: "ሌተናንት ኮሎኔል",
 		level: 12,
 		category: RANK_CATEGORIES.SENIOR_OFFICER,
 		baseSalary: 14000,
@@ -149,7 +149,7 @@ const MILITARY_RANKS = [
 	{
 		code: "COL",
 		name: "Colonel",
-		nameAm: "\u12AE\u120E\u1294\u120D",
+		nameAm: "ኮሎኔል",
 		level: 13,
 		category: RANK_CATEGORIES.SENIOR_OFFICER,
 		baseSalary: 16000,
@@ -160,7 +160,7 @@ const MILITARY_RANKS = [
 	{
 		code: "BGEN",
 		name: "Brigadier General",
-		nameAm: "\u1265\u122A\u130C\u12F2\u12E8\u122D \u1300\u1294\u122B\u120D",
+		nameAm: "ብሪጌዲየር ጀነራል",
 		level: 14,
 		category: RANK_CATEGORIES.SENIOR_OFFICER,
 		baseSalary: 18000,
@@ -171,7 +171,7 @@ const MILITARY_RANKS = [
 	{
 		code: "MGEN",
 		name: "Major General",
-		nameAm: "\u121C\u1300\u122D \u1300\u1294\u122B\u120D",
+		nameAm: "ሜጀር ጀነራል",
 		level: 15,
 		category: RANK_CATEGORIES.SENIOR_OFFICER,
 		baseSalary: 20000,
@@ -182,7 +182,7 @@ const MILITARY_RANKS = [
 	{
 		code: "LGEN",
 		name: "Lieutenant General",
-		nameAm: "\u120C\u1270\u1293\u1295\u1275 \u1300\u1294\u122B\u120D",
+		nameAm: "ሌተናንት ጀነራል",
 		level: 16,
 		category: RANK_CATEGORIES.SENIOR_OFFICER,
 		baseSalary: 22000,
