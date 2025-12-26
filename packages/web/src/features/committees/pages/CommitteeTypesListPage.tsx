@@ -128,8 +128,8 @@ export const CommitteeTypesListPage = React.memo(
 					accessorKey: "maxMembers",
 					header: t("type.maxMembers"),
 					cell: ({ row }) => {
-						const max = row.getValue("maxMembers");
-						return <span>{max ?? t("type.unlimited")}</span>;
+						const max = row.getValue("maxMembers") as number | null | undefined;
+						return <span>{max !== null && max !== undefined ? max : t("type.unlimited")}</span>;
 					},
 				},
 				{

@@ -41,7 +41,7 @@ export const AddMemberDialog = React.memo(
 		const { t } = useTranslation("committees");
 		const { t: tCommon } = useTranslation("common");
 
-		const { data: employeesData } = useEmployees({ status: "ACTIVE", page: 1, limit: 1000 });
+		const { data: employeesData } = useEmployees({ status: "ACTIVE", page: 1, pageSize: 1000 });
 		const employees = employeesData?.data ?? [];
 
 		const {

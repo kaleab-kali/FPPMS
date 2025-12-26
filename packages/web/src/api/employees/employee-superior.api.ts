@@ -30,7 +30,7 @@ export const employeeSuperiorApi = {
 		api.patch<{ success: boolean }>(`${BASE_URL}/${employeeId}`, data),
 
 	removeSuperior: (employeeId: string, data: RemoveSuperiorDto) =>
-		api.request<{ success: boolean }>({ method: "DELETE", url: `${BASE_URL}/${employeeId}`, data }),
+		api.delete<{ success: boolean }>(`${BASE_URL}/${employeeId}`, { data }),
 
 	getSubordinates: (employeeId: string) => api.get<EmployeeBasicInfo[]>(`${BASE_URL}/${employeeId}/subordinates`),
 
