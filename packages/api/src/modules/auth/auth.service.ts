@@ -13,6 +13,7 @@ interface JwtPayloadData {
 	username: string;
 	tenantId: string;
 	centerId?: string;
+	employeeId?: string;
 	roles: string[];
 	permissions: string[];
 	permissionVersion: number;
@@ -101,6 +102,7 @@ export class AuthService {
 			username: user.username,
 			tenantId: user.tenantId,
 			centerId: user.centerId || undefined,
+			employeeId: user.employeeId || undefined,
 			roles,
 			permissions,
 			requirePasswordChange: user.mustChangePassword,
@@ -114,6 +116,7 @@ export class AuthService {
 			username: user.username,
 			tenantId: user.tenantId,
 			centerId: user.centerId,
+			employeeId: user.employeeId,
 			roles: user.roles,
 			permissions: user.permissions,
 			permissionVersion: user.permissionVersion,
@@ -198,6 +201,7 @@ export class AuthService {
 			username: user.username,
 			tenantId: user.tenantId,
 			centerId: user.centerId || undefined,
+			employeeId: user.employeeId || undefined,
 			roles,
 			permissions,
 			permissionVersion: user.permissionVersion,
@@ -351,6 +355,7 @@ export class AuthService {
 			username: user.username,
 			tenantId: user.tenantId,
 			centerId: user.centerId || undefined,
+			employeeId: user.employeeId || undefined,
 			roles,
 			permissions,
 			requirePasswordChange: user.mustChangePassword,

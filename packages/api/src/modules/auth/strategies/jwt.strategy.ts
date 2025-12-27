@@ -9,6 +9,7 @@ interface JwtPayloadData {
 	username: string;
 	tenantId: string;
 	centerId?: string;
+	employeeId?: string;
 	roles: string[];
 	permissions: string[];
 	permissionVersion?: number;
@@ -19,6 +20,7 @@ interface ValidatedUser {
 	username: string;
 	tenantId: string;
 	centerId?: string;
+	employeeId?: string;
 	roles: string[];
 	permissions: string[];
 	permissionVersion: number;
@@ -74,6 +76,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			username: payload.username,
 			tenantId: payload.tenantId,
 			centerId: payload.centerId,
+			employeeId: payload.employeeId,
 			roles: payload.roles,
 			permissions: payload.permissions,
 			permissionVersion: user.permissionVersion,

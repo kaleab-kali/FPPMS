@@ -3,6 +3,7 @@ export class LoginUserDto {
 	username: string;
 	tenantId: string;
 	centerId: string | undefined;
+	employeeId: string | undefined;
 	roles: string[];
 	permissions: string[];
 	requirePasswordChange: boolean;

@@ -7,6 +7,7 @@ import {
 	Clock,
 	DollarSign,
 	FileText,
+	Gavel,
 	Home,
 	type LucideIcon,
 	Package,
@@ -19,9 +20,11 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, useLocation } from "react-router-dom";
+import { useMyCommittees } from "#web/api/committees/committees.queries.ts";
 import logoImage from "#web/assets/fpp.jpg";
 import { NavUser } from "#web/components/layout/NavUser.tsx";
 import { Avatar, AvatarFallback, AvatarImage } from "#web/components/ui/avatar.tsx";
+import { Badge } from "#web/components/ui/badge.tsx";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "#web/components/ui/collapsible.tsx";
 import {
 	Sidebar,
@@ -268,8 +271,12 @@ NavMainItem.displayName = "NavMainItem";
 export const AppSidebar = React.memo(
 	({ ...props }: React.ComponentProps<typeof Sidebar>) => {
 		const { t } = useTranslation("navigation");
+		const { i18n } = useTranslation();
 		const { user } = useAuth();
 		const location = useLocation();
+		const isAmharic = i18n.language === "am";
+
+		const { data: myCommittees } = useMyCommittees();
 
 		const isItemActive = React.useCallback(
 			(item: NavItemConfig): boolean => {
@@ -290,6 +297,10 @@ export const AppSidebar = React.memo(
 			}),
 			[user?.username],
 		);
+
+		const isMyCommitteesActive = React.useMemo(() => {
+			return location.pathname.startsWith("/my-committee");
+		}, [location.pathname]);
 
 		return (
 			<Sidebar variant="inset" {...props}>
@@ -312,6 +323,58 @@ export const AppSidebar = React.memo(
 					</SidebarMenu>
 				</SidebarHeader>
 				<SidebarContent>
+					{myCommittees && myCommittees.length > 0 && (
+						<SidebarGroup>
+							<SidebarGroupLabel>{t("myCommittees")}</SidebarGroupLabel>
+							<SidebarMenu>
+								<Collapsible asChild defaultOpen={isMyCommitteesActive}>
+									<SidebarMenuItem>
+										<SidebarMenuButton asChild tooltip={t("assignedCases")}>
+											<span className="cursor-pointer">
+												<Gavel />
+												<span>{t("assignedCases")}</span>
+											</span>
+										</SidebarMenuButton>
+										<CollapsibleTrigger asChild>
+											<SidebarMenuAction className="data-[state=open]:rotate-90">
+												<ChevronRight />
+												<span className="sr-only">Toggle</span>
+											</SidebarMenuAction>
+										</CollapsibleTrigger>
+										<CollapsibleContent>
+											<SidebarMenuSub>
+												{myCommittees.map((membership) => {
+													const committeeName =
+														isAmharic && membership.committee?.nameAm
+															? membership.committee.nameAm
+															: membership.committee?.name ?? "Committee";
+													return (
+														<SidebarMenuSubItem key={membership.id}>
+															<SidebarMenuSubButton asChild>
+																<NavLink
+																	to={`/my-committee/${membership.committeeId}/cases`}
+																	className={({ isActive: subActive }) =>
+																		subActive ? "bg-sidebar-accent" : ""
+																	}
+																>
+																	<span className="flex items-center gap-2">
+																		<span className="truncate max-w-[150px]">{committeeName}</span>
+																		<Badge variant="outline" className="text-xs">
+																			{t(`role.${membership.role.toLowerCase()}`)}
+																		</Badge>
+																	</span>
+																</NavLink>
+															</SidebarMenuSubButton>
+														</SidebarMenuSubItem>
+													);
+												})}
+											</SidebarMenuSub>
+										</CollapsibleContent>
+									</SidebarMenuItem>
+								</Collapsible>
+							</SidebarMenu>
+						</SidebarGroup>
+					)}
 					<SidebarGroup>
 						<SidebarGroupLabel>{t("navigation")}</SidebarGroupLabel>
 						<SidebarMenu>

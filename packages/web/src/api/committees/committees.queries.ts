@@ -64,3 +64,9 @@ export const useEmployeeCommittees = (employeeId: string, includeInactive = fals
 		queryFn: () => committeesApi.getEmployeeCommittees(employeeId, includeInactive),
 		enabled: !!employeeId,
 	});
+
+export const useMyCommittees = (includeInactive = false) =>
+	useQuery({
+		queryKey: [...committeeKeys.all, "my-committees", { includeInactive }] as const,
+		queryFn: () => committeesApi.getMyCommittees(includeInactive),
+	});

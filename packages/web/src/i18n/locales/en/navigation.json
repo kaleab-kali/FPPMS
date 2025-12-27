@@ -14,6 +14,15 @@
 	"committees": "Committees",
 	"allCommittees": "All Committees",
 	"committeeTypes": "Committee Types",
+	"myCommittees": "My Committees",
+	"assignedCases": "Assigned Cases",
+	"role": {
+		"chairman": "Chairman",
+		"vice_chairman": "Vice Chairman",
+		"secretary": "Secretary",
+		"member": "Member",
+		"advisor": "Advisor"
+	},
 	"complaints": "Complaints",
 	"allComplaints": "All Complaints",
 	"registerComplaint": "Register Complaint",

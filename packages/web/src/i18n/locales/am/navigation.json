@@ -14,6 +14,15 @@
 	"committees": "ኮሚቴዎች",
 	"allCommittees": "ሁሉም ኮሚቴዎች",
 	"committeeTypes": "የኮሚቴ ዓይነቶች",
+	"myCommittees": "የእኔ ኮሚቴዎች",
+	"assignedCases": "የተመደቡ ጉዳዮች",
+	"role": {
+		"chairman": "ሰብሳቢ",
+		"vice_chairman": "ምክትል ሰብሳቢ",
+		"secretary": "ፀሐፊ",
+		"member": "አባል",
+		"advisor": "አማካሪ"
+	},
 	"complaints": "ቅሬታዎች",
 	"allComplaints": "ሁሉም ቅሬታዎች",
 	"registerComplaint": "ቅሬታ መመዝገብ",

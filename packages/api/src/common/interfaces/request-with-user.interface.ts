@@ -5,6 +5,7 @@ export interface JwtPayload {
 	username: string;
 	tenantId: string;
 	centerId?: string;
+	employeeId?: string;
 	roles: string[];
 	permissions: string[];
 	iat?: number;
@@ -16,6 +17,7 @@ export interface RequestUser {
 	username: string;
 	tenantId: string;
 	centerId?: string;
+	employeeId?: string;
 	roles: string[];
 	permissions: string[];
 }

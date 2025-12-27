@@ -68,4 +68,8 @@ export const committeesApi = {
 		api.get<EmployeeCommitteeMembership[]>(
 			`${BASE_URL}/employee/${employeeId}${includeInactive ? "?includeInactive=true" : ""}`,
 		),
+
+	// Current user's committees
+	getMyCommittees: (includeInactive = false) =>
+		api.get<EmployeeCommitteeMembership[]>(`${BASE_URL}/my-committees${includeInactive ? "?includeInactive=true" : ""}`),
 };

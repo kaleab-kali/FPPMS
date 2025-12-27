@@ -7,6 +7,7 @@ import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
 import { CommitteeDetailPage } from "#web/features/committees/pages/CommitteeDetailPage.tsx";
 import { CommitteesListPage } from "#web/features/committees/pages/CommitteesListPage.tsx";
 import { CommitteeTypesListPage } from "#web/features/committees/pages/CommitteeTypesListPage.tsx";
+import { MyCommitteeCasesPage } from "#web/features/committees/pages/MyCommitteeCasesPage.tsx";
 import { ComplaintDetailPage } from "#web/features/complaints/pages/ComplaintDetailPage.tsx";
 import { ComplaintRegisterPage } from "#web/features/complaints/pages/ComplaintRegisterPage.tsx";
 import { ComplaintsListPage } from "#web/features/complaints/pages/ComplaintsListPage.tsx";
@@ -171,6 +172,10 @@ export const router = createBrowserRouter([
 			{
 				path: "/committees/:id",
 				element: <CommitteeDetailPage />,
+			},
+			{
+				path: "/my-committee/:committeeId/cases",
+				element: <MyCommitteeCasesPage />,
 			},
 			{
 				path: "/complaints",

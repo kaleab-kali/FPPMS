@@ -14,6 +14,7 @@ export interface AuthUser {
 	username: string;
 	tenantId: string;
 	centerId?: string;
+	employeeId?: string;
 	roles: string[];
 	permissions: string[];
 	requirePasswordChange: boolean;
