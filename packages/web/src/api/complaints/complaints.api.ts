@@ -8,6 +8,7 @@ import type {
 	ComplaintListItem,
 	ComplaintTimeline,
 	CreateComplaintRequest,
+	ForwardToCommitteeRequest,
 	ForwardToHqRequest,
 	RecordAppealDecisionRequest,
 	RecordDecisionRequest,
@@ -58,6 +59,9 @@ export const complaintsApi = {
 
 	assignCommittee: (id: string, data: AssignCommitteeRequest) =>
 		api.patch<Complaint>(`${BASE_URL}/${id}/assign-committee`, data),
+
+	forwardToCommittee: (id: string, data: ForwardToCommitteeRequest) =>
+		api.patch<Complaint>(`${BASE_URL}/${id}/forward-to-committee`, data),
 
 	forwardToHq: (id: string, data: ForwardToHqRequest) => api.patch<Complaint>(`${BASE_URL}/${id}/forward-to-hq`, data),
 

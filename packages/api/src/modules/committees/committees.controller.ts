@@ -270,7 +270,10 @@ export class CommitteesController {
 	// ==================== EMPLOYEE COMMITTEE LOOKUP ====================
 
 	@Get("my-committees")
-	@ApiOperation({ summary: "Get current user's committees", description: "Get all committees the current user is a member of" })
+	@ApiOperation({
+		summary: "Get current user's committees",
+		description: "Get all committees the current user is a member of",
+	})
 	@ApiQuery({ name: "includeInactive", required: false, description: "Include inactive memberships" })
 	@ApiResponse({ status: 200, description: "List of committee memberships", type: [CommitteeMemberResponseDto] })
 	getMyCommittees(

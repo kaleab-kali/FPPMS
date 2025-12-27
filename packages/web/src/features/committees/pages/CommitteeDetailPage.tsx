@@ -287,9 +287,7 @@ export const CommitteeDetailPage = React.memo(
 				{
 					accessorKey: "complaintNumber",
 					header: t("complaints.complaintNumber"),
-					cell: ({ row }) => (
-						<span className="font-mono text-sm font-medium">{row.getValue("complaintNumber")}</span>
-					),
+					cell: ({ row }) => <span className="font-mono text-sm font-medium">{row.getValue("complaintNumber")}</span>,
 				},
 				{
 					accessorKey: "article",
@@ -323,11 +321,7 @@ export const CommitteeDetailPage = React.memo(
 					header: t("complaints.status"),
 					cell: ({ row }) => {
 						const status = row.getValue("status") as ComplaintStatusType;
-						return (
-							<Badge className={COMPLAINT_STATUS_COLORS[status]}>
-								{COMPLAINT_STATUS_LABELS[status]}
-							</Badge>
-						);
+						return <Badge className={COMPLAINT_STATUS_COLORS[status]}>{COMPLAINT_STATUS_LABELS[status]}</Badge>;
 					},
 				},
 				{
@@ -342,11 +336,7 @@ export const CommitteeDetailPage = React.memo(
 					id: "actions",
 					header: "",
 					cell: ({ row }) => (
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => handleViewComplaint(row.original.id)}
-						>
+						<Button variant="ghost" size="sm" onClick={() => handleViewComplaint(row.original.id)}>
 							<ExternalLink className="mr-1 h-3 w-3" />
 							{t("complaints.viewDetails")}
 						</Button>
@@ -472,9 +462,7 @@ export const CommitteeDetailPage = React.memo(
 							</CardHeader>
 							<CardContent>
 								{(assignedComplaints?.length ?? 0) === 0 && !assignedComplaintsLoading ? (
-									<p className="text-center text-muted-foreground py-8">
-										{t("complaints.noComplaints")}
-									</p>
+									<p className="text-center text-muted-foreground py-8">{t("complaints.noComplaints")}</p>
 								) : (
 									<DataTable
 										columns={complaintColumns}
@@ -494,15 +482,9 @@ export const CommitteeDetailPage = React.memo(
 							</CardHeader>
 							<CardContent>
 								{(hqComplaints?.length ?? 0) === 0 && !hqComplaintsLoading ? (
-									<p className="text-center text-muted-foreground py-8">
-										{t("complaints.noHqComplaints")}
-									</p>
+									<p className="text-center text-muted-foreground py-8">{t("complaints.noHqComplaints")}</p>
 								) : (
-									<DataTable
-										columns={complaintColumns}
-										data={hqComplaints ?? []}
-										isLoading={hqComplaintsLoading}
-									/>
+									<DataTable columns={complaintColumns} data={hqComplaints ?? []} isLoading={hqComplaintsLoading} />
 								)}
 							</CardContent>
 						</Card>

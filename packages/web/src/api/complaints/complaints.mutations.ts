@@ -5,6 +5,7 @@ import type {
 	AssignCommitteeRequest,
 	CloseComplaintRequest,
 	CreateComplaintRequest,
+	ForwardToCommitteeRequest,
 	ForwardToHqRequest,
 	RecordAppealDecisionRequest,
 	RecordDecisionRequest,
@@ -85,6 +86,18 @@ export const useAssignCommittee = () => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: ({ id, data }: { id: string; data: AssignCommitteeRequest }) => complaintsApi.assignCommittee(id, data),
+		onSuccess: (_data, variables) => {
+			queryClient.invalidateQueries({ queryKey: complaintKeys.detail(variables.id) });
+			queryClient.invalidateQueries({ queryKey: complaintKeys.lists() });
+		},
+	});
+};
+
+export const useForwardToCommittee = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({ id, data }: { id: string; data: ForwardToCommitteeRequest }) =>
+			complaintsApi.forwardToCommittee(id, data),
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({ queryKey: complaintKeys.detail(variables.id) });
 			queryClient.invalidateQueries({ queryKey: complaintKeys.lists() });

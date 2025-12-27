@@ -15,6 +15,7 @@ import {
 	ComplaintResponseDto,
 	ComplaintTimelineResponseDto,
 	CreateComplaintDto,
+	ForwardToCommitteeDto,
 	ForwardToHqDto,
 	RecordAppealDecisionDto,
 	RecordDecisionDto,
@@ -186,6 +187,24 @@ export class ComplaintsController {
 		@Body() dto: AssignCommitteeDto,
 	) {
 		return this.complaintsService.assignCommittee(tenantId, id, user.id, dto);
+	}
+
+	@Patch(":id/forward-to-committee")
+	@Permissions("complaints.update.complaint")
+	@ApiOperation({ summary: "Forward Article 30 Level 5+ complaint to discipline committee" })
+	@ApiParam({ name: "id", description: "Complaint ID" })
+	@ApiResponse({ status: 200, description: "Forwarded to committee", type: ComplaintResponseDto })
+	@ApiResponse({ status: 400, description: "Bad request - invalid article type or severity level" })
+	@ApiResponse({ status: 401, description: "Unauthorized" })
+	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
+	@ApiResponse({ status: 404, description: "Complaint or committee not found" })
+	async forwardToCommittee(
+		@CurrentTenant() tenantId: string,
+		@CurrentUser() user: { id: string },
+		@Param("id") id: string,
+		@Body() dto: ForwardToCommitteeDto,
+	) {
+		return this.complaintsService.forwardToCommittee(tenantId, id, user.id, dto);
 	}
 
 	@Patch(":id/forward-to-hq")

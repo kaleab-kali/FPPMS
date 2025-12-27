@@ -6,6 +6,7 @@ import {
 	CloseComplaintDto,
 	ComplaintFilterDto,
 	CreateComplaintDto,
+	ForwardToCommitteeDto,
 	ForwardToHqDto,
 	RecordAppealDecisionDto,
 	RecordDecisionDto,
@@ -422,14 +423,21 @@ export class ComplaintsService {
 			throw new BadRequestException("This action is only applicable for Article 30 complaints");
 		}
 
-		if (complaint.status !== ComplaintStatus.AWAITING_SUPERIOR_DECISION) {
-			throw new BadRequestException("Complaint must be awaiting superior decision");
+		const validStatuses: ComplaintStatus[] = [
+			ComplaintStatus.AWAITING_SUPERIOR_DECISION,
+			ComplaintStatus.COMMITTEE_ANALYSIS,
+		];
+
+		if (!validStatuses.includes(complaint.status)) {
+			throw new BadRequestException("Complaint must be awaiting decision or under committee analysis");
 		}
+
+		const isCommitteeDecision = complaint.status === ComplaintStatus.COMMITTEE_ANALYSIS;
 
 		await this.prisma.complaint.update({
 			where: { id: complaintId },
 			data: {
-				superiorDecisionDate: new Date(dto.decisionDate),
+				superiorDecisionDate: isCommitteeDecision ? undefined : new Date(dto.decisionDate),
 				punishmentPercentage: dto.punishmentPercentage,
 				punishmentDescription: dto.punishmentDescription,
 				decisionDate: new Date(dto.decisionDate),
@@ -441,8 +449,8 @@ export class ComplaintsService {
 		await this.addTimelineEntry(
 			tenantId,
 			complaintId,
-			"DECISION_MADE",
-			ComplaintStatus.AWAITING_SUPERIOR_DECISION,
+			isCommitteeDecision ? "COMMITTEE_DECISION_MADE" : "DECISION_MADE",
+			complaint.status,
 			ComplaintStatus.DECIDED,
 			userId,
 			dto.notes,
@@ -487,6 +495,63 @@ export class ComplaintsService {
 			ComplaintStatus.WITH_DISCIPLINE_COMMITTEE,
 			userId,
 			dto.notes,
+		);
+
+		return this.findOne(tenantId, complaintId);
+	}
+
+	async forwardToCommittee(tenantId: string, complaintId: string, userId: string, dto: ForwardToCommitteeDto) {
+		const complaint = await this.findOne(tenantId, complaintId);
+
+		if (complaint.article !== ComplaintArticle.ARTICLE_30) {
+			throw new BadRequestException("Committee forwarding for Article 30 complaints only");
+		}
+
+		if (complaint.decisionAuthority !== DecisionAuthority.DISCIPLINE_COMMITTEE) {
+			throw new BadRequestException("Only complaints with severity level 5+ can be forwarded to committee");
+		}
+
+		const validStatuses: ComplaintStatus[] = [
+			ComplaintStatus.UNDER_HR_REVIEW,
+			ComplaintStatus.WAITING_FOR_REBUTTAL,
+			ComplaintStatus.UNDER_HR_ANALYSIS,
+			ComplaintStatus.AWAITING_SUPERIOR_DECISION,
+		];
+
+		if (!validStatuses.includes(complaint.status)) {
+			throw new BadRequestException("Complaint cannot be forwarded from current status");
+		}
+
+		const committee = await this.prisma.committee.findFirst({
+			where: { id: dto.committeeId, tenantId },
+			include: { committeeType: true },
+		});
+
+		if (!committee) {
+			throw new NotFoundException("Committee not found");
+		}
+
+		if (committee.centerId && complaint.centerId !== committee.centerId) {
+			throw new BadRequestException("Committee must belong to the same center as the complaint");
+		}
+
+		await this.prisma.complaint.update({
+			where: { id: complaintId },
+			data: {
+				assignedCommitteeId: dto.committeeId,
+				committeeAssignedDate: new Date(dto.forwardedDate),
+				status: ComplaintStatus.WITH_DISCIPLINE_COMMITTEE,
+			},
+		});
+
+		await this.addTimelineEntry(
+			tenantId,
+			complaintId,
+			"FORWARDED_TO_COMMITTEE",
+			complaint.status,
+			ComplaintStatus.WITH_DISCIPLINE_COMMITTEE,
+			userId,
+			dto.notes ?? "Article 30 case forwarded to discipline committee (Level 5+)",
 		);
 
 		return this.findOne(tenantId, complaintId);

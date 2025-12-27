@@ -6,6 +6,7 @@ import { useCommittees } from "#web/api/committees/committees.queries.ts";
 import {
 	useAssignCommittee,
 	useCloseComplaint,
+	useForwardToCommittee,
 	useForwardToHq,
 	useMarkRebuttalDeadlinePassed,
 	useRecordAppealDecision,
@@ -46,6 +47,7 @@ type ActionType =
 	| "finding"
 	| "decision"
 	| "assignCommittee"
+	| "forwardToCommittee"
 	| "forwardToHq"
 	| "hqDecision"
 	| "submitAppeal"
@@ -100,6 +102,7 @@ export const ComplaintActions = React.memo(
 		const findingMutation = useRecordFinding();
 		const decisionMutation = useRecordDecision();
 		const assignCommitteeMutation = useAssignCommittee();
+		const forwardToCommitteeMutation = useForwardToCommittee();
 		const forwardToHqMutation = useForwardToHq();
 		const hqDecisionMutation = useRecordHqDecision();
 		const submitAppealMutation = useSubmitAppeal();
@@ -113,6 +116,7 @@ export const ComplaintActions = React.memo(
 			findingMutation.isPending ||
 			decisionMutation.isPending ||
 			assignCommitteeMutation.isPending ||
+			forwardToCommitteeMutation.isPending ||
 			forwardToHqMutation.isPending ||
 			hqDecisionMutation.isPending ||
 			submitAppealMutation.isPending ||
@@ -214,6 +218,19 @@ export const ComplaintActions = React.memo(
 						{ onSuccess, onError },
 					);
 					break;
+				case "forwardToCommittee":
+					forwardToCommitteeMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								committeeId: formData.committeeId,
+								forwardedDate: formData.date,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
 				case "forwardToHq":
 					forwardToHqMutation.mutate(
 						{
@@ -300,6 +317,7 @@ export const ComplaintActions = React.memo(
 			findingMutation,
 			decisionMutation,
 			assignCommitteeMutation,
+			forwardToCommitteeMutation,
 			forwardToHqMutation,
 			hqDecisionMutation,
 			submitAppealMutation,
@@ -322,9 +340,17 @@ export const ComplaintActions = React.memo(
 		const availableActions = React.useMemo(() => {
 			const actions: { type: ActionType; label: string; variant?: "default" | "destructive"; appealId?: string }[] = [];
 
+			const isArticle30Level5Plus =
+				complaint.article === "ARTICLE_30" &&
+				complaint.decisionAuthority === "DISCIPLINE_COMMITTEE" &&
+				!complaint.assignedCommitteeId;
+
 			switch (complaint.status) {
 				case "UNDER_HR_REVIEW":
 					actions.push({ type: "notification", label: t("action.sendNotification") });
+					if (isArticle30Level5Plus) {
+						actions.push({ type: "forwardToCommittee", label: t("action.forwardToCommittee") });
+					}
 					break;
 				case "WITH_DISCIPLINE_COMMITTEE":
 					actions.push({ type: "notification", label: t("action.sendNotification") });
@@ -333,8 +359,16 @@ export const ComplaintActions = React.memo(
 				case "COMMITTEE_WAITING_REBUTTAL":
 					actions.push({ type: "rebuttal", label: t("action.recordRebuttal") });
 					actions.push({ type: "rebuttalDeadline", label: t("action.markDeadlinePassed"), variant: "destructive" });
+					if (isArticle30Level5Plus) {
+						actions.push({ type: "forwardToCommittee", label: t("action.forwardToCommittee") });
+					}
 					break;
 				case "UNDER_HR_ANALYSIS":
+					actions.push({ type: "finding", label: t("action.recordFinding") });
+					if (isArticle30Level5Plus) {
+						actions.push({ type: "forwardToCommittee", label: t("action.forwardToCommittee") });
+					}
+					break;
 				case "COMMITTEE_ANALYSIS":
 					actions.push({ type: "finding", label: t("action.recordFinding") });
 					break;
@@ -345,6 +379,9 @@ export const ComplaintActions = React.memo(
 					break;
 				case "AWAITING_SUPERIOR_DECISION":
 					actions.push({ type: "decision", label: t("action.recordDecision") });
+					if (isArticle30Level5Plus) {
+						actions.push({ type: "forwardToCommittee", label: t("action.forwardToCommittee") });
+					}
 					break;
 				case "AWAITING_HQ_DECISION":
 					actions.push({ type: "hqDecision", label: t("action.recordHqDecision") });
@@ -372,7 +409,7 @@ export const ComplaintActions = React.memo(
 			}
 
 			return actions;
-		}, [complaint.status, complaint.article, pendingAppeals, canSubmitAppeal, canForwardToHq, t]);
+		}, [complaint.status, complaint.article, complaint.decisionAuthority, complaint.assignedCommitteeId, pendingAppeals, canSubmitAppeal, canForwardToHq, t]);
 
 		const getDialogTitle = React.useCallback(() => {
 			switch (actionType) {
@@ -388,6 +425,8 @@ export const ComplaintActions = React.memo(
 					return t("action.recordDecision");
 				case "assignCommittee":
 					return t("action.assignCommittee");
+				case "forwardToCommittee":
+					return t("action.forwardToCommittee");
 				case "forwardToHq":
 					return t("action.forwardToHq");
 				case "hqDecision":
@@ -502,6 +541,33 @@ export const ComplaintActions = React.memo(
 														</SelectItem>
 													))
 												) : centerDisciplineCommittees.length > 0 ? (
+													centerDisciplineCommittees.map((committee) => (
+														<SelectItem key={committee.id} value={committee.id}>
+															{committee.name}
+														</SelectItem>
+													))
+												) : (
+													<SelectItem value="none" disabled>
+														{t("action.noCenterCommittees")}
+													</SelectItem>
+												)}
+											</SelectContent>
+										</Select>
+									</div>
+								)}
+
+								{actionType === "forwardToCommittee" && (
+									<div className="space-y-2">
+										<Label>{t("action.selectCommittee")}</Label>
+										<Select
+											value={formData.committeeId ?? ""}
+											onValueChange={(value) => handleInputChange("committeeId", value)}
+										>
+											<SelectTrigger>
+												<SelectValue placeholder={t("action.selectCommittee")} />
+											</SelectTrigger>
+											<SelectContent>
+												{centerDisciplineCommittees.length > 0 ? (
 													centerDisciplineCommittees.map((committee) => (
 														<SelectItem key={committee.id} value={committee.id}>
 															{committee.name}

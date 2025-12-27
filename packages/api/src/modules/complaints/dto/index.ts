@@ -10,6 +10,7 @@ export {
 	ComplaintTimelineResponseDto,
 } from "./complaint-response.dto";
 export { CreateComplaintDto } from "./create-complaint.dto";
+export { ForwardToCommitteeDto } from "./forward-to-committee.dto";
 export { ForwardToHqDto } from "./forward-to-hq.dto";
 export { RecordAppealDecisionDto } from "./record-appeal-decision.dto";
 export { RecordDecisionDto } from "./record-decision.dto";

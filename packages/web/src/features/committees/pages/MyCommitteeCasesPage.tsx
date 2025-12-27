@@ -55,9 +55,7 @@ export const MyCommitteeCasesPage = React.memo(
 				{
 					accessorKey: "complaintNumber",
 					header: tComplaints("complaint.complaintNumber"),
-					cell: ({ row }) => (
-						<span className="font-mono text-sm font-medium">{row.getValue("complaintNumber")}</span>
-					),
+					cell: ({ row }) => <span className="font-mono text-sm font-medium">{row.getValue("complaintNumber")}</span>,
 				},
 				{
 					accessorKey: "article",
