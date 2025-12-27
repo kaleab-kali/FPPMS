@@ -185,9 +185,15 @@ enum ComplaintStatus {
   UNDER_HR_ANALYSIS
   AWAITING_SUPERIOR_DECISION
   WITH_DISCIPLINE_COMMITTEE
+  COMMITTEE_WAITING_REBUTTAL
+  COMMITTEE_ANALYSIS
+  INVESTIGATION_COMPLETE
   FORWARDED_TO_HQ
+  AWAITING_HQ_DECISION
   DECIDED
   DECIDED_BY_HQ
+  ON_APPEAL
+  APPEAL_DECIDED
   CLOSED_NO_LIABILITY
   CLOSED_FINAL
 }
@@ -200,10 +206,9 @@ enum ComplaintFinding {
 }
 
 enum AppealDecision {
-  PENDING
   UPHELD
   MODIFIED
-  REVERSED
+  OVERTURNED
 }
 
 enum DecisionAuthority {
@@ -701,6 +706,7 @@ model Employee {
   inventoryAssignments InventoryAssignment[]
   committeeMemberships CommitteeMember[]
   complaintsAgainst    Complaint[]        @relation("AccusedComplaints")
+  appealReviewsGiven   ComplaintAppeal[]  @relation("AppealReviewer")
 
   @@index([tenantId])
   @@index([tenantId, centerId])
@@ -2006,13 +2012,13 @@ model ComplaintAppeal {
   id                   String          @id @default(cuid())
   tenantId             String          @map("tenant_id")
   complaintId          String          @map("complaint_id")
-  appealLevel          Int             @map("appeal_level")
   appealDate           DateTime        @map("appeal_date") @db.Date
   appealReason         String          @map("appeal_reason")
   appealDocumentPath   String?         @map("appeal_document_path")
-  reviewedBy           String?         @map("reviewed_by")
+  reviewerEmployeeId   String?         @map("reviewer_employee_id")
+  submittedBy          String          @map("submitted_by")
   reviewedAt           DateTime?       @map("reviewed_at")
-  decision             AppealDecision  @default(PENDING)
+  decision             AppealDecision?
   decisionReason       String?         @map("decision_reason")
   newPunishment        String?         @map("new_punishment")
   decisionDocumentPath String?         @map("decision_document_path")
@@ -2020,8 +2026,10 @@ model ComplaintAppeal {
   updatedAt            DateTime        @updatedAt @map("updated_at")
 
   complaint            Complaint       @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  reviewerEmployee     Employee?       @relation("AppealReviewer", fields: [reviewerEmployeeId], references: [id])
 
   @@index([complaintId])
-  @@index([tenantId, appealLevel])
+  @@index([tenantId])
+  @@index([reviewerEmployeeId])
   @@map("complaint_appeals")
 }

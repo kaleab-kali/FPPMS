@@ -6,21 +6,34 @@ export type ComplaintStatus =
 	| "UNDER_HR_ANALYSIS"
 	| "AWAITING_SUPERIOR_DECISION"
 	| "WITH_DISCIPLINE_COMMITTEE"
+	| "COMMITTEE_WAITING_REBUTTAL"
+	| "COMMITTEE_ANALYSIS"
+	| "INVESTIGATION_COMPLETE"
 	| "FORWARDED_TO_HQ"
+	| "AWAITING_HQ_DECISION"
 	| "DECIDED"
 	| "DECIDED_BY_HQ"
+	| "ON_APPEAL"
+	| "APPEAL_DECIDED"
 	| "CLOSED_NO_LIABILITY"
 	| "CLOSED_FINAL";
 
 export type ComplaintFinding = "PENDING" | "GUILTY" | "GUILTY_NO_REBUTTAL" | "NOT_GUILTY";
 
-export type DecisionAuthority = "DIRECT_SUPERIOR" | "HR_HEAD" | "CENTER_COMMANDER" | "DISCIPLINE_COMMITTEE";
+export type DecisionAuthority = "DIRECT_SUPERIOR" | "DISCIPLINE_COMMITTEE";
 
 export type ComplainantType = "EMPLOYEE" | "EXTERNAL" | "ANONYMOUS";
 
 export type AppealDecision = "UPHELD" | "MODIFIED" | "OVERTURNED";
 
 export interface AccusedEmployeeMinimal {
+	id: string;
+	employeeId: string;
+	fullName: string;
+	fullNameAm?: string;
+}
+
+export interface ReviewerEmployeeMinimal {
 	id: string;
 	employeeId: string;
 	fullName: string;
@@ -57,10 +70,11 @@ export interface ComplaintAppeal {
 	id: string;
 	tenantId: string;
 	complaintId: string;
-	appealLevel: number;
 	appealDate: string;
 	appealReason: string;
-	reviewedBy?: string;
+	reviewerEmployeeId?: string;
+	reviewerEmployee?: ReviewerEmployeeMinimal;
+	submittedBy: string;
 	reviewedAt?: string;
 	decision?: AppealDecision;
 	decisionReason?: string;
@@ -184,6 +198,12 @@ export interface ForwardToHqRequest {
 	notes?: string;
 }
 
+export interface ForwardToCommitteeRequest {
+	committeeId: string;
+	forwardedDate: string;
+	notes?: string;
+}
+
 export interface RecordHqDecisionRequest {
 	decisionDate: string;
 	punishmentDescription: string;
@@ -191,9 +211,9 @@ export interface RecordHqDecisionRequest {
 }
 
 export interface SubmitAppealRequest {
-	appealLevel: number;
 	appealDate: string;
 	appealReason: string;
+	reviewerEmployeeId: string;
 	notes?: string;
 }
 
@@ -232,9 +252,15 @@ export const COMPLAINT_STATUS_LABELS: Record<ComplaintStatus, string> = {
 	UNDER_HR_ANALYSIS: "Under HR Analysis",
 	AWAITING_SUPERIOR_DECISION: "Awaiting Superior Decision",
 	WITH_DISCIPLINE_COMMITTEE: "With Discipline Committee",
+	COMMITTEE_WAITING_REBUTTAL: "Committee: Awaiting Rebuttal",
+	COMMITTEE_ANALYSIS: "Committee: Under Analysis",
+	INVESTIGATION_COMPLETE: "Investigation Complete",
 	FORWARDED_TO_HQ: "Forwarded to HQ",
+	AWAITING_HQ_DECISION: "Awaiting HQ Decision",
 	DECIDED: "Decided",
 	DECIDED_BY_HQ: "Decided by HQ",
+	ON_APPEAL: "On Appeal",
+	APPEAL_DECIDED: "Appeal Decided",
 	CLOSED_NO_LIABILITY: "Closed (No Liability)",
 	CLOSED_FINAL: "Closed (Final)",
 } as const;
@@ -254,8 +280,6 @@ export const COMPLAINANT_TYPE_LABELS: Record<ComplainantType, string> = {
 
 export const DECISION_AUTHORITY_LABELS: Record<DecisionAuthority, string> = {
 	DIRECT_SUPERIOR: "Direct Superior",
-	HR_HEAD: "HR Head",
-	CENTER_COMMANDER: "Center Commander",
 	DISCIPLINE_COMMITTEE: "Discipline Committee",
 } as const;
 
@@ -271,9 +295,15 @@ export const COMPLAINT_STATUS_COLORS: Record<ComplaintStatus, string> = {
 	UNDER_HR_ANALYSIS: "bg-purple-100 text-purple-800",
 	AWAITING_SUPERIOR_DECISION: "bg-orange-100 text-orange-800",
 	WITH_DISCIPLINE_COMMITTEE: "bg-indigo-100 text-indigo-800",
+	COMMITTEE_WAITING_REBUTTAL: "bg-yellow-100 text-yellow-800",
+	COMMITTEE_ANALYSIS: "bg-purple-100 text-purple-800",
+	INVESTIGATION_COMPLETE: "bg-teal-100 text-teal-800",
 	FORWARDED_TO_HQ: "bg-cyan-100 text-cyan-800",
+	AWAITING_HQ_DECISION: "bg-orange-100 text-orange-800",
 	DECIDED: "bg-green-100 text-green-800",
 	DECIDED_BY_HQ: "bg-green-100 text-green-800",
+	ON_APPEAL: "bg-amber-100 text-amber-800",
+	APPEAL_DECIDED: "bg-emerald-100 text-emerald-800",
 	CLOSED_NO_LIABILITY: "bg-gray-100 text-gray-800",
 	CLOSED_FINAL: "bg-gray-100 text-gray-800",
 } as const;
