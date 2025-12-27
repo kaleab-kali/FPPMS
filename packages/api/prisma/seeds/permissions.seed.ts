@@ -35,6 +35,20 @@ const PERMISSIONS = [
 	{ module: "disciplinary", action: "read", resource: "record", description: "View disciplinary records" },
 	{ module: "disciplinary", action: "manage", resource: "investigation", description: "Manage investigations" },
 
+	{ module: "complaints", action: "create", resource: "complaint", description: "Register new complaints" },
+	{ module: "complaints", action: "read", resource: "complaint", description: "View complaints" },
+	{ module: "complaints", action: "update", resource: "complaint", description: "Update complaint workflow" },
+	{ module: "complaints", action: "delete", resource: "complaint", description: "Delete complaints" },
+	{ module: "complaints", action: "manage", resource: "document", description: "Manage complaint documents" },
+	{ module: "complaints", action: "manage", resource: "appeal", description: "Manage complaint appeals" },
+
+	{ module: "committees", action: "create", resource: "committee", description: "Create committees" },
+	{ module: "committees", action: "read", resource: "committee", description: "View committees" },
+	{ module: "committees", action: "update", resource: "committee", description: "Update committees" },
+	{ module: "committees", action: "delete", resource: "committee", description: "Delete committees" },
+	{ module: "committees", action: "manage", resource: "member", description: "Manage committee members" },
+	{ module: "committees", action: "manage", resource: "type", description: "Manage committee types" },
+
 	{ module: "salary", action: "read", resource: "salary", description: "View salary information" },
 	{ module: "salary", action: "manage", resource: "increment", description: "Manage salary increments" },
 	{ module: "salary", action: "manage", resource: "scale", description: "Manage salary scales" },

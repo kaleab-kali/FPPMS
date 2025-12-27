@@ -58,6 +58,18 @@ import { cn } from "#web/lib/utils";
 
 **Never use relative imports like `../` or `./` for cross-directory imports.**
 
+**NEVER use `.js` extensions in TypeScript imports. This is a TypeScript project - all imports must be without file extensions.**
+
+```typescript
+// CORRECT
+import { ComplaintsService } from "./complaints.service";
+import { PrismaService } from "#api/database/prisma.service";
+
+// WRONG - never use .js extensions
+import { ComplaintsService } from "./complaints.service.js";
+import { PrismaService } from "#api/database/prisma.service.js";
+```
+
 ## GENERAL CODE RULES
 
 - NEVER insert emoji into any file. Use unicode codepoints instead.
@@ -108,6 +120,139 @@ import { cn } from "#web/lib/utils";
 - Place tests alongside source files (`*.spec.ts`)
 - Use DTOs for request/response validation
 - Follow single responsibility principle per service
+
+## SWAGGER API DOCUMENTATION (CRITICAL)
+
+**ALL backend API endpoints MUST be documented with Swagger decorators. This is mandatory - do NOT implement any backend endpoint without proper Swagger documentation.**
+
+### Required Swagger Decorators for Controllers
+
+Every controller class MUST have:
+```typescript
+@ApiTags("module-name")  // Tag for grouping endpoints
+@Controller("module-name")
+export class ModuleController {
+```
+
+Every endpoint method MUST have:
+```typescript
+@ApiOperation({ summary: "Brief description of what the endpoint does" })
+@ApiResponse({ status: 200, description: "Success response description", type: ResponseDto })
+@ApiResponse({ status: 400, description: "Bad request - validation error" })
+@ApiResponse({ status: 401, description: "Unauthorized" })
+@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
+@ApiResponse({ status: 404, description: "Resource not found" })
+```
+
+### Required Swagger Decorators for DTOs
+
+Every DTO property MUST have:
+```typescript
+@ApiProperty({
+  description: "Clear description of the field",
+  example: "Example value",
+  required: true,  // or false for optional
+})
+```
+
+For optional properties:
+```typescript
+@ApiPropertyOptional({
+  description: "Clear description of the optional field",
+  example: "Example value",
+})
+```
+
+For enum properties:
+```typescript
+@ApiProperty({
+  description: "Description",
+  enum: MyEnum,
+  enumName: "MyEnum",
+  example: MyEnum.VALUE,
+})
+```
+
+### Swagger Import Requirements
+
+```typescript
+import { ApiTags, ApiOperation, ApiResponse, ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+```
+
+### Example DTO with Swagger
+
+```typescript
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsString, IsOptional, IsDateString } from "class-validator";
+
+export class CreateExampleDto {
+  @ApiProperty({
+    description: "The name of the item",
+    example: "Sample Name",
+  })
+  @IsString()
+  name: string;
+
+  @ApiPropertyOptional({
+    description: "Optional description",
+    example: "This is a description",
+  })
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiProperty({
+    description: "The date in ISO format",
+    example: "2025-01-15",
+  })
+  @IsDateString()
+  date: string;
+}
+```
+
+### Example Controller with Swagger
+
+```typescript
+import { Controller, Get, Post, Body, Param } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+
+@ApiTags("examples")
+@Controller("examples")
+export class ExampleController {
+  @Get()
+  @ApiOperation({ summary: "Get all examples" })
+  @ApiResponse({ status: 200, description: "List of examples returned successfully" })
+  async findAll() {
+    // implementation
+  }
+
+  @Post()
+  @ApiOperation({ summary: "Create a new example" })
+  @ApiResponse({ status: 201, description: "Example created successfully" })
+  @ApiResponse({ status: 400, description: "Invalid input data" })
+  async create(@Body() dto: CreateExampleDto) {
+    // implementation
+  }
+
+  @Get(":id")
+  @ApiOperation({ summary: "Get example by ID" })
+  @ApiResponse({ status: 200, description: "Example found" })
+  @ApiResponse({ status: 404, description: "Example not found" })
+  async findOne(@Param("id") id: string) {
+    // implementation
+  }
+}
+```
+
+### Swagger Documentation Checklist
+
+Before completing any backend endpoint:
+- [ ] Controller has @ApiTags decorator
+- [ ] Every endpoint has @ApiOperation with summary
+- [ ] Every endpoint has appropriate @ApiResponse decorators (200, 201, 400, 401, 403, 404 as applicable)
+- [ ] All DTO properties have @ApiProperty or @ApiPropertyOptional
+- [ ] Enum properties use the `enum` and `enumName` options
+- [ ] All properties have meaningful `description` and `example` values
 
 
 
