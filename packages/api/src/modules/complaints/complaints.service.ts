@@ -1,25 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { ComplaintArticle, ComplaintFinding, ComplaintStatus, DecisionAuthority, Prisma } from "@prisma/client";
 import { PrismaService } from "#api/database/prisma.service";
 import {
-	ComplaintArticle,
-	ComplaintStatus,
-	ComplaintFinding,
-	DecisionAuthority,
-	Prisma,
-} from "@prisma/client";
-import {
-	CreateComplaintDto,
-	RecordNotificationDto,
-	RecordRebuttalDto,
-	RecordFindingDto,
-	RecordDecisionDto,
 	AssignCommitteeDto,
-	ForwardToHqDto,
-	RecordHqDecisionDto,
-	SubmitAppealDto,
-	RecordAppealDecisionDto,
 	CloseComplaintDto,
 	ComplaintFilterDto,
+	CreateComplaintDto,
+	ForwardToHqDto,
+	RecordAppealDecisionDto,
+	RecordDecisionDto,
+	RecordFindingDto,
+	RecordHqDecisionDto,
+	RecordNotificationDto,
+	RecordRebuttalDto,
+	SubmitAppealDto,
 } from "./dto";
 
 const REBUTTAL_DEADLINE_DAYS = 3;
@@ -106,7 +100,15 @@ export class ComplaintsService {
 			},
 		});
 
-		await this.addTimelineEntry(tenantId, complaint.id, "REGISTERED", undefined, initialStatus, userId, "Complaint registered");
+		await this.addTimelineEntry(
+			tenantId,
+			complaint.id,
+			"REGISTERED",
+			undefined,
+			initialStatus,
+			userId,
+			"Complaint registered",
+		);
 
 		return this.findOne(tenantId, complaint.id);
 	}
@@ -229,7 +231,7 @@ export class ComplaintsService {
 		const rebuttalDeadline = new Date(notificationDate);
 		rebuttalDeadline.setDate(rebuttalDeadline.getDate() + REBUTTAL_DEADLINE_DAYS);
 
-		const updated = await this.prisma.complaint.update({
+		await this.prisma.complaint.update({
 			where: { id: complaintId },
 			data: {
 				notificationDate,
@@ -321,7 +323,10 @@ export class ComplaintsService {
 	async recordFinding(tenantId: string, complaintId: string, userId: string, dto: RecordFindingDto) {
 		const complaint = await this.findOne(tenantId, complaintId);
 
-		const validStatuses: ComplaintStatus[] = [ComplaintStatus.UNDER_HR_ANALYSIS, ComplaintStatus.WITH_DISCIPLINE_COMMITTEE];
+		const validStatuses: ComplaintStatus[] = [
+			ComplaintStatus.UNDER_HR_ANALYSIS,
+			ComplaintStatus.WITH_DISCIPLINE_COMMITTEE,
+		];
 		if (!validStatuses.includes(complaint.status)) {
 			throw new BadRequestException("Invalid status for recording finding");
 		}
@@ -344,7 +349,15 @@ export class ComplaintsService {
 			},
 		});
 
-		await this.addTimelineEntry(tenantId, complaintId, "FINDING_RECORDED", complaint.status, newStatus, userId, dto.notes);
+		await this.addTimelineEntry(
+			tenantId,
+			complaintId,
+			"FINDING_RECORDED",
+			complaint.status,
+			newStatus,
+			userId,
+			dto.notes,
+		);
 
 		return this.findOne(tenantId, complaintId);
 	}
@@ -523,7 +536,15 @@ export class ComplaintsService {
 			},
 		});
 
-		await this.addTimelineEntry(tenantId, complaintId, `APPEAL_SUBMITTED_LEVEL_${dto.appealLevel}`, undefined, undefined, userId, dto.notes);
+		await this.addTimelineEntry(
+			tenantId,
+			complaintId,
+			`APPEAL_SUBMITTED_LEVEL_${dto.appealLevel}`,
+			undefined,
+			undefined,
+			userId,
+			dto.notes,
+		);
 
 		return appeal;
 	}
@@ -535,7 +556,7 @@ export class ComplaintsService {
 		userId: string,
 		dto: RecordAppealDecisionDto,
 	) {
-		const complaint = await this.findOne(tenantId, complaintId);
+		await this.findOne(tenantId, complaintId);
 
 		const appeal = await this.prisma.complaintAppeal.findFirst({
 			where: { id: appealId, complaintId },
@@ -597,7 +618,15 @@ export class ComplaintsService {
 			},
 		});
 
-		await this.addTimelineEntry(tenantId, complaintId, "COMPLAINT_CLOSED", complaint.status, newStatus, userId, dto.notes);
+		await this.addTimelineEntry(
+			tenantId,
+			complaintId,
+			"COMPLAINT_CLOSED",
+			complaint.status,
+			newStatus,
+			userId,
+			dto.notes,
+		);
 
 		return this.findOne(tenantId, complaintId);
 	}
@@ -618,6 +647,42 @@ export class ComplaintsService {
 		});
 	}
 
+	async findByCommittee(tenantId: string, committeeId: string, type: "assigned" | "hq" = "assigned") {
+		const where: Prisma.ComplaintWhereInput = {
+			tenantId,
+			deletedAt: null,
+		};
+
+		if (type === "assigned") {
+			where.assignedCommitteeId = committeeId;
+		} else {
+			where.hqCommitteeId = committeeId;
+		}
+
+		return this.prisma.complaint.findMany({
+			where,
+			include: {
+				accusedEmployee: {
+					select: {
+						id: true,
+						employeeId: true,
+						fullName: true,
+						fullNameAm: true,
+					},
+				},
+				center: {
+					select: {
+						id: true,
+						code: true,
+						name: true,
+						nameAm: true,
+					},
+				},
+			},
+			orderBy: { registeredDate: "desc" },
+		});
+	}
+
 	private async countPreviousOffenses(tenantId: string, employeeId: string, offenseCode: string): Promise<number> {
 		return this.prisma.complaint.count({
 			where: {
@@ -630,7 +695,7 @@ export class ComplaintsService {
 		});
 	}
 
-	private extractSeverityFromOffenseCode(offenseCode: string): number {
+	private extractSeverityFromOffenseCode(_offenseCode: string): number {
 		return 1;
 	}
 

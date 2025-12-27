@@ -1,28 +1,28 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from "@nestjs/swagger";
-import { JwtAuthGuard } from "#api/common/guards/jwt-auth.guard";
-import { PermissionsGuard } from "#api/common/guards/permissions.guard";
-import { Permissions } from "#api/common/decorators/permissions.decorator";
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CurrentTenant } from "#api/common/decorators/current-tenant.decorator";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
+import { JwtAuthGuard } from "#api/common/guards/jwt-auth.guard";
+import { PermissionsGuard } from "#api/common/guards/permissions.guard";
 import { ComplaintsService } from "./complaints.service";
 import {
+	AssignCommitteeDto,
+	CloseComplaintDto,
+	ComplaintAppealResponseDto,
+	ComplaintFilterDto,
+	ComplaintListResponseDto,
+	ComplaintResponseDto,
+	ComplaintTimelineResponseDto,
 	CreateComplaintDto,
+	ForwardToHqDto,
+	RecordAppealDecisionDto,
+	RecordDecisionDto,
+	RecordFindingDto,
+	RecordHqDecisionDto,
 	RecordNotificationDto,
 	RecordRebuttalDto,
-	RecordFindingDto,
-	RecordDecisionDto,
-	AssignCommitteeDto,
-	ForwardToHqDto,
-	RecordHqDecisionDto,
 	SubmitAppealDto,
-	RecordAppealDecisionDto,
-	CloseComplaintDto,
-	ComplaintFilterDto,
-	ComplaintResponseDto,
-	ComplaintListResponseDto,
-	ComplaintTimelineResponseDto,
-	ComplaintAppealResponseDto,
 } from "./dto";
 
 @ApiTags("complaints")
@@ -32,7 +32,7 @@ export class ComplaintsController {
 	constructor(private readonly complaintsService: ComplaintsService) {}
 
 	@Post()
-	@Permissions("complaints:create")
+	@Permissions("complaints.create.complaint")
 	@ApiOperation({ summary: "Register a new complaint" })
 	@ApiResponse({ status: 201, description: "Complaint registered successfully", type: ComplaintResponseDto })
 	@ApiResponse({ status: 400, description: "Bad request - validation error" })
@@ -48,7 +48,7 @@ export class ComplaintsController {
 	}
 
 	@Get()
-	@Permissions("complaints:read")
+	@Permissions("complaints.read.complaint")
 	@ApiOperation({ summary: "Get all complaints with optional filters" })
 	@ApiResponse({ status: 200, description: "List of complaints", type: [ComplaintListResponseDto] })
 	@ApiResponse({ status: 401, description: "Unauthorized" })
@@ -58,7 +58,7 @@ export class ComplaintsController {
 	}
 
 	@Get(":id")
-	@Permissions("complaints:read")
+	@Permissions("complaints.read.complaint")
 	@ApiOperation({ summary: "Get complaint by ID with full details" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Complaint details", type: ComplaintResponseDto })
@@ -70,7 +70,7 @@ export class ComplaintsController {
 	}
 
 	@Get(":id/timeline")
-	@Permissions("complaints:read")
+	@Permissions("complaints.read.complaint")
 	@ApiOperation({ summary: "Get complaint timeline/audit trail" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Complaint timeline", type: [ComplaintTimelineResponseDto] })
@@ -82,7 +82,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/notification")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Record notification sent to accused (Article 30)" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Notification recorded", type: ComplaintResponseDto })
@@ -100,7 +100,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/rebuttal")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Record rebuttal received from accused (Article 30)" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Rebuttal recorded", type: ComplaintResponseDto })
@@ -118,7 +118,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/rebuttal-deadline-passed")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Mark rebuttal deadline as passed - automatic guilty (Article 30)" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Deadline marked as passed", type: ComplaintResponseDto })
@@ -135,7 +135,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/finding")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Record finding/verdict for the complaint" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Finding recorded", type: ComplaintResponseDto })
@@ -153,7 +153,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/decision")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Record punishment decision by superior (Article 30)" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Decision recorded", type: ComplaintResponseDto })
@@ -171,7 +171,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/assign-committee")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Assign complaint to discipline committee (Article 31)" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Committee assigned", type: ComplaintResponseDto })
@@ -189,7 +189,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/forward-to-hq")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Forward complaint to HQ committee (Article 31)" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Forwarded to HQ", type: ComplaintResponseDto })
@@ -207,7 +207,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/hq-decision")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Record HQ committee decision (Article 31)" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "HQ decision recorded", type: ComplaintResponseDto })
@@ -225,7 +225,7 @@ export class ComplaintsController {
 	}
 
 	@Post(":id/appeals")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Submit an appeal against the decision" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 201, description: "Appeal submitted", type: ComplaintAppealResponseDto })
@@ -243,7 +243,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/appeals/:appealId")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Record decision on an appeal" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiParam({ name: "appealId", description: "Appeal ID" })
@@ -263,7 +263,7 @@ export class ComplaintsController {
 	}
 
 	@Patch(":id/close")
-	@Permissions("complaints:update")
+	@Permissions("complaints.update.complaint")
 	@ApiOperation({ summary: "Close the complaint" })
 	@ApiParam({ name: "id", description: "Complaint ID" })
 	@ApiResponse({ status: 200, description: "Complaint closed", type: ComplaintResponseDto })
@@ -281,7 +281,7 @@ export class ComplaintsController {
 	}
 
 	@Get("employee/:employeeId")
-	@Permissions("complaints:read")
+	@Permissions("complaints.read.complaint")
 	@ApiOperation({ summary: "Get all complaints for an employee" })
 	@ApiParam({ name: "employeeId", description: "Employee ID" })
 	@ApiResponse({ status: 200, description: "Employee complaint history", type: [ComplaintListResponseDto] })
@@ -289,5 +289,20 @@ export class ComplaintsController {
 	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
 	async getEmployeeComplaintHistory(@CurrentTenant() tenantId: string, @Param("employeeId") employeeId: string) {
 		return this.complaintsService.getEmployeeComplaintHistory(tenantId, employeeId);
+	}
+
+	@Get("committee/:committeeId")
+	@Permissions("complaints.read.complaint")
+	@ApiOperation({ summary: "Get all complaints assigned to a committee" })
+	@ApiParam({ name: "committeeId", description: "Committee ID" })
+	@ApiResponse({ status: 200, description: "Committee complaints", type: [ComplaintListResponseDto] })
+	@ApiResponse({ status: 401, description: "Unauthorized" })
+	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
+	async getCommitteeComplaints(
+		@CurrentTenant() tenantId: string,
+		@Param("committeeId") committeeId: string,
+		@Query("type") type: "assigned" | "hq" = "assigned",
+	) {
+		return this.complaintsService.findByCommittee(tenantId, committeeId, type);
 	}
 }

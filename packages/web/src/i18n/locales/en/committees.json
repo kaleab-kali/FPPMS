@@ -103,5 +103,19 @@
 		"date": "Date",
 		"action": "Action",
 		"notes": "Notes"
+	},
+	"complaints": {
+		"title": "Complaints",
+		"description": "Complaints assigned to this committee",
+		"hqTitle": "HQ Complaints",
+		"hqDescription": "Complaints forwarded to this committee for HQ review",
+		"noComplaints": "No complaints assigned to this committee",
+		"noHqComplaints": "No HQ complaints forwarded to this committee",
+		"complaintNumber": "Complaint #",
+		"article": "Article",
+		"accused": "Accused",
+		"status": "Status",
+		"registeredDate": "Registered",
+		"viewDetails": "View Details"
 	}
 }

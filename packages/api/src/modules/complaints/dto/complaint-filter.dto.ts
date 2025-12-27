@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
 import { ComplaintArticle, ComplaintStatus } from "@prisma/client";
+import { IsDateString, IsEnum, IsOptional, IsString } from "class-validator";
 
 export class ComplaintFilterDto {
 	@ApiPropertyOptional({

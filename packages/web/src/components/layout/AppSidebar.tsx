@@ -1,4 +1,5 @@
 import {
+	AlertTriangle,
 	Building2,
 	Calendar,
 	ChevronRight,
@@ -93,6 +94,15 @@ const NAV_ITEMS_CONFIG: NavItemConfig[] = [
 		items: [
 			{ titleKey: "allCommittees", url: "/committees" },
 			{ titleKey: "committeeTypes", url: "/committees/types" },
+		],
+	},
+	{
+		titleKey: "complaints",
+		url: "#",
+		icon: AlertTriangle,
+		items: [
+			{ titleKey: "allComplaints", url: "/complaints" },
+			{ titleKey: "registerComplaint", url: "/complaints/register" },
 		],
 	},
 	{

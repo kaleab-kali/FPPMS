@@ -7,6 +7,9 @@ import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
 import { CommitteeDetailPage } from "#web/features/committees/pages/CommitteeDetailPage.tsx";
 import { CommitteesListPage } from "#web/features/committees/pages/CommitteesListPage.tsx";
 import { CommitteeTypesListPage } from "#web/features/committees/pages/CommitteeTypesListPage.tsx";
+import { ComplaintDetailPage } from "#web/features/complaints/pages/ComplaintDetailPage.tsx";
+import { ComplaintRegisterPage } from "#web/features/complaints/pages/ComplaintRegisterPage.tsx";
+import { ComplaintsListPage } from "#web/features/complaints/pages/ComplaintsListPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
 import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
 import { EmployeeDetailPage } from "#web/features/employees/pages/EmployeeDetailPage.tsx";
@@ -168,6 +171,18 @@ export const router = createBrowserRouter([
 			{
 				path: "/committees/:id",
 				element: <CommitteeDetailPage />,
+			},
+			{
+				path: "/complaints",
+				element: <ComplaintsListPage />,
+			},
+			{
+				path: "/complaints/register",
+				element: <ComplaintRegisterPage />,
+			},
+			{
+				path: "/complaints/:id",
+				element: <ComplaintDetailPage />,
 			},
 			{
 				path: "/leave/*",

@@ -1,0 +1,703 @@
+import { Loader2 } from "lucide-react";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { useCommittees } from "#web/api/committees/committees.queries.ts";
+import {
+	useAssignCommittee,
+	useCloseComplaint,
+	useForwardToHq,
+	useMarkRebuttalDeadlinePassed,
+	useRecordAppealDecision,
+	useRecordDecision,
+	useRecordFinding,
+	useRecordHqDecision,
+	useRecordNotification,
+	useRecordRebuttal,
+	useSubmitAppeal,
+} from "#web/api/complaints/complaints.mutations.ts";
+import { Button } from "#web/components/ui/button.tsx";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#web/components/ui/card.tsx";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "#web/components/ui/dialog.tsx";
+import { Input } from "#web/components/ui/input.tsx";
+import { Label } from "#web/components/ui/label.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
+import { Textarea } from "#web/components/ui/textarea.tsx";
+import type { AppealDecision, Complaint, ComplaintFinding } from "#web/types/complaint.ts";
+import { COMPLAINT_FINDING_LABELS } from "#web/types/complaint.ts";
+
+interface ComplaintActionsProps {
+	complaint: Complaint;
+}
+
+type ActionType =
+	| "notification"
+	| "rebuttal"
+	| "rebuttalDeadline"
+	| "finding"
+	| "decision"
+	| "assignCommittee"
+	| "forwardToHq"
+	| "hqDecision"
+	| "submitAppeal"
+	| "appealDecision"
+	| "close"
+	| null;
+
+const APPEAL_LEVEL_LABELS: Record<number, string> = {
+	1: "Level 1 - Direct Superior",
+	2: "Level 2 - Department Head",
+	3: "Level 3 - Center Commander",
+	4: "Level 4 - Vice Commissioner",
+} as const;
+
+const APPEAL_DECISION_LABELS: Record<AppealDecision, string> = {
+	UPHELD: "Upheld (Original decision stands)",
+	MODIFIED: "Modified (Punishment changed)",
+	OVERTURNED: "Overturned (Decision reversed)",
+} as const;
+
+export const ComplaintActions = React.memo(
+	({ complaint }: ComplaintActionsProps) => {
+		const { t } = useTranslation("complaints");
+		const { t: tCommon } = useTranslation("common");
+
+		const [actionType, setActionType] = React.useState<ActionType>(null);
+		const [formData, setFormData] = React.useState<Record<string, string>>({});
+		const [selectedAppealId, setSelectedAppealId] = React.useState<string | null>(null);
+
+		const { data: committeesData } = useCommittees({ isActive: true });
+		const committees = committeesData?.data ?? [];
+
+		const disciplineCommittees = React.useMemo(
+			() => committees.filter((c) => c.typeName?.toLowerCase().includes("discipline")),
+			[committees],
+		);
+
+		const hqCommittees = React.useMemo(
+			() => committees.filter((c) => c.typeName?.toLowerCase().includes("hq") || c.name?.toLowerCase().includes("hq")),
+			[committees],
+		);
+
+		const notificationMutation = useRecordNotification();
+		const rebuttalMutation = useRecordRebuttal();
+		const deadlineMutation = useMarkRebuttalDeadlinePassed();
+		const findingMutation = useRecordFinding();
+		const decisionMutation = useRecordDecision();
+		const assignCommitteeMutation = useAssignCommittee();
+		const forwardToHqMutation = useForwardToHq();
+		const hqDecisionMutation = useRecordHqDecision();
+		const submitAppealMutation = useSubmitAppeal();
+		const appealDecisionMutation = useRecordAppealDecision();
+		const closeMutation = useCloseComplaint();
+
+		const isLoading =
+			notificationMutation.isPending ||
+			rebuttalMutation.isPending ||
+			deadlineMutation.isPending ||
+			findingMutation.isPending ||
+			decisionMutation.isPending ||
+			assignCommitteeMutation.isPending ||
+			forwardToHqMutation.isPending ||
+			hqDecisionMutation.isPending ||
+			submitAppealMutation.isPending ||
+			appealDecisionMutation.isPending ||
+			closeMutation.isPending;
+
+		const handleOpenAction = React.useCallback((type: ActionType, appealId?: string) => {
+			setActionType(type);
+			setSelectedAppealId(appealId ?? null);
+			setFormData({
+				date: new Date().toISOString().split("T")[0],
+			});
+		}, []);
+
+		const handleCloseAction = React.useCallback(() => {
+			setActionType(null);
+			setFormData({});
+			setSelectedAppealId(null);
+		}, []);
+
+		const handleInputChange = React.useCallback((field: string, value: string) => {
+			setFormData((prev) => ({ ...prev, [field]: value }));
+		}, []);
+
+		const handleSubmitAction = React.useCallback(() => {
+			const onSuccess = () => {
+				toast.success(tCommon("success"));
+				handleCloseAction();
+			};
+			const onError = () => {
+				toast.error(tCommon("error"));
+			};
+
+			switch (actionType) {
+				case "notification":
+					notificationMutation.mutate(
+						{
+							id: complaint.id,
+							data: { notificationDate: formData.date, notes: formData.notes },
+						},
+						{ onSuccess, onError },
+					);
+					break;
+				case "rebuttal":
+					rebuttalMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								rebuttalReceivedDate: formData.date,
+								rebuttalContent: formData.content,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
+				case "rebuttalDeadline":
+					deadlineMutation.mutate(complaint.id, { onSuccess, onError });
+					break;
+				case "finding":
+					findingMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								finding: formData.finding as ComplaintFinding,
+								findingDate: formData.date,
+								findingReason: formData.reason,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
+				case "decision":
+					decisionMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								decisionDate: formData.date,
+								punishmentPercentage: formData.percentage ? Number(formData.percentage) : undefined,
+								punishmentDescription: formData.description,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
+				case "assignCommittee":
+					assignCommitteeMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								committeeId: formData.committeeId,
+								assignedDate: formData.date,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
+				case "forwardToHq":
+					forwardToHqMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								hqCommitteeId: formData.hqCommitteeId,
+								forwardedDate: formData.date,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
+				case "hqDecision":
+					hqDecisionMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								decisionDate: formData.date,
+								punishmentDescription: formData.description,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
+				case "submitAppeal":
+					submitAppealMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								appealLevel: Number(formData.appealLevel),
+								appealDate: formData.date,
+								appealReason: formData.reason,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
+				case "appealDecision":
+					if (selectedAppealId) {
+						appealDecisionMutation.mutate(
+							{
+								id: complaint.id,
+								appealId: selectedAppealId,
+								data: {
+									reviewedAt: formData.date,
+									decision: formData.decision as AppealDecision,
+									decisionReason: formData.reason,
+									newPunishment: formData.newPunishment,
+									notes: formData.notes,
+								},
+							},
+							{ onSuccess, onError },
+						);
+					}
+					break;
+				case "close":
+					closeMutation.mutate(
+						{
+							id: complaint.id,
+							data: {
+								closedDate: formData.date,
+								closureReason: formData.reason,
+								notes: formData.notes,
+							},
+						},
+						{ onSuccess, onError },
+					);
+					break;
+			}
+		}, [
+			actionType,
+			complaint.id,
+			formData,
+			selectedAppealId,
+			notificationMutation,
+			rebuttalMutation,
+			deadlineMutation,
+			findingMutation,
+			decisionMutation,
+			assignCommitteeMutation,
+			forwardToHqMutation,
+			hqDecisionMutation,
+			submitAppealMutation,
+			appealDecisionMutation,
+			closeMutation,
+			tCommon,
+			handleCloseAction,
+		]);
+
+		const pendingAppeals = React.useMemo(
+			() => complaint.appeals?.filter((a) => !a.decision) ?? [],
+			[complaint.appeals],
+		);
+
+		const existingAppealLevels = React.useMemo(
+			() => new Set(complaint.appeals?.map((a) => a.appealLevel) ?? []),
+			[complaint.appeals],
+		);
+
+		const nextAppealLevel = React.useMemo(() => {
+			for (let level = 1; level <= 4; level++) {
+				if (!existingAppealLevels.has(level)) return level;
+			}
+			return null;
+		}, [existingAppealLevels]);
+
+		const availableActions = React.useMemo(() => {
+			const actions: { type: ActionType; label: string; variant?: "default" | "destructive"; appealId?: string }[] = [];
+
+			switch (complaint.status) {
+				case "UNDER_HR_REVIEW":
+					if (complaint.article === "ARTICLE_30") {
+						actions.push({ type: "notification", label: t("action.sendNotification") });
+					} else {
+						actions.push({ type: "assignCommittee", label: t("action.assignCommittee") });
+					}
+					break;
+				case "WAITING_FOR_REBUTTAL":
+					actions.push({ type: "rebuttal", label: t("action.recordRebuttal") });
+					actions.push({ type: "rebuttalDeadline", label: t("action.markDeadlinePassed"), variant: "destructive" });
+					break;
+				case "UNDER_HR_ANALYSIS":
+					actions.push({ type: "finding", label: t("action.recordFinding") });
+					break;
+				case "WITH_DISCIPLINE_COMMITTEE":
+					actions.push({ type: "finding", label: t("action.recordFinding") });
+					actions.push({ type: "forwardToHq", label: t("action.forwardToHq") });
+					break;
+				case "AWAITING_SUPERIOR_DECISION":
+					actions.push({ type: "decision", label: t("action.recordDecision") });
+					break;
+				case "FORWARDED_TO_HQ":
+					actions.push({ type: "hqDecision", label: t("action.recordHqDecision") });
+					break;
+				case "DECIDED":
+				case "DECIDED_BY_HQ":
+					if (nextAppealLevel) {
+						actions.push({ type: "submitAppeal", label: t("action.submitAppeal") });
+					}
+					for (const appeal of pendingAppeals) {
+						actions.push({
+							type: "appealDecision",
+							label: `${t("action.recordAppealDecision")} (${t("detail.appealLevel", { level: appeal.appealLevel })})`,
+							appealId: appeal.id,
+						});
+					}
+					actions.push({ type: "close", label: t("action.closeComplaint") });
+					break;
+				case "CLOSED_NO_LIABILITY":
+					actions.push({ type: "close", label: t("action.closeComplaint") });
+					break;
+			}
+
+			return actions;
+		}, [complaint.status, complaint.article, pendingAppeals, nextAppealLevel, t]);
+
+		const getDialogTitle = React.useCallback(() => {
+			switch (actionType) {
+				case "notification":
+					return t("action.sendNotification");
+				case "rebuttal":
+					return t("action.recordRebuttal");
+				case "rebuttalDeadline":
+					return t("action.markDeadlinePassed");
+				case "finding":
+					return t("action.recordFinding");
+				case "decision":
+					return t("action.recordDecision");
+				case "assignCommittee":
+					return t("action.assignCommittee");
+				case "forwardToHq":
+					return t("action.forwardToHq");
+				case "hqDecision":
+					return t("action.recordHqDecision");
+				case "submitAppeal":
+					return t("action.submitAppeal");
+				case "appealDecision":
+					return t("action.recordAppealDecision");
+				case "close":
+					return t("action.closeComplaint");
+				default:
+					return "";
+			}
+		}, [actionType, t]);
+
+		if (availableActions.length === 0) {
+			return null;
+		}
+
+		return (
+			<>
+				<Card>
+					<CardHeader>
+						<CardTitle>{t("detail.actions")}</CardTitle>
+						<CardDescription>{t("detail.actionsDescription")}</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-2">
+						{availableActions.map((action) => (
+							<Button
+								key={`${action.type}-${action.appealId ?? ""}`}
+								variant={action.variant ?? "default"}
+								className="w-full"
+								onClick={() => handleOpenAction(action.type, action.appealId)}
+							>
+								{action.label}
+							</Button>
+						))}
+					</CardContent>
+				</Card>
+
+				<Dialog open={actionType !== null} onOpenChange={(open) => !open && handleCloseAction()}>
+					<DialogContent className="max-w-lg">
+						<DialogHeader>
+							<DialogTitle>{getDialogTitle()}</DialogTitle>
+							<DialogDescription>
+								{actionType === "rebuttalDeadline" ? t("action.deadlinePassedConfirm") : t("action.fillDetails")}
+							</DialogDescription>
+						</DialogHeader>
+
+						{actionType !== "rebuttalDeadline" && (
+							<div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+								{actionType !== "submitAppeal" && actionType !== "appealDecision" && (
+									<div className="space-y-2">
+										<Label>{tCommon("date")}</Label>
+										<Input
+											type="date"
+											value={formData.date ?? ""}
+											onChange={(e) => handleInputChange("date", e.target.value)}
+										/>
+									</div>
+								)}
+
+								{actionType === "rebuttal" && (
+									<div className="space-y-2">
+										<Label>{t("complaint.rebuttalContent")}</Label>
+										<Textarea
+											value={formData.content ?? ""}
+											onChange={(e) => handleInputChange("content", e.target.value)}
+											className="min-h-[100px]"
+										/>
+									</div>
+								)}
+
+								{actionType === "finding" && (
+									<div className="space-y-2">
+										<Label>{t("complaint.finding")}</Label>
+										<Select
+											value={formData.finding ?? ""}
+											onValueChange={(value) => handleInputChange("finding", value)}
+										>
+											<SelectTrigger>
+												<SelectValue placeholder={t("action.selectFinding")} />
+											</SelectTrigger>
+											<SelectContent>
+												{Object.entries(COMPLAINT_FINDING_LABELS)
+													.filter(([key]) => key !== "PENDING")
+													.map(([value, label]) => (
+														<SelectItem key={value} value={value}>
+															{label}
+														</SelectItem>
+													))}
+											</SelectContent>
+										</Select>
+									</div>
+								)}
+
+								{actionType === "assignCommittee" && (
+									<div className="space-y-2">
+										<Label>{t("action.selectCommittee")}</Label>
+										<Select
+											value={formData.committeeId ?? ""}
+											onValueChange={(value) => handleInputChange("committeeId", value)}
+										>
+											<SelectTrigger>
+												<SelectValue placeholder={t("action.selectCommittee")} />
+											</SelectTrigger>
+											<SelectContent>
+												{disciplineCommittees.length > 0 ? (
+													disciplineCommittees.map((committee) => (
+														<SelectItem key={committee.id} value={committee.id}>
+															{committee.name}
+														</SelectItem>
+													))
+												) : (
+													committees.map((committee) => (
+														<SelectItem key={committee.id} value={committee.id}>
+															{committee.name}
+														</SelectItem>
+													))
+												)}
+											</SelectContent>
+										</Select>
+									</div>
+								)}
+
+								{actionType === "forwardToHq" && (
+									<div className="space-y-2">
+										<Label>{t("action.selectHqCommittee")}</Label>
+										<Select
+											value={formData.hqCommitteeId ?? ""}
+											onValueChange={(value) => handleInputChange("hqCommitteeId", value)}
+										>
+											<SelectTrigger>
+												<SelectValue placeholder={t("action.selectHqCommittee")} />
+											</SelectTrigger>
+											<SelectContent>
+												{hqCommittees.length > 0 ? (
+													hqCommittees.map((committee) => (
+														<SelectItem key={committee.id} value={committee.id}>
+															{committee.name}
+														</SelectItem>
+													))
+												) : (
+													committees.map((committee) => (
+														<SelectItem key={committee.id} value={committee.id}>
+															{committee.name}
+														</SelectItem>
+													))
+												)}
+											</SelectContent>
+										</Select>
+									</div>
+								)}
+
+								{(actionType === "finding" || actionType === "close") && (
+									<div className="space-y-2">
+										<Label>{t("complaint.reason")}</Label>
+										<Textarea
+											value={formData.reason ?? ""}
+											onChange={(e) => handleInputChange("reason", e.target.value)}
+											className="min-h-[80px]"
+										/>
+									</div>
+								)}
+
+								{actionType === "decision" && (
+									<>
+										<div className="space-y-2">
+											<Label>{t("complaint.punishmentPercentage")}</Label>
+											<Input
+												type="number"
+												min="0"
+												max="100"
+												value={formData.percentage ?? ""}
+												onChange={(e) => handleInputChange("percentage", e.target.value)}
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label>{t("complaint.punishmentDescription")}</Label>
+											<Textarea
+												value={formData.description ?? ""}
+												onChange={(e) => handleInputChange("description", e.target.value)}
+												className="min-h-[80px]"
+											/>
+										</div>
+									</>
+								)}
+
+								{(actionType === "hqDecision") && (
+									<div className="space-y-2">
+										<Label>{t("complaint.punishmentDescription")}</Label>
+										<Textarea
+											value={formData.description ?? ""}
+											onChange={(e) => handleInputChange("description", e.target.value)}
+											className="min-h-[80px]"
+										/>
+									</div>
+								)}
+
+								{actionType === "submitAppeal" && (
+									<>
+										<div className="space-y-2">
+											<Label>{t("appeal.appealLevel")}</Label>
+											<Select
+												value={formData.appealLevel ?? ""}
+												onValueChange={(value) => handleInputChange("appealLevel", value)}
+											>
+												<SelectTrigger>
+													<SelectValue placeholder={t("appeal.selectLevel")} />
+												</SelectTrigger>
+												<SelectContent>
+													{Object.entries(APPEAL_LEVEL_LABELS)
+														.filter(([level]) => !existingAppealLevels.has(Number(level)))
+														.map(([value, label]) => (
+															<SelectItem key={value} value={value}>
+																{label}
+															</SelectItem>
+														))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label>{t("appeal.appealDate")}</Label>
+											<Input
+												type="date"
+												value={formData.date ?? ""}
+												onChange={(e) => handleInputChange("date", e.target.value)}
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label>{t("appeal.appealReason")}</Label>
+											<Textarea
+												value={formData.reason ?? ""}
+												onChange={(e) => handleInputChange("reason", e.target.value)}
+												className="min-h-[100px]"
+												placeholder={t("appeal.enterAppealReason")}
+											/>
+										</div>
+									</>
+								)}
+
+								{actionType === "appealDecision" && (
+									<>
+										<div className="space-y-2">
+											<Label>{t("appeal.decisionDate")}</Label>
+											<Input
+												type="date"
+												value={formData.date ?? ""}
+												onChange={(e) => handleInputChange("date", e.target.value)}
+											/>
+										</div>
+										<div className="space-y-2">
+											<Label>{t("appeal.decision")}</Label>
+											<Select
+												value={formData.decision ?? ""}
+												onValueChange={(value) => handleInputChange("decision", value)}
+											>
+												<SelectTrigger>
+													<SelectValue placeholder={t("appeal.selectDecision")} />
+												</SelectTrigger>
+												<SelectContent>
+													{Object.entries(APPEAL_DECISION_LABELS).map(([value, label]) => (
+														<SelectItem key={value} value={value}>
+															{label}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+										</div>
+										<div className="space-y-2">
+											<Label>{t("appeal.decisionReason")}</Label>
+											<Textarea
+												value={formData.reason ?? ""}
+												onChange={(e) => handleInputChange("reason", e.target.value)}
+												className="min-h-[80px]"
+											/>
+										</div>
+										{formData.decision === "MODIFIED" && (
+											<div className="space-y-2">
+												<Label>{t("appeal.newPunishment")}</Label>
+												<Textarea
+													value={formData.newPunishment ?? ""}
+													onChange={(e) => handleInputChange("newPunishment", e.target.value)}
+													className="min-h-[60px]"
+													placeholder={t("appeal.enterNewPunishment")}
+												/>
+											</div>
+										)}
+									</>
+								)}
+
+								<div className="space-y-2">
+									<Label>{t("complaint.notes")}</Label>
+									<Textarea
+										value={formData.notes ?? ""}
+										onChange={(e) => handleInputChange("notes", e.target.value)}
+										placeholder={t("action.optionalNotes")}
+									/>
+								</div>
+							</div>
+						)}
+
+						<DialogFooter>
+							<Button variant="outline" onClick={handleCloseAction}>
+								{tCommon("cancel")}
+							</Button>
+							<Button onClick={handleSubmitAction} disabled={isLoading}>
+								{isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+								{tCommon("confirm")}
+							</Button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
+			</>
+		);
+	},
+	(prevProps, nextProps) =>
+		prevProps.complaint.id === nextProps.complaint.id &&
+		prevProps.complaint.status === nextProps.complaint.status &&
+		prevProps.complaint.appeals?.length === nextProps.complaint.appeals?.length,
+);
+
+ComplaintActions.displayName = "ComplaintActions";

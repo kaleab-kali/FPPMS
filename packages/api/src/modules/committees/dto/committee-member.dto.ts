@@ -1,6 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CommitteeMemberRole } from "@prisma/client";
-import { ArrayNotEmpty, IsArray, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
+import {
+	ArrayNotEmpty,
+	IsArray,
+	IsDateString,
+	IsEnum,
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	MaxLength,
+} from "class-validator";
 
 export class AddCommitteeMemberDto {
 	@ApiProperty({ description: "Employee ID to add as member" })

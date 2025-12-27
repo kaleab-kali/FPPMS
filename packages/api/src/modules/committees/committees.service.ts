@@ -1,12 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "#api/database/prisma.service";
-import {
-	CommitteeFilterDto,
-	CreateCommitteeDto,
-	DissolveCommitteeDto,
-	UpdateCommitteeDto,
-} from "./dto/committee.dto";
+import { CommitteeFilterDto, CreateCommitteeDto, DissolveCommitteeDto, UpdateCommitteeDto } from "./dto/committee.dto";
 import {
 	AddCommitteeMemberDto,
 	BulkAddMembersDto,

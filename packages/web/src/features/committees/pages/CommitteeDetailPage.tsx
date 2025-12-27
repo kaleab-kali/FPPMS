@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowLeft, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,6 +10,7 @@ import {
 	useUpdateCommitteeMember,
 } from "#web/api/committees/committees.mutations.ts";
 import { useCommittee, useCommitteeHistory, useCommitteeMembers } from "#web/api/committees/committees.queries.ts";
+import { useCommitteeComplaints } from "#web/api/complaints/complaints.queries.ts";
 import { ConfirmDialog } from "#web/components/common/ConfirmDialog.tsx";
 import { DataTable } from "#web/components/common/DataTable.tsx";
 import { Badge } from "#web/components/ui/badge.tsx";
@@ -31,6 +32,8 @@ import type {
 	CommitteeStatus,
 	UpdateCommitteeMemberRequest,
 } from "#web/types/committee.ts";
+import type { ComplaintListItem, ComplaintStatus as ComplaintStatusType } from "#web/types/complaint.ts";
+import { COMPLAINT_STATUS_COLORS, COMPLAINT_STATUS_LABELS } from "#web/types/complaint.ts";
 
 const STATUS_COLORS: Record<CommitteeStatus, "default" | "secondary" | "destructive"> = {
 	ACTIVE: "default",
@@ -60,6 +63,11 @@ export const CommitteeDetailPage = React.memo(
 		const { data: committee, isLoading: committeeLoading } = useCommittee(id ?? "", false);
 		const { data: members, isLoading: membersLoading } = useCommitteeMembers(id ?? "", false);
 		const { data: history } = useCommitteeHistory(id ?? "");
+		const { data: assignedComplaints, isLoading: assignedComplaintsLoading } = useCommitteeComplaints(
+			id ?? "",
+			"assigned",
+		);
+		const { data: hqComplaints, isLoading: hqComplaintsLoading } = useCommitteeComplaints(id ?? "", "hq");
 
 		const addMemberMutation = useAddCommitteeMember();
 		const updateMemberMutation = useUpdateCommitteeMember();
@@ -140,6 +148,13 @@ export const CommitteeDetailPage = React.memo(
 				},
 			);
 		}, [id, selectedMember, removeMemberMutation, tCommon]);
+
+		const handleViewComplaint = React.useCallback(
+			(complaintId: string) => {
+				navigate(`/complaints/${complaintId}`);
+			},
+			[navigate],
+		);
 
 		const { i18n } = useTranslation();
 		const isAmharic = i18n.language === "am";
@@ -267,6 +282,80 @@ export const CommitteeDetailPage = React.memo(
 			[t],
 		);
 
+		const complaintColumns = React.useMemo<ColumnDef<ComplaintListItem>[]>(
+			() => [
+				{
+					accessorKey: "complaintNumber",
+					header: t("complaints.complaintNumber"),
+					cell: ({ row }) => (
+						<span className="font-mono text-sm font-medium">{row.getValue("complaintNumber")}</span>
+					),
+				},
+				{
+					accessorKey: "article",
+					header: t("complaints.article"),
+					cell: ({ row }) => {
+						const article = row.getValue("article") as string;
+						return (
+							<Badge variant={article === "ARTICLE_30" ? "secondary" : "default"}>
+								{article === "ARTICLE_30" ? "Art. 30" : "Art. 31"}
+							</Badge>
+						);
+					},
+				},
+				{
+					accessorKey: "accusedEmployee",
+					header: t("complaints.accused"),
+					cell: ({ row }) => {
+						const emp = row.original.accusedEmployee;
+						if (!emp) return "-";
+						const displayName = isAmharic && emp.fullNameAm ? emp.fullNameAm : emp.fullName;
+						return (
+							<div>
+								<span className="font-medium">{displayName}</span>
+								<span className="block text-xs text-muted-foreground">{emp.employeeId}</span>
+							</div>
+						);
+					},
+				},
+				{
+					accessorKey: "status",
+					header: t("complaints.status"),
+					cell: ({ row }) => {
+						const status = row.getValue("status") as ComplaintStatusType;
+						return (
+							<Badge className={COMPLAINT_STATUS_COLORS[status]}>
+								{COMPLAINT_STATUS_LABELS[status]}
+							</Badge>
+						);
+					},
+				},
+				{
+					accessorKey: "registeredDate",
+					header: t("complaints.registeredDate"),
+					cell: ({ row }) => {
+						const date = row.getValue("registeredDate") as string;
+						return <span>{new Date(date).toLocaleDateString()}</span>;
+					},
+				},
+				{
+					id: "actions",
+					header: "",
+					cell: ({ row }) => (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => handleViewComplaint(row.original.id)}
+						>
+							<ExternalLink className="mr-1 h-3 w-3" />
+							{t("complaints.viewDetails")}
+						</Button>
+					),
+				},
+			],
+			[t, isAmharic, handleViewComplaint],
+		);
+
 		if (committeeLoading) {
 			return <div className="flex items-center justify-center p-8">{tCommon("loading")}</div>;
 		}
@@ -342,6 +431,14 @@ export const CommitteeDetailPage = React.memo(
 							<Users className="mr-2 h-4 w-4" />
 							{t("member.title")} ({members?.length ?? 0})
 						</TabsTrigger>
+						<TabsTrigger value="complaints">
+							<FileText className="mr-2 h-4 w-4" />
+							{t("complaints.title")} ({assignedComplaints?.length ?? 0})
+						</TabsTrigger>
+						<TabsTrigger value="hqComplaints">
+							<FileText className="mr-2 h-4 w-4" />
+							{t("complaints.hqTitle")} ({hqComplaints?.length ?? 0})
+						</TabsTrigger>
 						<TabsTrigger value="history">{t("history.title")}</TabsTrigger>
 					</TabsList>
 
@@ -362,11 +459,51 @@ export const CommitteeDetailPage = React.memo(
 								</div>
 							</CardHeader>
 							<CardContent>
-								<DataTable
-									columns={memberColumns}
-									data={members ?? []}
-									isLoading={membersLoading}
-								/>
+								<DataTable columns={memberColumns} data={members ?? []} isLoading={membersLoading} />
+							</CardContent>
+						</Card>
+					</TabsContent>
+
+					<TabsContent value="complaints" className="mt-4">
+						<Card>
+							<CardHeader>
+								<CardTitle>{t("complaints.title")}</CardTitle>
+								<CardDescription>{t("complaints.description")}</CardDescription>
+							</CardHeader>
+							<CardContent>
+								{(assignedComplaints?.length ?? 0) === 0 && !assignedComplaintsLoading ? (
+									<p className="text-center text-muted-foreground py-8">
+										{t("complaints.noComplaints")}
+									</p>
+								) : (
+									<DataTable
+										columns={complaintColumns}
+										data={assignedComplaints ?? []}
+										isLoading={assignedComplaintsLoading}
+									/>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
+
+					<TabsContent value="hqComplaints" className="mt-4">
+						<Card>
+							<CardHeader>
+								<CardTitle>{t("complaints.hqTitle")}</CardTitle>
+								<CardDescription>{t("complaints.hqDescription")}</CardDescription>
+							</CardHeader>
+							<CardContent>
+								{(hqComplaints?.length ?? 0) === 0 && !hqComplaintsLoading ? (
+									<p className="text-center text-muted-foreground py-8">
+										{t("complaints.noHqComplaints")}
+									</p>
+								) : (
+									<DataTable
+										columns={complaintColumns}
+										data={hqComplaints ?? []}
+										isLoading={hqComplaintsLoading}
+									/>
+								)}
 							</CardContent>
 						</Card>
 					</TabsContent>

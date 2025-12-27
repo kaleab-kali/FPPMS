@@ -1,12 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
-	ComplaintArticle,
-	ComplaintStatus,
-	ComplaintFinding,
-	ComplainantType,
-	DecisionAuthority,
 	AppealDecision,
+	ComplainantType,
+	ComplaintArticle,
 	ComplaintDocumentType,
+	ComplaintFinding,
+	ComplaintStatus,
+	DecisionAuthority,
 } from "@prisma/client";
 
 export class ComplaintTimelineResponseDto {

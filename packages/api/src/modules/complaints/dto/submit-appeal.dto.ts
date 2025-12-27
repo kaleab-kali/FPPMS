@@ -24,7 +24,8 @@ export class SubmitAppealDto {
 
 	@ApiProperty({
 		description: "Reason for the appeal",
-		example: "The accused believes the punishment is too severe and requests reconsideration based on prior good conduct",
+		example:
+			"The accused believes the punishment is too severe and requests reconsideration based on prior good conduct",
 		maxLength: 3000,
 	})
 	@IsString()

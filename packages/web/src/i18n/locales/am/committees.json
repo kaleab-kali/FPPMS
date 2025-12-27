@@ -103,5 +103,19 @@
 		"date": "ቀን",
 		"action": "እርምጃ",
 		"notes": "ማስታወሻዎች"
+	},
+	"complaints": {
+		"title": "ቅሬታዎች",
+		"description": "ለዚህ ኮሚቴ የተመደቡ ቅሬታዎች",
+		"hqTitle": "የዋና መስሪያ ቤት ቅሬታዎች",
+		"hqDescription": "ለዋና መስሪያ ቤት ግምገማ ለዚህ ኮሚቴ የተላለፉ ቅሬታዎች",
+		"noComplaints": "ለዚህ ኮሚቴ የተመደቡ ቅሬታዎች የሉም",
+		"noHqComplaints": "ለዚህ ኮሚቴ የተላለፉ የዋና መስሪያ ቤት ቅሬታዎች የሉም",
+		"complaintNumber": "የቅሬታ ቁጥር",
+		"article": "አንቀጽ",
+		"accused": "ተከሳሽ",
+		"status": "ሁኔታ",
+		"registeredDate": "የተመዘገበበት",
+		"viewDetails": "ዝርዝሮችን ይመልከቱ"
 	}
 }
