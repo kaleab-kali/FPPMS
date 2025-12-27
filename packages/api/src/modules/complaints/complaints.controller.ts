@@ -58,6 +58,32 @@ export class ComplaintsController {
 		return this.complaintsService.findAll(tenantId, filters);
 	}
 
+	@Get("employee/:employeeId")
+	@Permissions("complaints.read.complaint")
+	@ApiOperation({ summary: "Get all complaints for an employee" })
+	@ApiParam({ name: "employeeId", description: "Employee ID" })
+	@ApiResponse({ status: 200, description: "Employee complaint history", type: [ComplaintListResponseDto] })
+	@ApiResponse({ status: 401, description: "Unauthorized" })
+	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
+	async getEmployeeComplaintHistory(@CurrentTenant() tenantId: string, @Param("employeeId") employeeId: string) {
+		return this.complaintsService.getEmployeeComplaintHistory(tenantId, employeeId);
+	}
+
+	@Get("committee/:committeeId")
+	@Permissions("complaints.read.complaint")
+	@ApiOperation({ summary: "Get all complaints assigned to a committee" })
+	@ApiParam({ name: "committeeId", description: "Committee ID" })
+	@ApiResponse({ status: 200, description: "Committee complaints", type: [ComplaintListResponseDto] })
+	@ApiResponse({ status: 401, description: "Unauthorized" })
+	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
+	async getCommitteeComplaints(
+		@CurrentTenant() tenantId: string,
+		@Param("committeeId") committeeId: string,
+		@Query("type") type: "assigned" | "hq" = "assigned",
+	) {
+		return this.complaintsService.findByCommittee(tenantId, committeeId, type);
+	}
+
 	@Get(":id")
 	@Permissions("complaints.read.complaint")
 	@ApiOperation({ summary: "Get complaint by ID with full details" })
@@ -297,31 +323,5 @@ export class ComplaintsController {
 		@Body() dto: CloseComplaintDto,
 	) {
 		return this.complaintsService.closeComplaint(tenantId, id, user.id, dto);
-	}
-
-	@Get("employee/:employeeId")
-	@Permissions("complaints.read.complaint")
-	@ApiOperation({ summary: "Get all complaints for an employee" })
-	@ApiParam({ name: "employeeId", description: "Employee ID" })
-	@ApiResponse({ status: 200, description: "Employee complaint history", type: [ComplaintListResponseDto] })
-	@ApiResponse({ status: 401, description: "Unauthorized" })
-	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
-	async getEmployeeComplaintHistory(@CurrentTenant() tenantId: string, @Param("employeeId") employeeId: string) {
-		return this.complaintsService.getEmployeeComplaintHistory(tenantId, employeeId);
-	}
-
-	@Get("committee/:committeeId")
-	@Permissions("complaints.read.complaint")
-	@ApiOperation({ summary: "Get all complaints assigned to a committee" })
-	@ApiParam({ name: "committeeId", description: "Committee ID" })
-	@ApiResponse({ status: 200, description: "Committee complaints", type: [ComplaintListResponseDto] })
-	@ApiResponse({ status: 401, description: "Unauthorized" })
-	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
-	async getCommitteeComplaints(
-		@CurrentTenant() tenantId: string,
-		@Param("committeeId") committeeId: string,
-		@Query("type") type: "assigned" | "hq" = "assigned",
-	) {
-		return this.complaintsService.findByCommittee(tenantId, committeeId, type);
 	}
 }

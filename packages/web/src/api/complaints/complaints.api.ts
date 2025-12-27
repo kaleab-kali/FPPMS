@@ -8,6 +8,7 @@ import type {
 	ComplaintListItem,
 	ComplaintTimeline,
 	CreateComplaintRequest,
+	EmployeeComplaintHistoryItem,
 	ForwardToCommitteeRequest,
 	ForwardToHqRequest,
 	RecordAppealDecisionRequest,
@@ -39,7 +40,8 @@ export const complaintsApi = {
 
 	getTimeline: (id: string) => api.get<ComplaintTimeline[]>(`${BASE_URL}/${id}/timeline`),
 
-	getEmployeeHistory: (employeeId: string) => api.get<ComplaintListItem[]>(`${BASE_URL}/employee/${employeeId}`),
+	getEmployeeHistory: (employeeId: string) =>
+		api.get<EmployeeComplaintHistoryItem[]>(`${BASE_URL}/employee/${employeeId}`),
 
 	getByCommittee: (committeeId: string, type: "assigned" | "hq" = "assigned") =>
 		api.get<ComplaintListItem[]>(`${BASE_URL}/committee/${committeeId}?type=${type}`),

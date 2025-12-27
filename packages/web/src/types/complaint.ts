@@ -147,6 +147,18 @@ export interface ComplaintListItem {
 	accusedEmployee?: AccusedEmployeeMinimal;
 }
 
+export interface EmployeeComplaintHistoryItem extends ComplaintListItem {
+	offenseOccurrence?: number;
+	finding?: ComplaintFinding;
+	findingDate?: string;
+	findingReason?: string;
+	punishmentPercentage?: number;
+	punishmentDescription?: string;
+	decisionDate?: string;
+	closedDate?: string;
+	timeline?: ComplaintTimeline[];
+}
+
 export interface CreateComplaintRequest {
 	article: ComplaintArticle;
 	offenseCode: string;
