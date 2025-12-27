@@ -100,6 +100,8 @@
 		"selectFinding": "Select finding",
 		"selectCommittee": "Select committee",
 		"selectHqCommittee": "Select HQ committee",
+		"noCenterCommittees": "No discipline committees for this center",
+		"noHqCommittees": "No HQ discipline committees found",
 		"fillDetails": "Please fill in the required details",
 		"deadlinePassedConfirm": "Confirm that the rebuttal deadline has passed without response",
 		"optionalNotes": "Optional notes..."

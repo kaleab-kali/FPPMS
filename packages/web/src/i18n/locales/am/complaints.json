@@ -100,6 +100,8 @@
 		"selectFinding": "ግኝት ይምረጡ",
 		"selectCommittee": "ኮሚቴ ይምረጡ",
 		"selectHqCommittee": "የዋና መስሪያ ቤት ኮሚቴ ይምረጡ",
+		"noCenterCommittees": "ለዚህ ማዕከል የዲሲፕሊን ኮሚቴ የለም",
+		"noHqCommittees": "የዋና መስሪያ ቤት የዲሲፕሊን ኮሚቴ አልተገኘም",
 		"fillDetails": "እባክዎን የሚያስፈልጉትን ዝርዝሮች ይሙሉ",
 		"deadlinePassedConfirm": "የመከላከያ ቀነ-ገደብ ያለ ምላሽ ማለፉን ያረጋግጡ",
 		"optionalNotes": "አማራጭ ማስታወሻዎች..."

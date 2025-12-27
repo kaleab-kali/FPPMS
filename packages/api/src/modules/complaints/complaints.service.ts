@@ -413,6 +413,10 @@ export class ComplaintsService {
 			throw new NotFoundException("Committee not found");
 		}
 
+		if (committee.centerId && complaint.centerId !== committee.centerId) {
+			throw new BadRequestException("Committee must belong to the same center as the complaint");
+		}
+
 		await this.prisma.complaint.update({
 			where: { id: complaintId },
 			data: {
@@ -446,12 +450,28 @@ export class ComplaintsService {
 			throw new BadRequestException("Complaint must be with discipline committee");
 		}
 
+		const assignedCommittee = await this.prisma.committee.findFirst({
+			where: { id: complaint.assignedCommitteeId ?? "", tenantId },
+		});
+
+		if (!assignedCommittee) {
+			throw new BadRequestException("Complaint must have an assigned committee");
+		}
+
+		if (!assignedCommittee.centerId) {
+			throw new BadRequestException("Only center-level discipline committees can forward to HQ");
+		}
+
 		const hqCommittee = await this.prisma.committee.findFirst({
 			where: { id: dto.hqCommitteeId, tenantId },
 		});
 
 		if (!hqCommittee) {
 			throw new NotFoundException("HQ Committee not found");
+		}
+
+		if (hqCommittee.centerId) {
+			throw new BadRequestException("Target committee must be an HQ-level committee (no center)");
 		}
 
 		await this.prisma.complaint.update({

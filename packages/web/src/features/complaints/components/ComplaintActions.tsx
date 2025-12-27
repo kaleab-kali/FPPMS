@@ -76,15 +76,19 @@ export const ComplaintActions = React.memo(
 		const { data: committeesData } = useCommittees({ isActive: true });
 		const committees = committeesData?.data ?? [];
 
-		const disciplineCommittees = React.useMemo(
-			() => committees.filter((c) => c.typeName?.toLowerCase().includes("discipline")),
-			[committees],
+		const centerDisciplineCommittees = React.useMemo(
+			() =>
+				committees.filter((c) => c.typeName?.toLowerCase().includes("discipline") && c.centerId === complaint.centerId),
+			[committees, complaint.centerId],
 		);
 
 		const hqCommittees = React.useMemo(
-			() => committees.filter((c) => c.typeName?.toLowerCase().includes("hq") || c.name?.toLowerCase().includes("hq")),
+			() => committees.filter((c) => !c.centerId && c.typeName?.toLowerCase().includes("discipline")),
 			[committees],
 		);
+
+		const isHqComplaint = !complaint.centerId;
+		const canForwardToHq = complaint.assignedCommitteeId && !isHqComplaint;
 
 		const notificationMutation = useRecordNotification();
 		const rebuttalMutation = useRecordRebuttal();
@@ -334,7 +338,9 @@ export const ComplaintActions = React.memo(
 					break;
 				case "WITH_DISCIPLINE_COMMITTEE":
 					actions.push({ type: "finding", label: t("action.recordFinding") });
-					actions.push({ type: "forwardToHq", label: t("action.forwardToHq") });
+					if (canForwardToHq) {
+						actions.push({ type: "forwardToHq", label: t("action.forwardToHq") });
+					}
 					break;
 				case "AWAITING_SUPERIOR_DECISION":
 					actions.push({ type: "decision", label: t("action.recordDecision") });
@@ -362,7 +368,7 @@ export const ComplaintActions = React.memo(
 			}
 
 			return actions;
-		}, [complaint.status, complaint.article, pendingAppeals, nextAppealLevel, t]);
+		}, [complaint.status, complaint.article, pendingAppeals, nextAppealLevel, canForwardToHq, t]);
 
 		const getDialogTitle = React.useCallback(() => {
 			switch (actionType) {
@@ -485,18 +491,22 @@ export const ComplaintActions = React.memo(
 												<SelectValue placeholder={t("action.selectCommittee")} />
 											</SelectTrigger>
 											<SelectContent>
-												{disciplineCommittees.length > 0 ? (
-													disciplineCommittees.map((committee) => (
+												{isHqComplaint ? (
+													hqCommittees.map((committee) => (
+														<SelectItem key={committee.id} value={committee.id}>
+															{committee.name}
+														</SelectItem>
+													))
+												) : centerDisciplineCommittees.length > 0 ? (
+													centerDisciplineCommittees.map((committee) => (
 														<SelectItem key={committee.id} value={committee.id}>
 															{committee.name}
 														</SelectItem>
 													))
 												) : (
-													committees.map((committee) => (
-														<SelectItem key={committee.id} value={committee.id}>
-															{committee.name}
-														</SelectItem>
-													))
+													<SelectItem value="none" disabled>
+														{t("action.noCenterCommittees")}
+													</SelectItem>
 												)}
 											</SelectContent>
 										</Select>
@@ -521,11 +531,9 @@ export const ComplaintActions = React.memo(
 														</SelectItem>
 													))
 												) : (
-													committees.map((committee) => (
-														<SelectItem key={committee.id} value={committee.id}>
-															{committee.name}
-														</SelectItem>
-													))
+													<SelectItem value="none" disabled>
+														{t("action.noHqCommittees")}
+													</SelectItem>
 												)}
 											</SelectContent>
 										</Select>
@@ -566,7 +574,7 @@ export const ComplaintActions = React.memo(
 									</>
 								)}
 
-								{(actionType === "hqDecision") && (
+								{actionType === "hqDecision" && (
 									<div className="space-y-2">
 										<Label>{t("complaint.punishmentDescription")}</Label>
 										<Textarea
