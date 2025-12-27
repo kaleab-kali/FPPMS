@@ -5,10 +5,13 @@ import {
 	IsArray,
 	IsDateString,
 	IsEnum,
+	IsInt,
 	IsNotEmpty,
 	IsOptional,
 	IsString,
+	Max,
 	MaxLength,
+	Min,
 } from "class-validator";
 
 export class AddCommitteeMemberDto {
@@ -26,6 +29,13 @@ export class AddCommitteeMemberDto {
 	@IsDateString()
 	@IsNotEmpty()
 	appointedDate: string;
+
+	@ApiPropertyOptional({ description: "Term limit in months (default: 24)", example: 24, default: 24 })
+	@IsInt()
+	@Min(1)
+	@Max(120)
+	@IsOptional()
+	termLimitMonths?: number;
 }
 
 export class UpdateCommitteeMemberDto {
@@ -64,4 +74,44 @@ export class BulkAddMembersDto {
 	@IsDateString()
 	@IsNotEmpty()
 	appointedDate: string;
+
+	@ApiPropertyOptional({ description: "Term limit in months for all members (default: 24)", example: 24, default: 24 })
+	@IsInt()
+	@Min(1)
+	@Max(120)
+	@IsOptional()
+	termLimitMonths?: number;
+}
+
+export class RenewMemberTermDto {
+	@ApiProperty({ description: "Start date of new term (ISO date string)", example: "2027-01-01" })
+	@IsDateString()
+	@IsNotEmpty()
+	newTermStartDate: string;
+
+	@ApiPropertyOptional({ description: "Term limit in months for the new term (default: same as previous)", example: 24 })
+	@IsInt()
+	@Min(1)
+	@Max(120)
+	@IsOptional()
+	termLimitMonths?: number;
+
+	@ApiPropertyOptional({ description: "Notes about the renewal" })
+	@IsString()
+	@IsOptional()
+	@MaxLength(500)
+	notes?: string;
+}
+
+export class TerminateMemberTermDto {
+	@ApiProperty({ description: "Date of termination (ISO date string)", example: "2026-06-15" })
+	@IsDateString()
+	@IsNotEmpty()
+	terminatedDate: string;
+
+	@ApiProperty({ description: "Reason for early termination" })
+	@IsString()
+	@IsNotEmpty()
+	@MaxLength(500)
+	terminatedReason: string;
 }

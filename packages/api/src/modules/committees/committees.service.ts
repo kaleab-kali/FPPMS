@@ -6,6 +6,8 @@ import {
 	AddCommitteeMemberDto,
 	BulkAddMembersDto,
 	RemoveCommitteeMemberDto,
+	RenewMemberTermDto,
+	TerminateMemberTermDto,
 	UpdateCommitteeMemberDto,
 } from "./dto/committee-member.dto";
 import { CreateCommitteeTypeDto, UpdateCommitteeTypeDto } from "./dto/committee-type.dto";
@@ -411,28 +413,64 @@ export class CommitteesService {
 			throw new BadRequestException(`Committee has reached maximum member capacity`);
 		}
 
-		const member = await this.prisma.committeeMember.create({
-			data: {
-				tenantId,
-				committeeId,
-				employeeId: dto.employeeId,
-				role: dto.role,
-				appointedDate: new Date(dto.appointedDate),
-				appointedBy: userId,
-			},
-			include: {
-				employee: {
-					select: {
-						id: true,
-						employeeId: true,
-						fullName: true,
-						fullNameAm: true,
-						position: {
-							select: { id: true, name: true, nameAm: true },
+		const termLimitMonths = dto.termLimitMonths ?? 24;
+		const startDate = new Date(dto.appointedDate);
+		const endDate = new Date(startDate);
+		endDate.setMonth(endDate.getMonth() + termLimitMonths);
+
+		const result = await this.prisma.$transaction(async (tx) => {
+			const member = await tx.committeeMember.create({
+				data: {
+					tenantId,
+					committeeId,
+					employeeId: dto.employeeId,
+					role: dto.role,
+					appointedDate: startDate,
+					endDate: endDate,
+					appointedBy: userId,
+				},
+			});
+
+			const term = await tx.committeeMemberTerm.create({
+				data: {
+					tenantId,
+					centerId: committee.centerId,
+					committeeId,
+					memberId: member.id,
+					employeeId: dto.employeeId,
+					termNumber: 1,
+					termLimitMonths,
+					startDate,
+					endDate,
+					status: "ACTIVE",
+				},
+			});
+
+			await tx.committeeMember.update({
+				where: { id: member.id },
+				data: { currentTermId: term.id },
+			});
+
+			return tx.committeeMember.findUnique({
+				where: { id: member.id },
+				include: {
+					employee: {
+						select: {
+							id: true,
+							employeeId: true,
+							fullName: true,
+							fullNameAm: true,
+							position: {
+								select: { id: true, name: true, nameAm: true },
+							},
 						},
 					},
+					terms: {
+						orderBy: { termNumber: "desc" },
+						take: 1,
+					},
 				},
-			},
+			});
 		});
 
 		await this.addHistoryEntry(
@@ -440,11 +478,11 @@ export class CommitteesService {
 			committeeId,
 			"MEMBER_ADDED",
 			null,
-			{ employeeId: dto.employeeId, role: dto.role, appointedDate: dto.appointedDate },
+			{ employeeId: dto.employeeId, role: dto.role, appointedDate: dto.appointedDate, termLimitMonths, termEndDate: endDate.toISOString() },
 			userId,
 		);
 
-		return member;
+		return result;
 	}
 
 	async bulkAddMembers(tenantId: string, committeeId: string, dto: BulkAddMembersDto, userId: string) {
@@ -454,6 +492,7 @@ export class CommitteesService {
 				employeeId,
 				role: dto.role,
 				appointedDate: dto.appointedDate,
+				termLimitMonths: dto.termLimitMonths,
 			};
 			const member = await this.addMember(tenantId, committeeId, memberDto, userId);
 			results.push(member);
@@ -624,8 +663,286 @@ export class CommitteesService {
 						},
 					},
 				},
+				terms: {
+					orderBy: { termNumber: "desc" },
+				},
 			},
 			orderBy: { appointedDate: "desc" },
+		});
+	}
+
+	// ==================== TERM MANAGEMENT METHODS ====================
+
+	async renewMemberTerm(
+		tenantId: string,
+		committeeId: string,
+		memberId: string,
+		dto: RenewMemberTermDto,
+		userId: string,
+	) {
+		const member = await this.prisma.committeeMember.findFirst({
+			where: { id: memberId, committeeId, tenantId, isActive: true },
+			include: {
+				committee: true,
+				terms: {
+					where: { status: "ACTIVE" },
+					orderBy: { termNumber: "desc" },
+					take: 1,
+				},
+			},
+		});
+
+		if (!member) {
+			throw new NotFoundException(`Committee member not found`);
+		}
+
+		const currentTerm = member.terms[0];
+		if (!currentTerm) {
+			throw new BadRequestException(`No active term found for this member`);
+		}
+
+		const termLimitMonths = dto.termLimitMonths ?? currentTerm.termLimitMonths;
+		const newStartDate = new Date(dto.newTermStartDate);
+		const newEndDate = new Date(newStartDate);
+		newEndDate.setMonth(newEndDate.getMonth() + termLimitMonths);
+
+		const result = await this.prisma.$transaction(async (tx) => {
+			await tx.committeeMemberTerm.update({
+				where: { id: currentTerm.id },
+				data: {
+					status: "RENEWED",
+					renewedBy: userId,
+					renewedDate: new Date(),
+					notes: dto.notes,
+				},
+			});
+
+			const newTerm = await tx.committeeMemberTerm.create({
+				data: {
+					tenantId,
+					centerId: member.committee.centerId,
+					committeeId,
+					memberId,
+					employeeId: member.employeeId,
+					termNumber: currentTerm.termNumber + 1,
+					termLimitMonths,
+					startDate: newStartDate,
+					endDate: newEndDate,
+					status: "ACTIVE",
+					renewedFromTermId: currentTerm.id,
+				},
+			});
+
+			await tx.committeeMember.update({
+				where: { id: memberId },
+				data: {
+					currentTermId: newTerm.id,
+					endDate: newEndDate,
+				},
+			});
+
+			return tx.committeeMember.findUnique({
+				where: { id: memberId },
+				include: {
+					employee: {
+						select: {
+							id: true,
+							employeeId: true,
+							fullName: true,
+							fullNameAm: true,
+						},
+					},
+					terms: {
+						orderBy: { termNumber: "desc" },
+					},
+				},
+			});
+		});
+
+		await this.addHistoryEntry(
+			tenantId,
+			committeeId,
+			"MEMBER_TERM_RENEWED",
+			{ termNumber: currentTerm.termNumber, endDate: currentTerm.endDate },
+			{ newTermNumber: currentTerm.termNumber + 1, newEndDate: newEndDate.toISOString(), termLimitMonths },
+			userId,
+			dto.notes,
+		);
+
+		return result;
+	}
+
+	async terminateMemberTerm(
+		tenantId: string,
+		committeeId: string,
+		memberId: string,
+		dto: TerminateMemberTermDto,
+		userId: string,
+	) {
+		const member = await this.prisma.committeeMember.findFirst({
+			where: { id: memberId, committeeId, tenantId, isActive: true },
+			include: {
+				terms: {
+					where: { status: "ACTIVE" },
+					orderBy: { termNumber: "desc" },
+					take: 1,
+				},
+			},
+		});
+
+		if (!member) {
+			throw new NotFoundException(`Committee member not found`);
+		}
+
+		const currentTerm = member.terms[0];
+		if (!currentTerm) {
+			throw new BadRequestException(`No active term found for this member`);
+		}
+
+		const terminatedDate = new Date(dto.terminatedDate);
+
+		const result = await this.prisma.$transaction(async (tx) => {
+			await tx.committeeMemberTerm.update({
+				where: { id: currentTerm.id },
+				data: {
+					status: "TERMINATED",
+					terminatedDate,
+					terminatedReason: dto.terminatedReason,
+					terminatedBy: userId,
+				},
+			});
+
+			await tx.committeeMember.update({
+				where: { id: memberId },
+				data: {
+					isActive: false,
+					endDate: terminatedDate,
+					removedBy: userId,
+					removalReason: dto.terminatedReason,
+				},
+			});
+
+			return tx.committeeMember.findUnique({
+				where: { id: memberId },
+				include: {
+					employee: {
+						select: {
+							id: true,
+							employeeId: true,
+							fullName: true,
+							fullNameAm: true,
+						},
+					},
+					terms: {
+						orderBy: { termNumber: "desc" },
+					},
+				},
+			});
+		});
+
+		await this.addHistoryEntry(
+			tenantId,
+			committeeId,
+			"MEMBER_TERM_TERMINATED",
+			{ termNumber: currentTerm.termNumber, originalEndDate: currentTerm.endDate },
+			{ terminatedDate: dto.terminatedDate, terminatedReason: dto.terminatedReason },
+			userId,
+		);
+
+		return result;
+	}
+
+	async getExpiringTerms(tenantId: string, daysUntilExpiry = 30, centerId?: string) {
+		const expiryDate = new Date();
+		expiryDate.setDate(expiryDate.getDate() + daysUntilExpiry);
+
+		const where: Prisma.CommitteeMemberTermWhereInput = {
+			tenantId,
+			status: "ACTIVE",
+			endDate: { lte: expiryDate },
+		};
+
+		if (centerId) {
+			where.centerId = centerId;
+		}
+
+		return this.prisma.committeeMemberTerm.findMany({
+			where,
+			include: {
+				member: {
+					include: {
+						employee: {
+							select: {
+								id: true,
+								employeeId: true,
+								fullName: true,
+								fullNameAm: true,
+							},
+						},
+					},
+				},
+				committee: {
+					select: {
+						id: true,
+						code: true,
+						name: true,
+						nameAm: true,
+						committeeType: {
+							select: { id: true, code: true, name: true, nameAm: true },
+						},
+					},
+				},
+				center: {
+					select: { id: true, code: true, name: true, nameAm: true },
+				},
+			},
+			orderBy: { endDate: "asc" },
+		});
+	}
+
+	async getMemberTermHistory(tenantId: string, memberId: string) {
+		return this.prisma.committeeMemberTerm.findMany({
+			where: { tenantId, memberId },
+			include: {
+				committee: {
+					select: {
+						id: true,
+						code: true,
+						name: true,
+						nameAm: true,
+					},
+				},
+				center: {
+					select: { id: true, code: true, name: true, nameAm: true },
+				},
+				renewedFromTerm: {
+					select: { id: true, termNumber: true, startDate: true, endDate: true },
+				},
+			},
+			orderBy: { termNumber: "desc" },
+		});
+	}
+
+	async getEmployeeTermHistory(tenantId: string, employeeId: string) {
+		return this.prisma.committeeMemberTerm.findMany({
+			where: { tenantId, employeeId },
+			include: {
+				committee: {
+					select: {
+						id: true,
+						code: true,
+						name: true,
+						nameAm: true,
+						committeeType: {
+							select: { id: true, code: true, name: true, nameAm: true },
+						},
+					},
+				},
+				center: {
+					select: { id: true, code: true, name: true, nameAm: true },
+				},
+			},
+			orderBy: [{ startDate: "desc" }, { termNumber: "desc" }],
 		});
 	}
 

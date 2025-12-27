@@ -173,6 +173,13 @@ enum CommitteeStatus {
   DISSOLVED
 }
 
+enum TermStatus {
+  ACTIVE
+  COMPLETED
+  RENEWED
+  TERMINATED
+}
+
 // Complaint Module Enums
 enum ComplaintArticle {
   ARTICLE_30
@@ -260,8 +267,9 @@ model Tenant {
   holidays         Holiday[]
   committeeTypes   CommitteeType[]
   committees       Committee[]
-  committeeMembers CommitteeMember[]
-  committeeHistory CommitteeHistory[]
+  committeeMembers     CommitteeMember[]
+  committeeMemberTerms CommitteeMemberTerm[]
+  committeeHistory     CommitteeHistory[]
 
   @@index([code])
   @@map("tenants")
@@ -295,10 +303,11 @@ model Center {
   parentCenter        Center?                   @relation("CenterHierarchy", fields: [parentCenterId], references: [id])
   childCenters        Center[]                  @relation("CenterHierarchy")
   users               User[]
-  employees           Employee[]
-  transfersFrom       EmployeeTransferRequest[] @relation("TransferFromCenter")
-  transfersTo         EmployeeTransferRequest[] @relation("TransferToCenter")
-  committees          Committee[]
+  employees            Employee[]
+  transfersFrom        EmployeeTransferRequest[] @relation("TransferFromCenter")
+  transfersTo          EmployeeTransferRequest[] @relation("TransferToCenter")
+  committees           Committee[]
+  committeeMemberTerms CommitteeMemberTerm[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -701,12 +710,13 @@ model Employee {
   disciplinaryRecords  DisciplinaryRecord[]
   investigations       Investigation[]
   serviceRewards       ServiceReward[]
-  attendanceRecords    AttendanceRecord[]
-  shiftAssignments     ShiftAssignment[]
-  inventoryAssignments InventoryAssignment[]
-  committeeMemberships CommitteeMember[]
-  complaintsAgainst    Complaint[]        @relation("AccusedComplaints")
-  appealReviewsGiven   ComplaintAppeal[]  @relation("AppealReviewer")
+  attendanceRecords        AttendanceRecord[]
+  shiftAssignments         ShiftAssignment[]
+  inventoryAssignments     InventoryAssignment[]
+  committeeMemberships     CommitteeMember[]
+  committeeMembershipTerms CommitteeMemberTerm[]
+  complaintsAgainst        Complaint[]        @relation("AccusedComplaints")
+  appealReviewsGiven       ComplaintAppeal[]  @relation("AppealReviewer")
 
   @@index([tenantId])
   @@index([tenantId, centerId])
@@ -1828,10 +1838,11 @@ model Committee {
   createdAt        DateTime        @default(now()) @map("created_at")
   updatedAt        DateTime        @updatedAt @map("updated_at")
 
-  tenant        Tenant             @relation(fields: [tenantId], references: [id])
-  committeeType CommitteeType      @relation(fields: [committeeTypeId], references: [id])
-  center        Center?            @relation(fields: [centerId], references: [id])
+  tenant        Tenant                @relation(fields: [tenantId], references: [id])
+  committeeType CommitteeType         @relation(fields: [committeeTypeId], references: [id])
+  center        Center?               @relation(fields: [centerId], references: [id])
   members       CommitteeMember[]
+  memberTerms   CommitteeMemberTerm[]
   history       CommitteeHistory[]
 
   @@unique([tenantId, code])
@@ -1850,6 +1861,7 @@ model CommitteeMember {
   role          CommitteeMemberRole
   appointedDate DateTime            @map("appointed_date") @db.Date
   endDate       DateTime?           @map("end_date") @db.Date
+  currentTermId String?             @map("current_term_id")
   appointedBy   String              @map("appointed_by")
   removedBy     String?             @map("removed_by")
   removalReason String?             @map("removal_reason")
@@ -1857,9 +1869,10 @@ model CommitteeMember {
   createdAt     DateTime            @default(now()) @map("created_at")
   updatedAt     DateTime            @updatedAt @map("updated_at")
 
-  tenant    Tenant    @relation(fields: [tenantId], references: [id])
-  committee Committee @relation(fields: [committeeId], references: [id])
-  employee  Employee  @relation(fields: [employeeId], references: [id])
+  tenant    Tenant                 @relation(fields: [tenantId], references: [id])
+  committee Committee              @relation(fields: [committeeId], references: [id])
+  employee  Employee               @relation(fields: [employeeId], references: [id])
+  terms     CommitteeMemberTerm[]
 
   @@unique([committeeId, employeeId, isActive])
   @@index([tenantId])
@@ -1867,6 +1880,49 @@ model CommitteeMember {
   @@index([employeeId])
   @@index([committeeId, isActive])
   @@map("committee_members")
+}
+
+model CommitteeMemberTerm {
+  id                String     @id @default(cuid())
+  tenantId          String     @map("tenant_id")
+  centerId          String?    @map("center_id")
+  committeeId       String     @map("committee_id")
+  memberId          String     @map("member_id")
+  employeeId        String     @map("employee_id")
+  termNumber        Int        @map("term_number")
+  termLimitMonths   Int        @default(24) @map("term_limit_months")
+  startDate         DateTime   @map("start_date") @db.Date
+  endDate           DateTime   @map("end_date") @db.Date
+  status            TermStatus @default(ACTIVE)
+  renewedFromTermId String?    @unique @map("renewed_from_term_id")
+  terminatedDate    DateTime?  @map("terminated_date") @db.Date
+  terminatedReason  String?    @map("terminated_reason")
+  terminatedBy      String?    @map("terminated_by")
+  renewedBy         String?    @map("renewed_by")
+  renewedDate       DateTime?  @map("renewed_date") @db.Date
+  notes             String?
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  tenant          Tenant               @relation(fields: [tenantId], references: [id])
+  center          Center?              @relation(fields: [centerId], references: [id])
+  committee       Committee            @relation(fields: [committeeId], references: [id])
+  member          CommitteeMember      @relation(fields: [memberId], references: [id])
+  employee        Employee             @relation(fields: [employeeId], references: [id])
+  renewedFromTerm CommitteeMemberTerm? @relation("TermRenewal", fields: [renewedFromTermId], references: [id])
+  renewedToTerm   CommitteeMemberTerm? @relation("TermRenewal")
+
+  @@unique([memberId, termNumber])
+  @@index([tenantId])
+  @@index([centerId])
+  @@index([committeeId])
+  @@index([memberId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([endDate])
+  @@index([centerId, status])
+  @@index([employeeId, status])
+  @@map("committee_member_terms")
 }
 
 model CommitteeHistory {

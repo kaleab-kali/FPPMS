@@ -19,6 +19,8 @@ import {
 	AddCommitteeMemberDto,
 	BulkAddMembersDto,
 	RemoveCommitteeMemberDto,
+	RenewMemberTermDto,
+	TerminateMemberTermDto,
 	UpdateCommitteeMemberDto,
 } from "./dto/committee-member.dto";
 import { CommitteeTypeResponseDto, CreateCommitteeTypeDto, UpdateCommitteeTypeDto } from "./dto/committee-type.dto";
@@ -267,6 +269,64 @@ export class CommitteesController {
 		return this.committeesService.removeMember(tenantId, id, memberId, dto, userId);
 	}
 
+	// ==================== TERM MANAGEMENT ENDPOINTS ====================
+
+	@Post(":id/members/:memberId/renew-term")
+	@Permissions("committees.manage.member")
+	@ApiOperation({ summary: "Renew member term", description: "Renew a member's term for another period" })
+	@ApiResponse({ status: 200, description: "Term renewed successfully", type: CommitteeMemberResponseDto })
+	@ApiResponse({ status: 404, description: "Committee or member not found" })
+	@ApiResponse({ status: 400, description: "No active term to renew" })
+	renewMemberTerm(
+		@CurrentTenant() tenantId: string,
+		@CurrentUser("id") userId: string,
+		@Param("id") id: string,
+		@Param("memberId") memberId: string,
+		@Body() dto: RenewMemberTermDto,
+	) {
+		return this.committeesService.renewMemberTerm(tenantId, id, memberId, dto, userId);
+	}
+
+	@Post(":id/members/:memberId/terminate-term")
+	@Permissions("committees.manage.member")
+	@ApiOperation({ summary: "Terminate member term", description: "Terminate a member's term early" })
+	@ApiResponse({ status: 200, description: "Term terminated", type: CommitteeMemberResponseDto })
+	@ApiResponse({ status: 404, description: "Committee or member not found" })
+	@ApiResponse({ status: 400, description: "No active term to terminate" })
+	terminateMemberTerm(
+		@CurrentTenant() tenantId: string,
+		@CurrentUser("id") userId: string,
+		@Param("id") id: string,
+		@Param("memberId") memberId: string,
+		@Body() dto: TerminateMemberTermDto,
+	) {
+		return this.committeesService.terminateMemberTerm(tenantId, id, memberId, dto, userId);
+	}
+
+	@Get(":id/members/:memberId/terms")
+	@Permissions("committees.read.member")
+	@ApiOperation({ summary: "Get member term history", description: "Get all terms a member has served" })
+	@ApiResponse({ status: 200, description: "List of terms" })
+	@ApiResponse({ status: 404, description: "Committee or member not found" })
+	getMemberTermHistory(@CurrentTenant() tenantId: string, @Param("memberId") memberId: string) {
+		return this.committeesService.getMemberTermHistory(tenantId, memberId);
+	}
+
+	@Get("terms/expiring")
+	@Permissions("committees.read.member")
+	@ApiOperation({ summary: "Get expiring terms", description: "Get members with terms expiring soon" })
+	@ApiQuery({ name: "days", required: false, description: "Days until expiry (default: 30)" })
+	@ApiQuery({ name: "centerId", required: false, description: "Filter by center ID" })
+	@ApiResponse({ status: 200, description: "List of expiring terms" })
+	getExpiringTerms(
+		@CurrentTenant() tenantId: string,
+		@Query("days") days?: string,
+		@Query("centerId") centerId?: string,
+	) {
+		const daysUntilExpiry = days ? Number.parseInt(days, 10) : 30;
+		return this.committeesService.getExpiringTerms(tenantId, daysUntilExpiry, centerId);
+	}
+
 	// ==================== EMPLOYEE COMMITTEE LOOKUP ====================
 
 	@Get("my-committees")
@@ -299,5 +359,13 @@ export class CommitteesController {
 		@Query("includeInactive") includeInactive?: string,
 	) {
 		return this.committeesService.getEmployeeCommittees(tenantId, employeeId, includeInactive === "true");
+	}
+
+	@Get("employee/:employeeId/terms")
+	@Permissions("committees.read.member")
+	@ApiOperation({ summary: "Get employee term history", description: "Get all committee terms an employee has served" })
+	@ApiResponse({ status: 200, description: "List of all terms served by employee" })
+	getEmployeeTermHistory(@CurrentTenant() tenantId: string, @Param("employeeId") employeeId: string) {
+		return this.committeesService.getEmployeeTermHistory(tenantId, employeeId);
 	}
 }
