@@ -167,7 +167,19 @@
 	"committees": {
 		"noMemberships": "Not a member of any committee",
 		"active": "Active",
-		"inactive": "Inactive"
+		"inactive": "Inactive",
+		"currentMemberships": "Current Memberships",
+		"showTermHistory": "Show Term History",
+		"hideTermHistory": "Hide Term History",
+		"noActiveMemberships": "No active committee memberships",
+		"termHistory": "Term History",
+		"term": "Term",
+		"termStart": "Start",
+		"termEnd": "End",
+		"termLimit": "Limit",
+		"months": "months",
+		"terminatedReason": "Terminated",
+		"noTermHistory": "No term history available"
 	},
 	"complaints": {
 		"noComplaints": "No complaints on record",

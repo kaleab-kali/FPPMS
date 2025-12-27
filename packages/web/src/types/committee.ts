@@ -2,6 +2,8 @@ export type CommitteeMemberRole = "CHAIRMAN" | "VICE_CHAIRMAN" | "SECRETARY" | "
 
 export type CommitteeStatus = "ACTIVE" | "SUSPENDED" | "DISSOLVED";
 
+export type TermStatus = "ACTIVE" | "COMPLETED" | "RENEWED" | "TERMINATED";
+
 export interface CommitteeType {
 	id: string;
 	tenantId: string;
@@ -163,6 +165,7 @@ export interface AddCommitteeMemberRequest {
 	employeeId: string;
 	role: CommitteeMemberRole;
 	appointedDate: string;
+	termLimitMonths?: number;
 }
 
 export interface UpdateCommitteeMemberRequest {
@@ -178,6 +181,23 @@ export interface BulkAddMembersRequest {
 	employeeIds: string[];
 	role: CommitteeMemberRole;
 	appointedDate: string;
+	termLimitMonths?: number;
+}
+
+export interface RenewMemberTermRequest {
+	newTermStartDate: string;
+	termLimitMonths?: number;
+	notes?: string;
+}
+
+export interface TerminateMemberTermRequest {
+	terminatedDate: string;
+	terminatedReason: string;
+}
+
+export interface ExpiringTermsParams {
+	days?: number;
+	centerId?: string;
 }
 
 export interface CommitteeHistory {
@@ -256,3 +276,58 @@ export interface EmployeeCommitteeMembership {
 	updatedAt: string;
 	committee?: CommitteeMinimalForEmployee;
 }
+
+export interface CommitteeMemberTerm {
+	id: string;
+	tenantId: string;
+	centerId?: string;
+	committeeId: string;
+	memberId: string;
+	employeeId: string;
+	termNumber: number;
+	termLimitMonths: number;
+	startDate: string;
+	endDate: string;
+	status: TermStatus;
+	renewedFromTermId?: string;
+	terminatedDate?: string;
+	terminatedReason?: string;
+	terminatedBy?: string;
+	renewedBy?: string;
+	renewedDate?: string;
+	notes?: string;
+	createdAt: string;
+	updatedAt: string;
+	committee?: {
+		id: string;
+		code: string;
+		name: string;
+		nameAm?: string;
+		committeeType?: {
+			id: string;
+			code: string;
+			name: string;
+			nameAm?: string;
+		};
+	};
+	center?: {
+		id: string;
+		code: string;
+		name: string;
+		nameAm?: string;
+	};
+}
+
+export const TERM_STATUS_LABELS: Record<TermStatus, string> = {
+	ACTIVE: "Active",
+	COMPLETED: "Completed",
+	RENEWED: "Renewed",
+	TERMINATED: "Terminated",
+} as const;
+
+export const TERM_STATUS_COLORS: Record<TermStatus, string> = {
+	ACTIVE: "bg-green-100 text-green-800",
+	COMPLETED: "bg-gray-100 text-gray-800",
+	RENEWED: "bg-blue-100 text-blue-800",
+	TERMINATED: "bg-red-100 text-red-800",
+} as const;

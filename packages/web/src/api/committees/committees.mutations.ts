@@ -9,7 +9,9 @@ import type {
 	DissolveCommitteeRequest,
 	ReactivateCommitteeRequest,
 	RemoveCommitteeMemberRequest,
+	RenewMemberTermRequest,
 	SuspendCommitteeRequest,
+	TerminateMemberTermRequest,
 	UpdateCommitteeMemberRequest,
 	UpdateCommitteeRequest,
 	UpdateCommitteeTypeRequest,
@@ -156,6 +158,51 @@ export const useRemoveCommitteeMember = () => {
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({ queryKey: [...committeeKeys.all, "members", variables.committeeId] });
 			queryClient.invalidateQueries({ queryKey: committeeKeys.details() });
+		},
+	});
+};
+
+// Term Management Mutations
+export const useRenewMemberTerm = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			committeeId,
+			memberId,
+			data,
+		}: {
+			committeeId: string;
+			memberId: string;
+			data: RenewMemberTermRequest;
+		}) => committeesApi.renewMemberTerm(committeeId, memberId, data),
+		onSuccess: (_data, variables) => {
+			queryClient.invalidateQueries({ queryKey: [...committeeKeys.all, "members", variables.committeeId] });
+			queryClient.invalidateQueries({
+				queryKey: committeeKeys.memberTerms(variables.committeeId, variables.memberId),
+			});
+			queryClient.invalidateQueries({ queryKey: committeeKeys.expiringTerms() });
+		},
+	});
+};
+
+export const useTerminateMemberTerm = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: ({
+			committeeId,
+			memberId,
+			data,
+		}: {
+			committeeId: string;
+			memberId: string;
+			data: TerminateMemberTermRequest;
+		}) => committeesApi.terminateMemberTerm(committeeId, memberId, data),
+		onSuccess: (_data, variables) => {
+			queryClient.invalidateQueries({ queryKey: [...committeeKeys.all, "members", variables.committeeId] });
+			queryClient.invalidateQueries({
+				queryKey: committeeKeys.memberTerms(variables.committeeId, variables.memberId),
+			});
+			queryClient.invalidateQueries({ queryKey: committeeKeys.expiringTerms() });
 		},
 	});
 };

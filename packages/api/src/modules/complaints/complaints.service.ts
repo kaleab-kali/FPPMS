@@ -278,15 +278,7 @@ export class ComplaintsService {
 			},
 		});
 
-		await this.addTimelineEntry(
-			tenantId,
-			complaintId,
-			"NOTIFICATION_SENT",
-			validStatus,
-			newStatus,
-			userId,
-			dto.notes,
-		);
+		await this.addTimelineEntry(tenantId, complaintId, "NOTIFICATION_SENT", validStatus, newStatus, userId, dto.notes);
 
 		return this.findOne(tenantId, complaintId);
 	}
@@ -319,15 +311,7 @@ export class ComplaintsService {
 			},
 		});
 
-		await this.addTimelineEntry(
-			tenantId,
-			complaintId,
-			"REBUTTAL_RECEIVED",
-			validStatus,
-			newStatus,
-			userId,
-			dto.notes,
-		);
+		await this.addTimelineEntry(tenantId, complaintId, "REBUTTAL_RECEIVED", validStatus, newStatus, userId, dto.notes);
 
 		return this.findOne(tenantId, complaintId);
 	}
@@ -375,10 +359,7 @@ export class ComplaintsService {
 	async recordFinding(tenantId: string, complaintId: string, userId: string, dto: RecordFindingDto) {
 		const complaint = await this.findOne(tenantId, complaintId);
 
-		const validStatuses: ComplaintStatus[] = [
-			ComplaintStatus.UNDER_HR_ANALYSIS,
-			ComplaintStatus.COMMITTEE_ANALYSIS,
-		];
+		const validStatuses: ComplaintStatus[] = [ComplaintStatus.UNDER_HR_ANALYSIS, ComplaintStatus.COMMITTEE_ANALYSIS];
 		if (!validStatuses.includes(complaint.status)) {
 			throw new BadRequestException("Invalid status for recording finding. Complaint must be under analysis.");
 		}

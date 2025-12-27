@@ -6,6 +6,7 @@ import type {
 	CommitteeFilterParams,
 	CommitteeHistory,
 	CommitteeMember,
+	CommitteeMemberTerm,
 	CommitteeType,
 	CreateCommitteeRequest,
 	CreateCommitteeTypeRequest,
@@ -13,7 +14,9 @@ import type {
 	EmployeeCommitteeMembership,
 	ReactivateCommitteeRequest,
 	RemoveCommitteeMemberRequest,
+	RenewMemberTermRequest,
 	SuspendCommitteeRequest,
+	TerminateMemberTermRequest,
 	UpdateCommitteeMemberRequest,
 	UpdateCommitteeRequest,
 	UpdateCommitteeTypeRequest,
@@ -63,11 +66,27 @@ export const committeesApi = {
 	removeMember: (committeeId: string, memberId: string, data: RemoveCommitteeMemberRequest) =>
 		api.delete<CommitteeMember>(`${BASE_URL}/${committeeId}/members/${memberId}`, { data }),
 
+	// Term management
+	renewMemberTerm: (committeeId: string, memberId: string, data: RenewMemberTermRequest) =>
+		api.post<CommitteeMember>(`${BASE_URL}/${committeeId}/members/${memberId}/renew-term`, data),
+	terminateMemberTerm: (committeeId: string, memberId: string, data: TerminateMemberTermRequest) =>
+		api.post<CommitteeMember>(`${BASE_URL}/${committeeId}/members/${memberId}/terminate-term`, data),
+	getMemberTermHistory: (committeeId: string, memberId: string) =>
+		api.get<CommitteeMemberTerm[]>(`${BASE_URL}/${committeeId}/members/${memberId}/terms`),
+	getExpiringTerms: (days = 30, centerId?: string) => {
+		const params = new URLSearchParams();
+		params.append("days", days.toString());
+		if (centerId) params.append("centerId", centerId);
+		return api.get<CommitteeMemberTerm[]>(`${BASE_URL}/terms/expiring?${params.toString()}`);
+	},
+
 	// Employee lookup
 	getEmployeeCommittees: (employeeId: string, includeInactive = false) =>
 		api.get<EmployeeCommitteeMembership[]>(
 			`${BASE_URL}/employee/${employeeId}${includeInactive ? "?includeInactive=true" : ""}`,
 		),
+	getEmployeeTermHistory: (employeeId: string) =>
+		api.get<CommitteeMemberTerm[]>(`${BASE_URL}/employee/${employeeId}/terms`),
 
 	// Current user's committees
 	getMyCommittees: (includeInactive = false) =>

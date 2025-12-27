@@ -478,7 +478,13 @@ export class CommitteesService {
 			committeeId,
 			"MEMBER_ADDED",
 			null,
-			{ employeeId: dto.employeeId, role: dto.role, appointedDate: dto.appointedDate, termLimitMonths, termEndDate: endDate.toISOString() },
+			{
+				employeeId: dto.employeeId,
+				role: dto.role,
+				appointedDate: dto.appointedDate,
+				termLimitMonths,
+				termEndDate: endDate.toISOString(),
+			},
 			userId,
 		);
 

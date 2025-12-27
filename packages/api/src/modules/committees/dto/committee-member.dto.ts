@@ -89,7 +89,10 @@ export class RenewMemberTermDto {
 	@IsNotEmpty()
 	newTermStartDate: string;
 
-	@ApiPropertyOptional({ description: "Term limit in months for the new term (default: same as previous)", example: 24 })
+	@ApiPropertyOptional({
+		description: "Term limit in months for the new term (default: same as previous)",
+		example: 24,
+	})
 	@IsInt()
 	@Min(1)
 	@Max(120)

@@ -176,7 +176,19 @@
 	"committees": {
 		"noMemberships": "የማንኛውም ኮሚቴ አባል አይደለም",
 		"active": "ንቁ",
-		"inactive": "ንቁ ያልሆነ"
+		"inactive": "ንቁ ያልሆነ",
+		"currentMemberships": "አሁን ያሉ አባልነቶች",
+		"showTermHistory": "የጊዜ ገደብ ታሪክ አሳይ",
+		"hideTermHistory": "የጊዜ ገደብ ታሪክ ደብቅ",
+		"noActiveMemberships": "ንቁ የኮሚቴ አባልነት የለም",
+		"termHistory": "የጊዜ ገደብ ታሪክ",
+		"term": "ዙር",
+		"termStart": "መጀመሪያ",
+		"termEnd": "ማብቂያ",
+		"termLimit": "ገደብ",
+		"months": "ወራት",
+		"terminatedReason": "የቋረጠበት ምክንያት",
+		"noTermHistory": "የጊዜ ገደብ ታሪክ የለም"
 	},
 	"complaints": {
 		"noComplaints": "ምንም ቅሬታ በመዝገብ የለም",

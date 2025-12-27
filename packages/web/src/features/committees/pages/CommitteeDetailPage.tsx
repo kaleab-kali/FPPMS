@@ -1,39 +1,24 @@
-import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowLeft, ExternalLink, FileText, MoreHorizontal, Pencil, Plus, Trash2, Users } from "lucide-react";
+import { ArrowLeft, FileText, Users } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
-import {
-	useAddCommitteeMember,
-	useRemoveCommitteeMember,
-	useUpdateCommitteeMember,
-} from "#web/api/committees/committees.mutations.ts";
+import { useParams } from "react-router-dom";
 import { useCommittee, useCommitteeHistory, useCommitteeMembers } from "#web/api/committees/committees.queries.ts";
 import { useCommitteeComplaints } from "#web/api/complaints/complaints.queries.ts";
 import { ConfirmDialog } from "#web/components/common/ConfirmDialog.tsx";
-import { DataTable } from "#web/components/common/DataTable.tsx";
 import { Badge } from "#web/components/ui/badge.tsx";
 import { Button } from "#web/components/ui/button.tsx";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#web/components/ui/card.tsx";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "#web/components/ui/dropdown-menu.tsx";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "#web/components/ui/tabs.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "#web/components/ui/card.tsx";
+import { Tabs, TabsList, TabsTrigger } from "#web/components/ui/tabs.tsx";
 import { AddMemberDialog } from "#web/features/committees/components/AddMemberDialog.tsx";
-import type {
-	AddCommitteeMemberRequest,
-	CommitteeHistory,
-	CommitteeMember,
-	CommitteeMemberRole,
-	CommitteeStatus,
-	UpdateCommitteeMemberRequest,
-} from "#web/types/committee.ts";
-import type { ComplaintListItem, ComplaintStatus as ComplaintStatusType } from "#web/types/complaint.ts";
-import { COMPLAINT_STATUS_COLORS, COMPLAINT_STATUS_LABELS } from "#web/types/complaint.ts";
+import { ComplaintsTab, HistoryTab, MembersTab } from "#web/features/committees/components/CommitteeTabs.tsx";
+import {
+	useComplaintColumns,
+	useHistoryColumns,
+	useMemberColumns,
+} from "#web/features/committees/hooks/useCommitteeColumns.tsx";
+import { useCommitteeDisplayNames } from "#web/features/committees/hooks/useCommitteeDisplayNames.ts";
+import { useCommitteePageHandlers } from "#web/features/committees/hooks/useCommitteePageHandlers.ts";
+import type { CommitteeStatus } from "#web/types/committee.ts";
 
 const STATUS_COLORS: Record<CommitteeStatus, "default" | "secondary" | "destructive"> = {
 	ACTIVE: "default",
@@ -41,24 +26,13 @@ const STATUS_COLORS: Record<CommitteeStatus, "default" | "secondary" | "destruct
 	DISSOLVED: "destructive",
 } as const;
 
-const ROLE_COLORS: Record<CommitteeMemberRole, "default" | "secondary" | "outline"> = {
-	CHAIRMAN: "default",
-	VICE_CHAIRMAN: "default",
-	SECRETARY: "secondary",
-	MEMBER: "outline",
-	ADVISOR: "outline",
-} as const;
-
 export const CommitteeDetailPage = React.memo(
 	() => {
 		const { id } = useParams<{ id: string }>();
 		const { t } = useTranslation("committees");
 		const { t: tCommon } = useTranslation("common");
-		const navigate = useNavigate();
-
-		const [addMemberOpen, setAddMemberOpen] = React.useState(false);
-		const [removeOpen, setRemoveOpen] = React.useState(false);
-		const [selectedMember, setSelectedMember] = React.useState<CommitteeMember | undefined>();
+		const { i18n } = useTranslation();
+		const isAmharic = i18n.language === "am";
 
 		const { data: committee, isLoading: committeeLoading } = useCommittee(id ?? "", false);
 		const { data: members, isLoading: membersLoading } = useCommitteeMembers(id ?? "", false);
@@ -69,282 +43,34 @@ export const CommitteeDetailPage = React.memo(
 		);
 		const { data: hqComplaints, isLoading: hqComplaintsLoading } = useCommitteeComplaints(id ?? "", "hq");
 
-		const addMemberMutation = useAddCommitteeMember();
-		const updateMemberMutation = useUpdateCommitteeMember();
-		const removeMemberMutation = useRemoveCommitteeMember();
+		const {
+			addMemberMutation,
+			removeMemberMutation,
+			addMemberOpen,
+			removeOpen,
+			setAddMemberOpen,
+			setRemoveOpen,
+			handleBack,
+			handleAddMember,
+			handleRemoveClick,
+			handleAddMemberSubmit,
+			handleRoleChange,
+			handleRemoveConfirm,
+			handleViewComplaint,
+		} = useCommitteePageHandlers({ committeeId: id, tCommon });
 
-		const handleBack = React.useCallback(() => {
-			navigate("/committees");
-		}, [navigate]);
+		const memberColumns = useMemberColumns({
+			t,
+			tCommon,
+			isAmharic,
+			committeeStatus: committee?.status,
+			onRoleChange: handleRoleChange,
+			onRemoveClick: handleRemoveClick,
+		});
+		const historyColumns = useHistoryColumns({ t });
+		const complaintColumns = useComplaintColumns({ t, isAmharic, onViewComplaint: handleViewComplaint });
 
-		const handleAddMember = React.useCallback(() => {
-			setSelectedMember(undefined);
-			setAddMemberOpen(true);
-		}, []);
-
-		const handleRemoveClick = React.useCallback((member: CommitteeMember) => {
-			setSelectedMember(member);
-			setRemoveOpen(true);
-		}, []);
-
-		const handleAddMemberSubmit = React.useCallback(
-			(data: AddCommitteeMemberRequest) => {
-				if (!id) return;
-				addMemberMutation.mutate(
-					{ committeeId: id, data },
-					{
-						onSuccess: () => {
-							toast.success(tCommon("success"));
-							setAddMemberOpen(false);
-						},
-						onError: () => {
-							toast.error(tCommon("error"));
-						},
-					},
-				);
-			},
-			[id, addMemberMutation, tCommon],
-		);
-
-		const handleRoleChange = React.useCallback(
-			(memberId: string, role: CommitteeMemberRole) => {
-				if (!id) return;
-				const data: UpdateCommitteeMemberRequest = { role };
-				updateMemberMutation.mutate(
-					{ committeeId: id, memberId, data },
-					{
-						onSuccess: () => {
-							toast.success(tCommon("success"));
-						},
-						onError: () => {
-							toast.error(tCommon("error"));
-						},
-					},
-				);
-			},
-			[id, updateMemberMutation, tCommon],
-		);
-
-		const handleRemoveConfirm = React.useCallback(() => {
-			if (!id || !selectedMember) return;
-			removeMemberMutation.mutate(
-				{
-					committeeId: id,
-					memberId: selectedMember.id,
-					data: {
-						endDate: new Date().toISOString().split("T")[0],
-						removalReason: "Removed by administrator",
-					},
-				},
-				{
-					onSuccess: () => {
-						toast.success(tCommon("success"));
-						setRemoveOpen(false);
-						setSelectedMember(undefined);
-					},
-					onError: () => {
-						toast.error(tCommon("error"));
-					},
-				},
-			);
-		}, [id, selectedMember, removeMemberMutation, tCommon]);
-
-		const handleViewComplaint = React.useCallback(
-			(complaintId: string) => {
-				navigate(`/complaints/${complaintId}`);
-			},
-			[navigate],
-		);
-
-		const { i18n } = useTranslation();
-		const isAmharic = i18n.language === "am";
-
-		const memberColumns = React.useMemo<ColumnDef<CommitteeMember>[]>(
-			() => [
-				{
-					accessorKey: "employee.employeeId",
-					header: t("member.employeeId"),
-					cell: ({ row }) => <span className="font-mono text-sm">{row.original.employee?.employeeId ?? "-"}</span>,
-				},
-				{
-					accessorKey: "employee.fullName",
-					header: t("member.name"),
-					cell: ({ row }) => {
-						const emp = row.original.employee;
-						if (!emp) return "-";
-						const displayName = isAmharic && emp.fullNameAm ? emp.fullNameAm : emp.fullName;
-						return <span className="font-medium">{displayName}</span>;
-					},
-				},
-				{
-					accessorKey: "employee.position",
-					header: t("member.position"),
-					cell: ({ row }) => {
-						const pos = row.original.employee?.position;
-						if (!pos) return "-";
-						const displayName = isAmharic && pos.nameAm ? pos.nameAm : pos.name;
-						return <span>{displayName}</span>;
-					},
-				},
-				{
-					accessorKey: "role",
-					header: t("member.role"),
-					cell: ({ row }) => {
-						const role = row.getValue("role") as CommitteeMemberRole;
-						return <Badge variant={ROLE_COLORS[role]}>{t(`role.${role.toLowerCase()}`)}</Badge>;
-					},
-				},
-				{
-					accessorKey: "appointedDate",
-					header: t("member.appointedDate"),
-					cell: ({ row }) => {
-						const date = row.getValue("appointedDate") as string;
-						return <span>{new Date(date).toLocaleDateString()}</span>;
-					},
-				},
-				{
-					id: "actions",
-					header: tCommon("actions"),
-					cell: ({ row }) => {
-						const member = row.original;
-						const isDisabled = committee?.status !== "ACTIVE";
-						return (
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon" className="h-8 w-8" disabled={isDisabled}>
-										<MoreHorizontal className="h-4 w-4" />
-										<span className="sr-only">{tCommon("actions")}</span>
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
-									<DropdownMenuItem
-										onClick={() => handleRoleChange(member.id, "CHAIRMAN")}
-										disabled={member.role === "CHAIRMAN"}
-									>
-										<Pencil className="mr-2 h-4 w-4" />
-										{t("action.makeChairman")}
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										onClick={() => handleRoleChange(member.id, "VICE_CHAIRMAN")}
-										disabled={member.role === "VICE_CHAIRMAN"}
-									>
-										<Pencil className="mr-2 h-4 w-4" />
-										{t("action.makeViceChairman")}
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										onClick={() => handleRoleChange(member.id, "SECRETARY")}
-										disabled={member.role === "SECRETARY"}
-									>
-										<Pencil className="mr-2 h-4 w-4" />
-										{t("action.makeSecretary")}
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										onClick={() => handleRoleChange(member.id, "MEMBER")}
-										disabled={member.role === "MEMBER"}
-									>
-										<Pencil className="mr-2 h-4 w-4" />
-										{t("action.makeMember")}
-									</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => handleRemoveClick(member)} className="text-destructive">
-										<Trash2 className="mr-2 h-4 w-4" />
-										{t("action.removeMember")}
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						);
-					},
-				},
-			],
-			[t, tCommon, committee?.status, handleRoleChange, handleRemoveClick, isAmharic],
-		);
-
-		const historyColumns = React.useMemo<ColumnDef<CommitteeHistory>[]>(
-			() => [
-				{
-					accessorKey: "performedAt",
-					header: t("history.date"),
-					cell: ({ row }) => {
-						const date = row.getValue("performedAt") as string;
-						return <span>{new Date(date).toLocaleString()}</span>;
-					},
-				},
-				{
-					accessorKey: "action",
-					header: t("history.action"),
-					cell: ({ row }) => <Badge variant="outline">{row.getValue("action")}</Badge>,
-				},
-				{
-					accessorKey: "notes",
-					header: t("history.notes"),
-					cell: ({ row }) => <span className="text-sm">{row.getValue("notes") ?? "-"}</span>,
-				},
-			],
-			[t],
-		);
-
-		const complaintColumns = React.useMemo<ColumnDef<ComplaintListItem>[]>(
-			() => [
-				{
-					accessorKey: "complaintNumber",
-					header: t("complaints.complaintNumber"),
-					cell: ({ row }) => <span className="font-mono text-sm font-medium">{row.getValue("complaintNumber")}</span>,
-				},
-				{
-					accessorKey: "article",
-					header: t("complaints.article"),
-					cell: ({ row }) => {
-						const article = row.getValue("article") as string;
-						return (
-							<Badge variant={article === "ARTICLE_30" ? "secondary" : "default"}>
-								{article === "ARTICLE_30" ? "Art. 30" : "Art. 31"}
-							</Badge>
-						);
-					},
-				},
-				{
-					accessorKey: "accusedEmployee",
-					header: t("complaints.accused"),
-					cell: ({ row }) => {
-						const emp = row.original.accusedEmployee;
-						if (!emp) return "-";
-						const displayName = isAmharic && emp.fullNameAm ? emp.fullNameAm : emp.fullName;
-						return (
-							<div>
-								<span className="font-medium">{displayName}</span>
-								<span className="block text-xs text-muted-foreground">{emp.employeeId}</span>
-							</div>
-						);
-					},
-				},
-				{
-					accessorKey: "status",
-					header: t("complaints.status"),
-					cell: ({ row }) => {
-						const status = row.getValue("status") as ComplaintStatusType;
-						return <Badge className={COMPLAINT_STATUS_COLORS[status]}>{COMPLAINT_STATUS_LABELS[status]}</Badge>;
-					},
-				},
-				{
-					accessorKey: "registeredDate",
-					header: t("complaints.registeredDate"),
-					cell: ({ row }) => {
-						const date = row.getValue("registeredDate") as string;
-						return <span>{new Date(date).toLocaleDateString()}</span>;
-					},
-				},
-				{
-					id: "actions",
-					header: "",
-					cell: ({ row }) => (
-						<Button variant="ghost" size="sm" onClick={() => handleViewComplaint(row.original.id)}>
-							<ExternalLink className="mr-1 h-3 w-3" />
-							{t("complaints.viewDetails")}
-						</Button>
-					),
-				},
-			],
-			[t, isAmharic, handleViewComplaint],
-		);
+		const { displayName, typeName, centerName } = useCommitteeDisplayNames({ committee, isAmharic, t });
 
 		if (committeeLoading) {
 			return <div className="flex items-center justify-center p-8">{tCommon("loading")}</div>;
@@ -353,15 +79,6 @@ export const CommitteeDetailPage = React.memo(
 		if (!committee) {
 			return <div className="flex items-center justify-center p-8">{t("committee.notFound")}</div>;
 		}
-
-		const displayName = isAmharic && committee.nameAm ? committee.nameAm : committee.name;
-		const typeName =
-			isAmharic && committee.committeeType?.nameAm ? committee.committeeType.nameAm : committee.committeeType?.name;
-		const centerName = committee.center
-			? isAmharic && committee.center.nameAm
-				? committee.center.nameAm
-				: committee.center.name
-			: t("committee.hqLevel");
 
 		return (
 			<div className="space-y-6">
@@ -432,75 +149,36 @@ export const CommitteeDetailPage = React.memo(
 						<TabsTrigger value="history">{t("history.title")}</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value="members" className="mt-4">
-						<Card>
-							<CardHeader>
-								<div className="flex items-center justify-between">
-									<div>
-										<CardTitle>{t("member.title")}</CardTitle>
-										<CardDescription>{t("member.description")}</CardDescription>
-									</div>
-									{committee.status === "ACTIVE" && (
-										<Button onClick={handleAddMember}>
-											<Plus className="mr-2 h-4 w-4" />
-											{t("member.add")}
-										</Button>
-									)}
-								</div>
-							</CardHeader>
-							<CardContent>
-								<DataTable columns={memberColumns} data={members ?? []} isLoading={membersLoading} />
-							</CardContent>
-						</Card>
-					</TabsContent>
+					<MembersTab
+						t={t}
+						members={members}
+						membersLoading={membersLoading}
+						memberColumns={memberColumns}
+						isActive={committee.status === "ACTIVE"}
+						onAddMember={handleAddMember}
+					/>
 
-					<TabsContent value="complaints" className="mt-4">
-						<Card>
-							<CardHeader>
-								<CardTitle>{t("complaints.title")}</CardTitle>
-								<CardDescription>{t("complaints.description")}</CardDescription>
-							</CardHeader>
-							<CardContent>
-								{(assignedComplaints?.length ?? 0) === 0 && !assignedComplaintsLoading ? (
-									<p className="text-center text-muted-foreground py-8">{t("complaints.noComplaints")}</p>
-								) : (
-									<DataTable
-										columns={complaintColumns}
-										data={assignedComplaints ?? []}
-										isLoading={assignedComplaintsLoading}
-									/>
-								)}
-							</CardContent>
-						</Card>
-					</TabsContent>
+					<ComplaintsTab
+						complaints={assignedComplaints}
+						complaintsLoading={assignedComplaintsLoading}
+						complaintColumns={complaintColumns}
+						tabValue="complaints"
+						title={t("complaints.title")}
+						description={t("complaints.description")}
+						noComplaintsMessage={t("complaints.noComplaints")}
+					/>
 
-					<TabsContent value="hqComplaints" className="mt-4">
-						<Card>
-							<CardHeader>
-								<CardTitle>{t("complaints.hqTitle")}</CardTitle>
-								<CardDescription>{t("complaints.hqDescription")}</CardDescription>
-							</CardHeader>
-							<CardContent>
-								{(hqComplaints?.length ?? 0) === 0 && !hqComplaintsLoading ? (
-									<p className="text-center text-muted-foreground py-8">{t("complaints.noHqComplaints")}</p>
-								) : (
-									<DataTable columns={complaintColumns} data={hqComplaints ?? []} isLoading={hqComplaintsLoading} />
-								)}
-							</CardContent>
-						</Card>
-					</TabsContent>
+					<ComplaintsTab
+						complaints={hqComplaints}
+						complaintsLoading={hqComplaintsLoading}
+						complaintColumns={complaintColumns}
+						tabValue="hqComplaints"
+						title={t("complaints.hqTitle")}
+						description={t("complaints.hqDescription")}
+						noComplaintsMessage={t("complaints.noHqComplaints")}
+					/>
 
-					<TabsContent value="history" className="mt-4">
-						<Card>
-							<CardHeader>
-								<CardTitle>{t("history.title")}</CardTitle>
-								<CardDescription>{t("history.description")}</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<DataTable columns={historyColumns} data={history ?? []} isLoading={false} />
-							</CardContent>
-						</Card>
-					</TabsContent>
+					<HistoryTab t={t} history={history} historyColumns={historyColumns} />
 				</Tabs>
 
 				<AddMemberDialog

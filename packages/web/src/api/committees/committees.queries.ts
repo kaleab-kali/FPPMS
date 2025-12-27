@@ -13,9 +13,14 @@ export const committeeKeys = {
 	detail: (id: string, includeMembers?: boolean) => [...committeeKeys.details(), id, { includeMembers }] as const,
 	members: (committeeId: string, includeInactive?: boolean) =>
 		[...committeeKeys.all, "members", committeeId, { includeInactive }] as const,
+	memberTerms: (committeeId: string, memberId: string) =>
+		[...committeeKeys.all, "members", committeeId, memberId, "terms"] as const,
 	history: (committeeId: string) => [...committeeKeys.all, "history", committeeId] as const,
+	expiringTerms: (days?: number, centerId?: string) =>
+		[...committeeKeys.all, "terms", "expiring", { days, centerId }] as const,
 	employeeCommittees: (employeeId: string, includeInactive?: boolean) =>
 		[...committeeKeys.all, "employee", employeeId, { includeInactive }] as const,
+	employeeTermHistory: (employeeId: string) => [...committeeKeys.all, "employee", employeeId, "terms"] as const,
 } as const;
 
 export const useCommitteeTypes = (includeInactive = false) =>
@@ -69,4 +74,24 @@ export const useMyCommittees = (includeInactive = false) =>
 	useQuery({
 		queryKey: [...committeeKeys.all, "my-committees", { includeInactive }] as const,
 		queryFn: () => committeesApi.getMyCommittees(includeInactive),
+	});
+
+export const useEmployeeTermHistory = (employeeId: string) =>
+	useQuery({
+		queryKey: committeeKeys.employeeTermHistory(employeeId),
+		queryFn: () => committeesApi.getEmployeeTermHistory(employeeId),
+		enabled: !!employeeId,
+	});
+
+export const useMemberTermHistory = (committeeId: string, memberId: string) =>
+	useQuery({
+		queryKey: committeeKeys.memberTerms(committeeId, memberId),
+		queryFn: () => committeesApi.getMemberTermHistory(committeeId, memberId),
+		enabled: !!committeeId && !!memberId,
+	});
+
+export const useExpiringTerms = (days = 30, centerId?: string) =>
+	useQuery({
+		queryKey: committeeKeys.expiringTerms(days, centerId),
+		queryFn: () => committeesApi.getExpiringTerms(days, centerId),
 	});
