@@ -59,15 +59,27 @@ export class ComplaintsService {
 			throw new NotFoundException("Accused employee not found");
 		}
 
-		const initialStatus =
-			dto.article === ComplaintArticle.ARTICLE_30
-				? ComplaintStatus.UNDER_HR_REVIEW
-				: ComplaintStatus.WITH_DISCIPLINE_COMMITTEE;
-
 		const offenseOccurrence = await this.countPreviousOffenses(tenantId, dto.accusedEmployeeId, dto.offenseCode);
-
 		const severityLevel = this.extractSeverityFromOffenseCode(dto.offenseCode);
 		const decisionAuthority = this.determineDecisionAuthority(severityLevel);
+
+		let initialStatus: ComplaintStatus;
+		let assignedCommitteeId: string | undefined;
+		let committeeAssignedDate: Date | undefined;
+
+		if (dto.article === ComplaintArticle.ARTICLE_31) {
+			const disciplineCommittee = await this.findDisciplineCommitteeForCenter(tenantId, centerId);
+			if (!disciplineCommittee) {
+				throw new BadRequestException(
+					"No active discipline committee exists for this center. Please create a discipline committee before registering Article 31 complaints.",
+				);
+			}
+			initialStatus = ComplaintStatus.WITH_DISCIPLINE_COMMITTEE;
+			assignedCommitteeId = disciplineCommittee.id;
+			committeeAssignedDate = new Date();
+		} else {
+			initialStatus = ComplaintStatus.UNDER_HR_REVIEW;
+		}
 
 		const complaint = await this.prisma.complaint.create({
 			data: {
@@ -94,6 +106,8 @@ export class ComplaintsService {
 					dto.article === ComplaintArticle.ARTICLE_30 && decisionAuthority === DecisionAuthority.DIRECT_SUPERIOR
 						? accusedEmployee.directSuperiorId
 						: undefined,
+				assignedCommitteeId,
+				committeeAssignedDate,
 			},
 			include: {
 				timeline: true,
@@ -107,7 +121,9 @@ export class ComplaintsService {
 			undefined,
 			initialStatus,
 			userId,
-			"Complaint registered",
+			dto.article === ComplaintArticle.ARTICLE_31
+				? "Complaint registered and auto-assigned to discipline committee"
+				: "Complaint registered",
 		);
 
 		return this.findOne(tenantId, complaint.id);
@@ -189,7 +205,17 @@ export class ComplaintsService {
 					orderBy: { uploadedAt: "desc" },
 				},
 				appeals: {
-					orderBy: { appealLevel: "asc" },
+					orderBy: { appealDate: "asc" },
+					include: {
+						reviewerEmployee: {
+							select: {
+								id: true,
+								employeeId: true,
+								fullName: true,
+								fullNameAm: true,
+							},
+						},
+					},
 				},
 			},
 		});
@@ -219,12 +245,23 @@ export class ComplaintsService {
 	async recordNotification(tenantId: string, complaintId: string, userId: string, dto: RecordNotificationDto) {
 		const complaint = await this.findOne(tenantId, complaintId);
 
-		if (complaint.article !== ComplaintArticle.ARTICLE_30) {
-			throw new BadRequestException("Notification is only applicable for Article 30 complaints");
+		let validStatus: ComplaintStatus;
+		let newStatus: ComplaintStatus;
+
+		if (complaint.article === ComplaintArticle.ARTICLE_30) {
+			validStatus = ComplaintStatus.UNDER_HR_REVIEW;
+			newStatus = ComplaintStatus.WAITING_FOR_REBUTTAL;
+		} else {
+			validStatus = ComplaintStatus.WITH_DISCIPLINE_COMMITTEE;
+			newStatus = ComplaintStatus.COMMITTEE_WAITING_REBUTTAL;
 		}
 
-		if (complaint.status !== ComplaintStatus.UNDER_HR_REVIEW) {
-			throw new BadRequestException("Complaint must be under HR review to record notification");
+		if (complaint.status !== validStatus) {
+			throw new BadRequestException(
+				complaint.article === ComplaintArticle.ARTICLE_30
+					? "Complaint must be under HR review to record notification"
+					: "Complaint must be with discipline committee to record notification",
+			);
 		}
 
 		const notificationDate = new Date(dto.notificationDate);
@@ -236,7 +273,7 @@ export class ComplaintsService {
 			data: {
 				notificationDate,
 				rebuttalDeadline,
-				status: ComplaintStatus.WAITING_FOR_REBUTTAL,
+				status: newStatus,
 			},
 		});
 
@@ -244,8 +281,8 @@ export class ComplaintsService {
 			tenantId,
 			complaintId,
 			"NOTIFICATION_SENT",
-			ComplaintStatus.UNDER_HR_REVIEW,
-			ComplaintStatus.WAITING_FOR_REBUTTAL,
+			validStatus,
+			newStatus,
 			userId,
 			dto.notes,
 		);
@@ -256,11 +293,18 @@ export class ComplaintsService {
 	async recordRebuttal(tenantId: string, complaintId: string, userId: string, dto: RecordRebuttalDto) {
 		const complaint = await this.findOne(tenantId, complaintId);
 
-		if (complaint.article !== ComplaintArticle.ARTICLE_30) {
-			throw new BadRequestException("Rebuttal is only applicable for Article 30 complaints");
+		let validStatus: ComplaintStatus;
+		let newStatus: ComplaintStatus;
+
+		if (complaint.article === ComplaintArticle.ARTICLE_30) {
+			validStatus = ComplaintStatus.WAITING_FOR_REBUTTAL;
+			newStatus = ComplaintStatus.UNDER_HR_ANALYSIS;
+		} else {
+			validStatus = ComplaintStatus.COMMITTEE_WAITING_REBUTTAL;
+			newStatus = ComplaintStatus.COMMITTEE_ANALYSIS;
 		}
 
-		if (complaint.status !== ComplaintStatus.WAITING_FOR_REBUTTAL) {
+		if (complaint.status !== validStatus) {
 			throw new BadRequestException("Complaint must be waiting for rebuttal");
 		}
 
@@ -270,7 +314,7 @@ export class ComplaintsService {
 				rebuttalReceivedDate: new Date(dto.rebuttalReceivedDate),
 				rebuttalContent: dto.rebuttalContent,
 				hasRebuttal: true,
-				status: ComplaintStatus.UNDER_HR_ANALYSIS,
+				status: newStatus,
 			},
 		});
 
@@ -278,8 +322,8 @@ export class ComplaintsService {
 			tenantId,
 			complaintId,
 			"REBUTTAL_RECEIVED",
-			ComplaintStatus.WAITING_FOR_REBUTTAL,
-			ComplaintStatus.UNDER_HR_ANALYSIS,
+			validStatus,
+			newStatus,
 			userId,
 			dto.notes,
 		);
@@ -290,11 +334,18 @@ export class ComplaintsService {
 	async markRebuttalDeadlinePassed(tenantId: string, complaintId: string, userId: string) {
 		const complaint = await this.findOne(tenantId, complaintId);
 
-		if (complaint.article !== ComplaintArticle.ARTICLE_30) {
-			throw new BadRequestException("This action is only applicable for Article 30 complaints");
+		let validStatus: ComplaintStatus;
+		let newStatus: ComplaintStatus;
+
+		if (complaint.article === ComplaintArticle.ARTICLE_30) {
+			validStatus = ComplaintStatus.WAITING_FOR_REBUTTAL;
+			newStatus = ComplaintStatus.AWAITING_SUPERIOR_DECISION;
+		} else {
+			validStatus = ComplaintStatus.COMMITTEE_WAITING_REBUTTAL;
+			newStatus = ComplaintStatus.COMMITTEE_ANALYSIS;
 		}
 
-		if (complaint.status !== ComplaintStatus.WAITING_FOR_REBUTTAL) {
+		if (complaint.status !== validStatus) {
 			throw new BadRequestException("Complaint must be waiting for rebuttal");
 		}
 
@@ -303,7 +354,7 @@ export class ComplaintsService {
 			data: {
 				hasRebuttal: false,
 				finding: ComplaintFinding.GUILTY_NO_REBUTTAL,
-				status: ComplaintStatus.AWAITING_SUPERIOR_DECISION,
+				status: newStatus,
 			},
 		});
 
@@ -311,8 +362,8 @@ export class ComplaintsService {
 			tenantId,
 			complaintId,
 			"REBUTTAL_DEADLINE_PASSED",
-			ComplaintStatus.WAITING_FOR_REBUTTAL,
-			ComplaintStatus.AWAITING_SUPERIOR_DECISION,
+			validStatus,
+			newStatus,
 			userId,
 			"Rebuttal deadline passed - automatic guilty finding",
 		);
@@ -325,18 +376,20 @@ export class ComplaintsService {
 
 		const validStatuses: ComplaintStatus[] = [
 			ComplaintStatus.UNDER_HR_ANALYSIS,
-			ComplaintStatus.WITH_DISCIPLINE_COMMITTEE,
+			ComplaintStatus.COMMITTEE_ANALYSIS,
 		];
 		if (!validStatuses.includes(complaint.status)) {
-			throw new BadRequestException("Invalid status for recording finding");
+			throw new BadRequestException("Invalid status for recording finding. Complaint must be under analysis.");
 		}
 
-		const newStatus =
-			dto.finding === ComplaintFinding.NOT_GUILTY
-				? ComplaintStatus.CLOSED_NO_LIABILITY
-				: complaint.article === ComplaintArticle.ARTICLE_30
-					? ComplaintStatus.AWAITING_SUPERIOR_DECISION
-					: ComplaintStatus.FORWARDED_TO_HQ;
+		let newStatus: ComplaintStatus;
+		if (dto.finding === ComplaintFinding.NOT_GUILTY) {
+			newStatus = ComplaintStatus.CLOSED_NO_LIABILITY;
+		} else if (complaint.article === ComplaintArticle.ARTICLE_30) {
+			newStatus = ComplaintStatus.AWAITING_SUPERIOR_DECISION;
+		} else {
+			newStatus = ComplaintStatus.INVESTIGATION_COMPLETE;
+		}
 
 		await this.prisma.complaint.update({
 			where: { id: complaintId },
@@ -446,8 +499,12 @@ export class ComplaintsService {
 			throw new BadRequestException("HQ forwarding is only for Article 31 complaints");
 		}
 
-		if (complaint.status !== ComplaintStatus.WITH_DISCIPLINE_COMMITTEE) {
-			throw new BadRequestException("Complaint must be with discipline committee");
+		if (complaint.status !== ComplaintStatus.INVESTIGATION_COMPLETE) {
+			throw new BadRequestException("Complaint must have investigation complete before forwarding to HQ");
+		}
+
+		if (!complaint.finding) {
+			throw new BadRequestException("Complaint must have a finding recorded before forwarding to HQ");
 		}
 
 		const assignedCommittee = await this.prisma.committee.findFirst({
@@ -479,7 +536,7 @@ export class ComplaintsService {
 			data: {
 				hqCommitteeId: dto.hqCommitteeId,
 				hqForwardedDate: new Date(dto.forwardedDate),
-				status: ComplaintStatus.FORWARDED_TO_HQ,
+				status: ComplaintStatus.AWAITING_HQ_DECISION,
 			},
 		});
 
@@ -487,8 +544,8 @@ export class ComplaintsService {
 			tenantId,
 			complaintId,
 			"FORWARDED_TO_HQ",
-			ComplaintStatus.WITH_DISCIPLINE_COMMITTEE,
-			ComplaintStatus.FORWARDED_TO_HQ,
+			ComplaintStatus.INVESTIGATION_COMPLETE,
+			ComplaintStatus.AWAITING_HQ_DECISION,
 			userId,
 			dto.notes,
 		);
@@ -503,8 +560,8 @@ export class ComplaintsService {
 			throw new BadRequestException("HQ decision is only for Article 31 complaints");
 		}
 
-		if (complaint.status !== ComplaintStatus.FORWARDED_TO_HQ) {
-			throw new BadRequestException("Complaint must be forwarded to HQ");
+		if (complaint.status !== ComplaintStatus.AWAITING_HQ_DECISION) {
+			throw new BadRequestException("Complaint must be awaiting HQ decision");
 		}
 
 		await this.prisma.complaint.update({
@@ -521,7 +578,7 @@ export class ComplaintsService {
 			tenantId,
 			complaintId,
 			"HQ_DECISION_MADE",
-			ComplaintStatus.FORWARDED_TO_HQ,
+			ComplaintStatus.AWAITING_HQ_DECISION,
 			ComplaintStatus.DECIDED_BY_HQ,
 			userId,
 			dto.notes,
@@ -533,35 +590,53 @@ export class ComplaintsService {
 	async submitAppeal(tenantId: string, complaintId: string, userId: string, dto: SubmitAppealDto) {
 		const complaint = await this.findOne(tenantId, complaintId);
 
-		const validStatuses: ComplaintStatus[] = [ComplaintStatus.DECIDED, ComplaintStatus.DECIDED_BY_HQ];
+		const validStatuses: ComplaintStatus[] = [
+			ComplaintStatus.DECIDED,
+			ComplaintStatus.DECIDED_BY_HQ,
+			ComplaintStatus.APPEAL_DECIDED,
+		];
 		if (!validStatuses.includes(complaint.status)) {
 			throw new BadRequestException("Complaint must be decided to submit an appeal");
 		}
 
-		const existingAppeal = await this.prisma.complaintAppeal.findFirst({
-			where: { complaintId, appealLevel: dto.appealLevel },
+		const pendingAppeal = await this.prisma.complaintAppeal.findFirst({
+			where: { complaintId, decision: null },
 		});
 
-		if (existingAppeal) {
-			throw new BadRequestException(`Appeal at level ${dto.appealLevel} already exists`);
+		if (pendingAppeal) {
+			throw new BadRequestException("There is already a pending appeal for this complaint");
+		}
+
+		const reviewerEmployee = await this.prisma.employee.findFirst({
+			where: { id: dto.reviewerEmployeeId, tenantId },
+		});
+
+		if (!reviewerEmployee) {
+			throw new NotFoundException("Reviewer employee not found");
 		}
 
 		const appeal = await this.prisma.complaintAppeal.create({
 			data: {
 				tenantId,
 				complaintId,
-				appealLevel: dto.appealLevel,
 				appealDate: new Date(dto.appealDate),
 				appealReason: dto.appealReason,
+				reviewerEmployeeId: dto.reviewerEmployeeId,
+				submittedBy: userId,
 			},
+		});
+
+		await this.prisma.complaint.update({
+			where: { id: complaintId },
+			data: { status: ComplaintStatus.ON_APPEAL },
 		});
 
 		await this.addTimelineEntry(
 			tenantId,
 			complaintId,
-			`APPEAL_SUBMITTED_LEVEL_${dto.appealLevel}`,
-			undefined,
-			undefined,
+			"APPEAL_SUBMITTED",
+			complaint.status,
+			ComplaintStatus.ON_APPEAL,
 			userId,
 			dto.notes,
 		);
@@ -576,7 +651,11 @@ export class ComplaintsService {
 		userId: string,
 		dto: RecordAppealDecisionDto,
 	) {
-		await this.findOne(tenantId, complaintId);
+		const complaint = await this.findOne(tenantId, complaintId);
+
+		if (complaint.status !== ComplaintStatus.ON_APPEAL) {
+			throw new BadRequestException("Complaint must be on appeal");
+		}
 
 		const appeal = await this.prisma.complaintAppeal.findFirst({
 			where: { id: appealId, complaintId },
@@ -586,10 +665,13 @@ export class ComplaintsService {
 			throw new NotFoundException("Appeal not found");
 		}
 
+		if (appeal.decision) {
+			throw new BadRequestException("This appeal has already been decided");
+		}
+
 		const updated = await this.prisma.complaintAppeal.update({
 			where: { id: appealId },
 			data: {
-				reviewedBy: userId,
 				reviewedAt: new Date(dto.reviewedAt),
 				decision: dto.decision,
 				decisionReason: dto.decisionReason,
@@ -597,12 +679,17 @@ export class ComplaintsService {
 			},
 		});
 
+		await this.prisma.complaint.update({
+			where: { id: complaintId },
+			data: { status: ComplaintStatus.APPEAL_DECIDED },
+		});
+
 		await this.addTimelineEntry(
 			tenantId,
 			complaintId,
-			`APPEAL_DECIDED_LEVEL_${appeal.appealLevel}`,
-			undefined,
-			undefined,
+			"APPEAL_DECIDED",
+			ComplaintStatus.ON_APPEAL,
+			ComplaintStatus.APPEAL_DECIDED,
 			userId,
 			dto.notes,
 		);
@@ -616,6 +703,7 @@ export class ComplaintsService {
 		const validStatuses: ComplaintStatus[] = [
 			ComplaintStatus.DECIDED,
 			ComplaintStatus.DECIDED_BY_HQ,
+			ComplaintStatus.APPEAL_DECIDED,
 			ComplaintStatus.CLOSED_NO_LIABILITY,
 		];
 
@@ -690,14 +778,6 @@ export class ComplaintsService {
 						fullNameAm: true,
 					},
 				},
-				center: {
-					select: {
-						id: true,
-						code: true,
-						name: true,
-						nameAm: true,
-					},
-				},
 			},
 			orderBy: { registeredDate: "desc" },
 		});
@@ -744,6 +824,22 @@ export class ComplaintsService {
 				toStatus,
 				performedBy,
 				notes,
+			},
+		});
+	}
+
+	private async findDisciplineCommitteeForCenter(tenantId: string, centerId: string) {
+		return this.prisma.committee.findFirst({
+			where: {
+				tenantId,
+				centerId,
+				status: "ACTIVE",
+				committeeType: {
+					code: "DISCIPLINE",
+				},
+			},
+			include: {
+				committeeType: true,
 			},
 		});
 	}

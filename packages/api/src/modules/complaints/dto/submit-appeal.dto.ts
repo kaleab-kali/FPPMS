@@ -1,19 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from "class-validator";
+import { IsDateString, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from "class-validator";
 
 export class SubmitAppealDto {
-	@ApiProperty({
-		description: "Appeal level (1=Superior, 2=Dept Head, 3=Center Commander, 4=Vice Commissioner)",
-		example: 1,
-		minimum: 1,
-		maximum: 4,
-	})
-	@IsInt()
-	@Min(1)
-	@Max(4)
-	@IsNotEmpty()
-	appealLevel: number;
-
 	@ApiProperty({
 		description: "Date when the appeal was submitted (ISO 8601 format)",
 		example: "2025-02-05",
@@ -32,6 +20,14 @@ export class SubmitAppealDto {
 	@IsNotEmpty()
 	@MaxLength(3000)
 	appealReason: string;
+
+	@ApiProperty({
+		description: "ID of the employee who will review/decide this appeal (higher authority)",
+		example: "clxyz123...",
+	})
+	@IsUUID()
+	@IsNotEmpty()
+	reviewerEmployeeId: string;
 
 	@ApiPropertyOptional({
 		description: "Additional notes about the appeal submission",

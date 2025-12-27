@@ -16,6 +16,7 @@ import {
 	useRecordRebuttal,
 	useSubmitAppeal,
 } from "#web/api/complaints/complaints.mutations.ts";
+import { EmployeeSearch } from "#web/components/common/EmployeeSearch.tsx";
 import { Button } from "#web/components/ui/button.tsx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#web/components/ui/card.tsx";
 import {
@@ -32,6 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#
 import { Textarea } from "#web/components/ui/textarea.tsx";
 import type { AppealDecision, Complaint, ComplaintFinding } from "#web/types/complaint.ts";
 import { COMPLAINT_FINDING_LABELS } from "#web/types/complaint.ts";
+import type { Committee } from "#web/types/committee.ts";
 
 interface ComplaintActionsProps {
 	complaint: Complaint;
@@ -51,13 +53,6 @@ type ActionType =
 	| "close"
 	| null;
 
-const APPEAL_LEVEL_LABELS: Record<number, string> = {
-	1: "Level 1 - Direct Superior",
-	2: "Level 2 - Department Head",
-	3: "Level 3 - Center Commander",
-	4: "Level 4 - Vice Commissioner",
-} as const;
-
 const APPEAL_DECISION_LABELS: Record<AppealDecision, string> = {
 	UPHELD: "Upheld (Original decision stands)",
 	MODIFIED: "Modified (Punishment changed)",
@@ -72,18 +67,27 @@ export const ComplaintActions = React.memo(
 		const [actionType, setActionType] = React.useState<ActionType>(null);
 		const [formData, setFormData] = React.useState<Record<string, string>>({});
 		const [selectedAppealId, setSelectedAppealId] = React.useState<string | null>(null);
+		const [selectedReviewerEmployee, setSelectedReviewerEmployee] = React.useState<{
+			id: string;
+			fullName: string;
+		} | null>(null);
 
-		const { data: committeesData } = useCommittees({ isActive: true });
-		const committees = committeesData?.data ?? [];
+		const { data: committees = [] } = useCommittees({ status: "ACTIVE" });
 
 		const centerDisciplineCommittees = React.useMemo(
 			() =>
-				committees.filter((c) => c.typeName?.toLowerCase().includes("discipline") && c.centerId === complaint.centerId),
+				committees.filter(
+					(c: Committee) =>
+						c.committeeType?.code?.toLowerCase().includes("discipline") && c.centerId === complaint.centerId,
+				),
 			[committees, complaint.centerId],
 		);
 
 		const hqCommittees = React.useMemo(
-			() => committees.filter((c) => !c.centerId && c.typeName?.toLowerCase().includes("discipline")),
+			() =>
+				committees.filter(
+					(c: Committee) => !c.centerId && c.committeeType?.code?.toLowerCase().includes("discipline"),
+				),
 			[committees],
 		);
 
@@ -127,6 +131,7 @@ export const ComplaintActions = React.memo(
 			setActionType(null);
 			setFormData({});
 			setSelectedAppealId(null);
+			setSelectedReviewerEmployee(null);
 		}, []);
 
 		const handleInputChange = React.useCallback((field: string, value: string) => {
@@ -236,18 +241,20 @@ export const ComplaintActions = React.memo(
 					);
 					break;
 				case "submitAppeal":
-					submitAppealMutation.mutate(
-						{
-							id: complaint.id,
-							data: {
-								appealLevel: Number(formData.appealLevel),
-								appealDate: formData.date,
-								appealReason: formData.reason,
-								notes: formData.notes,
+					if (selectedReviewerEmployee) {
+						submitAppealMutation.mutate(
+							{
+								id: complaint.id,
+								data: {
+									appealDate: formData.date,
+									appealReason: formData.reason,
+									reviewerEmployeeId: selectedReviewerEmployee.id,
+									notes: formData.notes,
+								},
 							},
-						},
-						{ onSuccess, onError },
-					);
+							{ onSuccess, onError },
+						);
+					}
 					break;
 				case "appealDecision":
 					if (selectedAppealId) {
@@ -286,6 +293,7 @@ export const ComplaintActions = React.memo(
 			complaint.id,
 			formData,
 			selectedAppealId,
+			selectedReviewerEmployee,
 			notificationMutation,
 			rebuttalMutation,
 			deadlineMutation,
@@ -306,61 +314,57 @@ export const ComplaintActions = React.memo(
 			[complaint.appeals],
 		);
 
-		const existingAppealLevels = React.useMemo(
-			() => new Set(complaint.appeals?.map((a) => a.appealLevel) ?? []),
-			[complaint.appeals],
-		);
-
-		const nextAppealLevel = React.useMemo(() => {
-			for (let level = 1; level <= 4; level++) {
-				if (!existingAppealLevels.has(level)) return level;
-			}
-			return null;
-		}, [existingAppealLevels]);
+		const canSubmitAppeal = React.useMemo(() => {
+			const hasNoPendingAppeals = !complaint.appeals?.some((a) => !a.decision);
+			return hasNoPendingAppeals;
+		}, [complaint.appeals]);
 
 		const availableActions = React.useMemo(() => {
 			const actions: { type: ActionType; label: string; variant?: "default" | "destructive"; appealId?: string }[] = [];
 
 			switch (complaint.status) {
 				case "UNDER_HR_REVIEW":
-					if (complaint.article === "ARTICLE_30") {
-						actions.push({ type: "notification", label: t("action.sendNotification") });
-					} else {
-						actions.push({ type: "assignCommittee", label: t("action.assignCommittee") });
-					}
+					actions.push({ type: "notification", label: t("action.sendNotification") });
+					break;
+				case "WITH_DISCIPLINE_COMMITTEE":
+					actions.push({ type: "notification", label: t("action.sendNotification") });
 					break;
 				case "WAITING_FOR_REBUTTAL":
+				case "COMMITTEE_WAITING_REBUTTAL":
 					actions.push({ type: "rebuttal", label: t("action.recordRebuttal") });
 					actions.push({ type: "rebuttalDeadline", label: t("action.markDeadlinePassed"), variant: "destructive" });
 					break;
 				case "UNDER_HR_ANALYSIS":
+				case "COMMITTEE_ANALYSIS":
 					actions.push({ type: "finding", label: t("action.recordFinding") });
 					break;
-				case "WITH_DISCIPLINE_COMMITTEE":
-					actions.push({ type: "finding", label: t("action.recordFinding") });
-					if (canForwardToHq) {
+				case "INVESTIGATION_COMPLETE":
+					if (complaint.article === "ARTICLE_31" && canForwardToHq) {
 						actions.push({ type: "forwardToHq", label: t("action.forwardToHq") });
 					}
 					break;
 				case "AWAITING_SUPERIOR_DECISION":
 					actions.push({ type: "decision", label: t("action.recordDecision") });
 					break;
-				case "FORWARDED_TO_HQ":
+				case "AWAITING_HQ_DECISION":
 					actions.push({ type: "hqDecision", label: t("action.recordHqDecision") });
 					break;
 				case "DECIDED":
 				case "DECIDED_BY_HQ":
-					if (nextAppealLevel) {
+				case "APPEAL_DECIDED":
+					if (canSubmitAppeal) {
 						actions.push({ type: "submitAppeal", label: t("action.submitAppeal") });
 					}
+					actions.push({ type: "close", label: t("action.closeComplaint") });
+					break;
+				case "ON_APPEAL":
 					for (const appeal of pendingAppeals) {
 						actions.push({
 							type: "appealDecision",
-							label: `${t("action.recordAppealDecision")} (${t("detail.appealLevel", { level: appeal.appealLevel })})`,
+							label: t("action.recordAppealDecision"),
 							appealId: appeal.id,
 						});
 					}
-					actions.push({ type: "close", label: t("action.closeComplaint") });
 					break;
 				case "CLOSED_NO_LIABILITY":
 					actions.push({ type: "close", label: t("action.closeComplaint") });
@@ -368,7 +372,7 @@ export const ComplaintActions = React.memo(
 			}
 
 			return actions;
-		}, [complaint.status, complaint.article, pendingAppeals, nextAppealLevel, canForwardToHq, t]);
+		}, [complaint.status, complaint.article, pendingAppeals, canSubmitAppeal, canForwardToHq, t]);
 
 		const getDialogTitle = React.useCallback(() => {
 			switch (actionType) {
@@ -588,32 +592,30 @@ export const ComplaintActions = React.memo(
 								{actionType === "submitAppeal" && (
 									<>
 										<div className="space-y-2">
-											<Label>{t("appeal.appealLevel")}</Label>
-											<Select
-												value={formData.appealLevel ?? ""}
-												onValueChange={(value) => handleInputChange("appealLevel", value)}
-											>
-												<SelectTrigger>
-													<SelectValue placeholder={t("appeal.selectLevel")} />
-												</SelectTrigger>
-												<SelectContent>
-													{Object.entries(APPEAL_LEVEL_LABELS)
-														.filter(([level]) => !existingAppealLevels.has(Number(level)))
-														.map(([value, label]) => (
-															<SelectItem key={value} value={value}>
-																{label}
-															</SelectItem>
-														))}
-												</SelectContent>
-											</Select>
-										</div>
-										<div className="space-y-2">
 											<Label>{t("appeal.appealDate")}</Label>
 											<Input
 												type="date"
 												value={formData.date ?? ""}
 												onChange={(e) => handleInputChange("date", e.target.value)}
 											/>
+										</div>
+										<div className="space-y-2">
+											<Label>{t("appeal.reviewerEmployee")}</Label>
+											<EmployeeSearch
+												onEmployeeFound={(emp) =>
+													setSelectedReviewerEmployee({ id: emp.id, fullName: emp.fullName })
+												}
+												onClear={() => setSelectedReviewerEmployee(null)}
+												selectedEmployee={selectedReviewerEmployee as never}
+											/>
+											{selectedReviewerEmployee && (
+												<p className="text-sm text-green-600">
+													{t("appeal.selectedReviewer")}: {selectedReviewerEmployee.fullName}
+												</p>
+											)}
+											<p className="text-xs text-muted-foreground">
+												{t("appeal.reviewerEmployeeHint")}
+											</p>
 										</div>
 										<div className="space-y-2">
 											<Label>{t("appeal.appealReason")}</Label>

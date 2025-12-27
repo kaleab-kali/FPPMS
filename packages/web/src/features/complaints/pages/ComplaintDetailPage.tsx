@@ -222,7 +222,7 @@ export const ComplaintDetailPage = React.memo(
 													<div key={appeal.id} className="border rounded-lg p-4">
 														<div className="flex justify-between items-start mb-2">
 															<span className="font-medium">
-																{t("detail.appealLevel", { level: appeal.appealLevel })}
+																{t("detail.appealTo")}: {appeal.reviewerEmployee?.fullName ?? t("detail.pendingReview")}
 															</span>
 															{appeal.decision && (
 																<Badge variant={appeal.decision === "UPHELD" ? "destructive" : "default"}>
@@ -406,8 +406,7 @@ export const ComplaintDetailPage = React.memo(
 												</div>
 												{complaint.hqForwardedDate && (
 													<p className="text-xs text-muted-foreground mt-1">
-														{t("complaint.hqForwardedDate")}:{" "}
-														{new Date(complaint.hqForwardedDate).toLocaleDateString()}
+														{t("complaint.hqForwardedDate")}: {new Date(complaint.hqForwardedDate).toLocaleDateString()}
 													</p>
 												)}
 											</div>
