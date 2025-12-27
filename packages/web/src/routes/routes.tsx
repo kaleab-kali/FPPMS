@@ -12,6 +12,7 @@ import { ComplaintDetailPage } from "#web/features/complaints/pages/ComplaintDet
 import { ComplaintRegisterPage } from "#web/features/complaints/pages/ComplaintRegisterPage.tsx";
 import { ComplaintsListPage } from "#web/features/complaints/pages/ComplaintsListPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
+import { HqDashboardPage } from "#web/features/dashboard/pages/HqDashboardPage.tsx";
 import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
 import { EmployeeDetailPage } from "#web/features/employees/pages/EmployeeDetailPage.tsx";
 import { EmployeeEditPage } from "#web/features/employees/pages/EmployeeEditPage.tsx";
@@ -68,6 +69,10 @@ export const router = createBrowserRouter([
 			{
 				path: "/dashboard",
 				element: <DashboardPage />,
+			},
+			{
+				path: "/dashboard/hq",
+				element: <HqDashboardPage />,
 			},
 			{
 				path: "/employees",
