@@ -115,6 +115,15 @@ export const RolesListPage = React.memo(
 					header: t("code"),
 				},
 				{
+					accessorKey: "accessScope",
+					header: t("accessScope"),
+					cell: ({ row }) => {
+						const scope = row.original.accessScope;
+						const isAllCenters = scope === "ALL_CENTERS";
+						return <Badge variant={isAllCenters ? "default" : "outline"}>{t(`scopes.${scope}`)}</Badge>;
+					},
+				},
+				{
 					accessorKey: "permissions",
 					header: t("permissions"),
 					cell: ({ row }) => {

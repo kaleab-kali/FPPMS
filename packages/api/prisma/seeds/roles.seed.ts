@@ -4,8 +4,7 @@ const SYSTEM_ROLES = [
 	{
 		code: "IT_ADMIN",
 		name: "IT Administrator",
-		nameAm:
-			"\u12E8\u12A2\u1295\u134E\u122D\u121C\u123D\u1295 \u1274\u12AD\u1296\u120E\u1302 \u12A0\u1235\u1270\u12F3\u12F3\u122A",
+		nameAm: "የኢንፎርሜሽን ቴክኖሎጂ አስተዳዳሪ",
 		description: "Full system access, user management, system configuration",
 		level: 100,
 		accessScope: "ALL_CENTERS",
@@ -14,7 +13,7 @@ const SYSTEM_ROLES = [
 	{
 		code: "HQ_ADMIN",
 		name: "HQ Administrator",
-		nameAm: "\u12E8\u12DD\u1241 \u1218\u1235\u122A\u12EB \u1264\u1275 \u12A0\u1235\u1270\u12F3\u12F3\u122A",
+		nameAm: "የዋና መስሪያ ቤት አስተዳዳሪ",
 		description: "HQ level administration, all centers access",
 		level: 95,
 		accessScope: "ALL_CENTERS",
@@ -23,7 +22,7 @@ const SYSTEM_ROLES = [
 	{
 		code: "CENTER_ADMIN",
 		name: "Center Administrator",
-		nameAm: "\u12E8\u121B\u12D5\u12A8\u120D \u12A0\u1235\u1270\u12F3\u12F3\u122A",
+		nameAm: "የማዕከል አስተዳዳሪ",
 		description: "Center level administration",
 		level: 85,
 		accessScope: "OWN_CENTER",
@@ -32,7 +31,7 @@ const SYSTEM_ROLES = [
 	{
 		code: "HR_DIRECTOR",
 		name: "HR Director",
-		nameAm: "\u12E8\u1230\u12CD \u1210\u12ED\u120D \u12A0\u1218\u122B\u122D",
+		nameAm: "የሰው ኃይል አመራር",
 		description: "HR department head, full HR access",
 		level: 90,
 		accessScope: "ALL_CENTERS",
@@ -41,7 +40,7 @@ const SYSTEM_ROLES = [
 	{
 		code: "HR_OFFICER",
 		name: "HR Officer",
-		nameAm: "\u12E8\u1230\u12CD \u1210\u12ED\u120D \u1218\u12AE\u1295\u1295",
+		nameAm: "የሰው ኃይል መኮንን",
 		description: "HR operations, employee management",
 		level: 70,
 		accessScope: "OWN_CENTER",
@@ -50,7 +49,7 @@ const SYSTEM_ROLES = [
 	{
 		code: "CENTER_COMMANDER",
 		name: "Center Commander",
-		nameAm: "\u12E8\u121B\u12D5\u12A8\u120D \u12A0\u12DC\u12CE",
+		nameAm: "የማዕከል አዛዥ",
 		description: "Center head, approvals and oversight",
 		level: 80,
 		accessScope: "OWN_CENTER",
@@ -59,25 +58,25 @@ const SYSTEM_ROLES = [
 	{
 		code: "DEPARTMENT_HEAD",
 		name: "Department Head",
-		nameAm: "\u12E8\u12AD\u134D\u120D \u12C8\u12ED\u1235",
+		nameAm: "የክፍል ኃላፊ",
 		description: "Department management and approvals",
 		level: 60,
-		accessScope: "OWN_DEPARTMENT",
+		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
 	{
 		code: "SUPERVISOR",
 		name: "Supervisor",
-		nameAm: "\u1230\u12A1\u1350\u122D\u126B\u12ED\u12D8\u122D",
+		nameAm: "ተቆጣጣሪ",
 		description: "Team supervision, leave approvals",
 		level: 50,
-		accessScope: "OWN_DEPARTMENT",
+		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
 	{
 		code: "FINANCE_OFFICER",
 		name: "Finance Officer",
-		nameAm: "\u12E8\u134B\u12ED\u1293\u1295\u1235 \u1218\u12AE\u1295\u1295",
+		nameAm: "የፋይናንስ መኮንን",
 		description: "Salary and financial operations",
 		level: 40,
 		accessScope: "OWN_CENTER",
@@ -86,19 +85,28 @@ const SYSTEM_ROLES = [
 	{
 		code: "RECORDS_OFFICER",
 		name: "Records Officer",
-		nameAm: "\u12E8\u1218\u12DD\u1308\u1265 \u1218\u12AE\u1295\u1295",
+		nameAm: "የመዝገብ መኮንን",
 		description: "Document and records management",
 		level: 30,
 		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
 	{
+		code: "EMPLOYEE",
+		name: "Employee",
+		nameAm: "ሰራተኛ",
+		description: "Basic employee access to own records",
+		level: 20,
+		accessScope: "OWN_RECORDS",
+		isSystemRole: true,
+	},
+	{
 		code: "VIEWER",
 		name: "Viewer",
-		nameAm: "\u1270\u1218\u120D\u12AB\u127D",
+		nameAm: "ተመልካች",
 		description: "Read-only access to allowed modules",
 		level: 10,
-		accessScope: "OWN_RECORDS",
+		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
 ];
@@ -110,7 +118,18 @@ export const seedRoles = async (prisma: PrismaClient): Promise<void> => {
 		});
 
 		if (existingRole) {
-			console.log(`Role ${role.code} already exists, skipping...`);
+			await prisma.role.update({
+				where: { id: existingRole.id },
+				data: {
+					name: role.name,
+					nameAm: role.nameAm,
+					description: role.description,
+					level: role.level,
+					accessScope: role.accessScope,
+					isSystemRole: role.isSystemRole,
+				},
+			});
+			console.log(`Updated role: ${role.name} (${role.code})`);
 			continue;
 		}
 

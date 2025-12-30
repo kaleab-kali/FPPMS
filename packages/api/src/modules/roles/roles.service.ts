@@ -121,6 +121,7 @@ export class RolesService {
 				data: {
 					nameAm: dto.nameAm,
 					description: dto.description,
+					accessScope: dto.accessScope,
 					isActive: dto.isActive,
 				},
 			});

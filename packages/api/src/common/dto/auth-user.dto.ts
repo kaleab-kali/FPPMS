@@ -5,4 +5,6 @@ export class AuthUserDto {
 	centerId?: string;
 	roles: string[];
 	permissions: string[];
+	accessScopes: string[];
+	effectiveAccessScope: string;
 }

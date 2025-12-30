@@ -159,6 +159,85 @@ enum TransferSource {
   APPRAISAL
 }
 
+enum CommitteeMemberRole {
+  CHAIRMAN
+  VICE_CHAIRMAN
+  SECRETARY
+  MEMBER
+  ADVISOR
+}
+
+enum CommitteeStatus {
+  ACTIVE
+  SUSPENDED
+  DISSOLVED
+}
+
+enum TermStatus {
+  ACTIVE
+  COMPLETED
+  RENEWED
+  TERMINATED
+}
+
+// Complaint Module Enums
+enum ComplaintArticle {
+  ARTICLE_30
+  ARTICLE_31
+}
+
+enum ComplaintStatus {
+  UNDER_HR_REVIEW
+  WAITING_FOR_REBUTTAL
+  UNDER_HR_ANALYSIS
+  AWAITING_SUPERIOR_DECISION
+  WITH_DISCIPLINE_COMMITTEE
+  COMMITTEE_WAITING_REBUTTAL
+  COMMITTEE_ANALYSIS
+  INVESTIGATION_COMPLETE
+  FORWARDED_TO_HQ
+  AWAITING_HQ_DECISION
+  DECIDED
+  DECIDED_BY_HQ
+  ON_APPEAL
+  APPEAL_DECIDED
+  CLOSED_NO_LIABILITY
+  CLOSED_FINAL
+}
+
+enum ComplaintFinding {
+  PENDING
+  GUILTY
+  NOT_GUILTY
+  GUILTY_NO_REBUTTAL
+}
+
+enum AppealDecision {
+  UPHELD
+  MODIFIED
+  OVERTURNED
+}
+
+enum DecisionAuthority {
+  DIRECT_SUPERIOR
+  DISCIPLINE_COMMITTEE
+}
+
+enum ComplainantType {
+  EMPLOYEE
+  EXTERNAL
+  ANONYMOUS
+}
+
+enum ComplaintDocumentType {
+  INITIAL_EVIDENCE
+  REBUTTAL
+  COMMITTEE_REPORT
+  DECISION
+  APPEAL
+  OTHER
+}
+
 // ============================================================================
 // TENANT
 // ============================================================================
@@ -174,18 +253,23 @@ model Tenant {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  centers       Center[]
-  users         User[]
-  employees     Employee[]
-  roles         Role[]
-  regions       Region[]
-  subCities     SubCity[]
-  woredas       Woreda[]
-  departments   Department[]
-  positions     Position[]
-  militaryRanks MilitaryRank[]
-  leaveTypes    LeaveType[]
-  holidays      Holiday[]
+  centers          Center[]
+  users            User[]
+  employees        Employee[]
+  roles            Role[]
+  regions          Region[]
+  subCities        SubCity[]
+  woredas          Woreda[]
+  departments      Department[]
+  positions        Position[]
+  militaryRanks    MilitaryRank[]
+  leaveTypes       LeaveType[]
+  holidays         Holiday[]
+  committeeTypes   CommitteeType[]
+  committees       Committee[]
+  committeeMembers     CommitteeMember[]
+  committeeMemberTerms CommitteeMemberTerm[]
+  committeeHistory     CommitteeHistory[]
 
   @@index([code])
   @@map("tenants")
@@ -219,9 +303,11 @@ model Center {
   parentCenter        Center?                   @relation("CenterHierarchy", fields: [parentCenterId], references: [id])
   childCenters        Center[]                  @relation("CenterHierarchy")
   users               User[]
-  employees           Employee[]
-  transfersFrom       EmployeeTransferRequest[] @relation("TransferFromCenter")
-  transfersTo         EmployeeTransferRequest[] @relation("TransferToCenter")
+  employees            Employee[]
+  transfersFrom        EmployeeTransferRequest[] @relation("TransferFromCenter")
+  transfersTo          EmployeeTransferRequest[] @relation("TransferToCenter")
+  committees           Committee[]
+  committeeMemberTerms CommitteeMemberTerm[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -624,9 +710,13 @@ model Employee {
   disciplinaryRecords  DisciplinaryRecord[]
   investigations       Investigation[]
   serviceRewards       ServiceReward[]
-  attendanceRecords    AttendanceRecord[]
-  shiftAssignments     ShiftAssignment[]
-  inventoryAssignments InventoryAssignment[]
+  attendanceRecords        AttendanceRecord[]
+  shiftAssignments         ShiftAssignment[]
+  inventoryAssignments     InventoryAssignment[]
+  committeeMemberships     CommitteeMember[]
+  committeeMembershipTerms CommitteeMemberTerm[]
+  complaintsAgainst        Complaint[]        @relation("AccusedComplaints")
+  appealReviewsGiven       ComplaintAppeal[]  @relation("AppealReviewer")
 
   @@index([tenantId])
   @@index([tenantId, centerId])
@@ -1697,4 +1787,305 @@ model RefreshToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+// ============================================================================
+// COMMITTEE MANAGEMENT
+// ============================================================================
+
+model CommitteeType {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  code           String
+  name           String
+  nameAm         String?  @map("name_am")
+  description    String?
+  descriptionAm  String?  @map("description_am")
+  isPermanent    Boolean  @default(false) @map("is_permanent")
+  requiresCenter Boolean  @default(false) @map("requires_center")
+  minMembers     Int      @default(3) @map("min_members")
+  maxMembers     Int?     @map("max_members")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  committees Committee[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, isActive])
+  @@map("committee_types")
+}
+
+model Committee {
+  id               String          @id @default(cuid())
+  tenantId         String          @map("tenant_id")
+  committeeTypeId  String          @map("committee_type_id")
+  centerId         String?         @map("center_id")
+  code             String
+  name             String
+  nameAm           String?         @map("name_am")
+  description      String?
+  descriptionAm    String?         @map("description_am")
+  status           CommitteeStatus @default(ACTIVE)
+  establishedDate  DateTime        @map("established_date") @db.Date
+  dissolvedDate    DateTime?       @map("dissolved_date") @db.Date
+  dissolvedReason  String?         @map("dissolved_reason")
+  establishedBy    String          @map("established_by")
+  dissolvedBy      String?         @map("dissolved_by")
+  isActive         Boolean         @default(true) @map("is_active")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  tenant        Tenant                @relation(fields: [tenantId], references: [id])
+  committeeType CommitteeType         @relation(fields: [committeeTypeId], references: [id])
+  center        Center?               @relation(fields: [centerId], references: [id])
+  members       CommitteeMember[]
+  memberTerms   CommitteeMemberTerm[]
+  history       CommitteeHistory[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([tenantId, committeeTypeId])
+  @@index([tenantId, centerId])
+  @@index([tenantId, status])
+  @@map("committees")
+}
+
+model CommitteeMember {
+  id            String              @id @default(cuid())
+  tenantId      String              @map("tenant_id")
+  committeeId   String              @map("committee_id")
+  employeeId    String              @map("employee_id")
+  role          CommitteeMemberRole
+  appointedDate DateTime            @map("appointed_date") @db.Date
+  endDate       DateTime?           @map("end_date") @db.Date
+  currentTermId String?             @map("current_term_id")
+  appointedBy   String              @map("appointed_by")
+  removedBy     String?             @map("removed_by")
+  removalReason String?             @map("removal_reason")
+  isActive      Boolean             @default(true) @map("is_active")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  tenant    Tenant                 @relation(fields: [tenantId], references: [id])
+  committee Committee              @relation(fields: [committeeId], references: [id])
+  employee  Employee               @relation(fields: [employeeId], references: [id])
+  terms     CommitteeMemberTerm[]
+
+  @@unique([committeeId, employeeId, isActive])
+  @@index([tenantId])
+  @@index([committeeId])
+  @@index([employeeId])
+  @@index([committeeId, isActive])
+  @@map("committee_members")
+}
+
+model CommitteeMemberTerm {
+  id                String     @id @default(cuid())
+  tenantId          String     @map("tenant_id")
+  centerId          String?    @map("center_id")
+  committeeId       String     @map("committee_id")
+  memberId          String     @map("member_id")
+  employeeId        String     @map("employee_id")
+  termNumber        Int        @map("term_number")
+  termLimitMonths   Int        @default(24) @map("term_limit_months")
+  startDate         DateTime   @map("start_date") @db.Date
+  endDate           DateTime   @map("end_date") @db.Date
+  status            TermStatus @default(ACTIVE)
+  renewedFromTermId String?    @unique @map("renewed_from_term_id")
+  terminatedDate    DateTime?  @map("terminated_date") @db.Date
+  terminatedReason  String?    @map("terminated_reason")
+  terminatedBy      String?    @map("terminated_by")
+  renewedBy         String?    @map("renewed_by")
+  renewedDate       DateTime?  @map("renewed_date") @db.Date
+  notes             String?
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  tenant          Tenant               @relation(fields: [tenantId], references: [id])
+  center          Center?              @relation(fields: [centerId], references: [id])
+  committee       Committee            @relation(fields: [committeeId], references: [id])
+  member          CommitteeMember      @relation(fields: [memberId], references: [id])
+  employee        Employee             @relation(fields: [employeeId], references: [id])
+  renewedFromTerm CommitteeMemberTerm? @relation("TermRenewal", fields: [renewedFromTermId], references: [id])
+  renewedToTerm   CommitteeMemberTerm? @relation("TermRenewal")
+
+  @@unique([memberId, termNumber])
+  @@index([tenantId])
+  @@index([centerId])
+  @@index([committeeId])
+  @@index([memberId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([endDate])
+  @@index([centerId, status])
+  @@index([employeeId, status])
+  @@map("committee_member_terms")
+}
+
+model CommitteeHistory {
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  committeeId   String   @map("committee_id")
+  action        String
+  previousValue Json?    @map("previous_value")
+  newValue      Json?    @map("new_value")
+  performedBy   String   @map("performed_by")
+  performedAt   DateTime @default(now()) @map("performed_at")
+  notes         String?
+  ipAddress     String?  @map("ip_address")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  committee Committee @relation(fields: [committeeId], references: [id])
+
+  @@index([tenantId])
+  @@index([committeeId])
+  @@index([performedAt])
+  @@map("committee_history")
+}
+
+// ============================================================================
+// COMPLAINT MANAGEMENT
+// ============================================================================
+
+model Complaint {
+  id                     String              @id @default(cuid())
+  tenantId               String              @map("tenant_id")
+  centerId               String              @map("center_id")
+  complaintNumber        String              @unique @map("complaint_number")
+  article                ComplaintArticle
+  offenseCode            String              @map("offense_code")
+  accusedEmployeeId      String              @map("accused_employee_id")
+  complainantName        String?             @map("complainant_name")
+  complainantType        ComplainantType     @map("complainant_type")
+  complainantEmployeeId  String?             @map("complainant_employee_id")
+  summary                String
+  summaryAm              String?             @map("summary_am")
+  incidentDate           DateTime            @map("incident_date") @db.Date
+  incidentLocation       String?             @map("incident_location")
+  registeredDate         DateTime            @map("registered_date") @db.Date
+  registeredBy           String              @map("registered_by")
+  status                 ComplaintStatus
+  currentAssigneeId      String?             @map("current_assignee_id")
+
+  // Article 30 specific fields
+  notificationDate       DateTime?           @map("notification_date") @db.Date
+  rebuttalDeadline       DateTime?           @map("rebuttal_deadline") @db.Date
+  rebuttalReceivedDate   DateTime?           @map("rebuttal_received_date") @db.Date
+  rebuttalContent        String?             @map("rebuttal_content")
+  hasRebuttal            Boolean             @default(false) @map("has_rebuttal")
+  offenseOccurrence      Int?                @map("offense_occurrence")
+  severityLevel          Int?                @map("severity_level")
+  decisionAuthority      DecisionAuthority?  @map("decision_authority")
+  superiorEmployeeId     String?             @map("superior_employee_id")
+  superiorDecisionDate   DateTime?           @map("superior_decision_date") @db.Date
+  punishmentPercentage   Int?                @map("punishment_percentage")
+  punishmentDescription  String?             @map("punishment_description")
+
+  // Article 31 specific fields
+  assignedCommitteeId    String?             @map("assigned_committee_id")
+  committeeAssignedDate  DateTime?           @map("committee_assigned_date") @db.Date
+  hqCommitteeId          String?             @map("hq_committee_id")
+  hqForwardedDate        DateTime?           @map("hq_forwarded_date") @db.Date
+
+  // Finding and decision fields
+  finding                ComplaintFinding    @default(PENDING)
+  findingDate            DateTime?           @map("finding_date") @db.Date
+  findingReason          String?             @map("finding_reason")
+  findingBy              String?             @map("finding_by")
+  decisionDate           DateTime?           @map("decision_date") @db.Date
+  decisionBy             String?             @map("decision_by")
+  decisionDocumentPath   String?             @map("decision_document_path")
+
+  // Closure fields
+  closedDate             DateTime?           @map("closed_date") @db.Date
+  closedBy               String?             @map("closed_by")
+  closureReason          String?             @map("closure_reason")
+
+  createdAt              DateTime            @default(now()) @map("created_at")
+  updatedAt              DateTime            @updatedAt @map("updated_at")
+  deletedAt              DateTime?           @map("deleted_at")
+
+  accusedEmployee        Employee            @relation("AccusedComplaints", fields: [accusedEmployeeId], references: [id])
+  timeline               ComplaintTimeline[]
+  documents              ComplaintDocument[]
+  appeals                ComplaintAppeal[]
+
+  @@index([tenantId])
+  @@index([tenantId, centerId])
+  @@index([tenantId, status])
+  @@index([tenantId, article])
+  @@index([accusedEmployeeId])
+  @@index([registeredDate])
+  @@index([tenantId, registeredDate])
+  @@map("complaints")
+}
+
+model ComplaintTimeline {
+  id            String           @id @default(cuid())
+  tenantId      String           @map("tenant_id")
+  complaintId   String           @map("complaint_id")
+  action        String
+  fromStatus    ComplaintStatus? @map("from_status")
+  toStatus      ComplaintStatus? @map("to_status")
+  performedBy   String           @map("performed_by")
+  performedAt   DateTime         @default(now()) @map("performed_at")
+  notes         String?
+  documentPath  String?          @map("document_path")
+
+  complaint     Complaint        @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@index([complaintId])
+  @@index([performedAt])
+  @@map("complaint_timeline")
+}
+
+model ComplaintDocument {
+  id            String                  @id @default(cuid())
+  tenantId      String                  @map("tenant_id")
+  complaintId   String                  @map("complaint_id")
+  documentType  ComplaintDocumentType   @map("document_type")
+  title         String
+  description   String?
+  filePath      String                  @map("file_path")
+  fileName      String                  @map("file_name")
+  fileSize      Int                     @map("file_size")
+  mimeType      String                  @map("mime_type")
+  uploadedBy    String                  @map("uploaded_by")
+  uploadedAt    DateTime                @default(now()) @map("uploaded_at")
+  deletedAt     DateTime?               @map("deleted_at")
+
+  complaint     Complaint               @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+
+  @@index([complaintId])
+  @@index([tenantId, documentType])
+  @@map("complaint_documents")
+}
+
+model ComplaintAppeal {
+  id                   String          @id @default(cuid())
+  tenantId             String          @map("tenant_id")
+  complaintId          String          @map("complaint_id")
+  appealDate           DateTime        @map("appeal_date") @db.Date
+  appealReason         String          @map("appeal_reason")
+  appealDocumentPath   String?         @map("appeal_document_path")
+  reviewerEmployeeId   String?         @map("reviewer_employee_id")
+  submittedBy          String          @map("submitted_by")
+  reviewedAt           DateTime?       @map("reviewed_at")
+  decision             AppealDecision?
+  decisionReason       String?         @map("decision_reason")
+  newPunishment        String?         @map("new_punishment")
+  decisionDocumentPath String?         @map("decision_document_path")
+  createdAt            DateTime        @default(now()) @map("created_at")
+  updatedAt            DateTime        @updatedAt @map("updated_at")
+
+  complaint            Complaint       @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  reviewerEmployee     Employee?       @relation("AppealReviewer", fields: [reviewerEmployeeId], references: [id])
+
+  @@index([complaintId])
+  @@index([tenantId])
+  @@index([reviewerEmployeeId])
+  @@map("complaint_appeals")
 }

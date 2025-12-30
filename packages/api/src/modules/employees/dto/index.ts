@@ -37,6 +37,8 @@ export {
 } from "#api/modules/employees/dto/employee-superior.dto";
 export {
 	AcceptTransferDto,
+	AssignFromHqToCenterDto,
+	AssignToHqDto,
 	CancelTransferDto,
 	CreateDepartureDto,
 	CreateTransferRequestDto,

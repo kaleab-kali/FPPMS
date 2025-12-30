@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
+import { ACCESS_SCOPES } from "#api/common/constants/roles.constant";
 import { PrismaService } from "#api/database/prisma.service";
 
 interface JwtPayloadData {
@@ -9,8 +10,11 @@ interface JwtPayloadData {
 	username: string;
 	tenantId: string;
 	centerId?: string;
+	employeeId?: string;
 	roles: string[];
 	permissions: string[];
+	accessScopes: string[];
+	effectiveAccessScope: string;
 	permissionVersion?: number;
 }
 
@@ -19,8 +23,11 @@ interface ValidatedUser {
 	username: string;
 	tenantId: string;
 	centerId?: string;
+	employeeId?: string;
 	roles: string[];
 	permissions: string[];
+	accessScopes: string[];
+	effectiveAccessScope: string;
 	permissionVersion: number;
 }
 
@@ -74,8 +81,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 			username: payload.username,
 			tenantId: payload.tenantId,
 			centerId: payload.centerId,
+			employeeId: payload.employeeId,
 			roles: payload.roles,
 			permissions: payload.permissions,
+			accessScopes: payload.accessScopes || [],
+			effectiveAccessScope: payload.effectiveAccessScope || ACCESS_SCOPES.OWN_CENTER,
 			permissionVersion: user.permissionVersion,
 		};
 	}

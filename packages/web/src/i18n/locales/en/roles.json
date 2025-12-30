@@ -20,8 +20,6 @@
 	"deleteConfirm": "Are you sure you want to delete this role?",
 	"scopes": {
 		"ALL_CENTERS": "All Centers",
-		"OWN_CENTER": "Own Center",
-		"OWN_DEPARTMENT": "Own Department",
-		"OWN_RECORDS": "Own Records"
+		"OWN_CENTER": "Own Center"
 	}
 }

@@ -8,7 +8,12 @@ import { ChangeUserStatusDto } from "#api/modules/users/dto/change-user-status.d
 import { CreateUserDto, CreateUserFromEmployeeDto } from "#api/modules/users/dto/create-user.dto";
 import { UpdateUserDto } from "#api/modules/users/dto/update-user.dto";
 import { UserResponseDto } from "#api/modules/users/dto/user-response.dto";
-import { UsersService } from "#api/modules/users/users.service";
+import { AccessContext, UsersService } from "#api/modules/users/users.service";
+
+const buildAccessContext = (user: AuthUserDto): AccessContext => ({
+	centerId: user.centerId,
+	effectiveAccessScope: user.effectiveAccessScope,
+});
 
 @ApiTags("users")
 @ApiBearerAuth("JWT-auth")
@@ -21,7 +26,7 @@ export class UsersController {
 	@ApiOperation({ summary: "Create user", description: "Create a new user account with custom username/password" })
 	@ApiResponse({ status: 201, description: "User created", type: UserResponseDto })
 	create(@CurrentUser() user: AuthUserDto, @Body() dto: CreateUserDto): Promise<UserResponseDto> {
-		return this.usersService.create(user.tenantId, dto, user.id);
+		return this.usersService.create(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Post("from-employee")
@@ -35,7 +40,7 @@ export class UsersController {
 		@CurrentUser() user: AuthUserDto,
 		@Body() dto: CreateUserFromEmployeeDto,
 	): Promise<{ user: UserResponseDto; generatedUsername: string; generatedPassword: string }> {
-		return this.usersService.createFromEmployee(user.tenantId, dto, user.id);
+		return this.usersService.createFromEmployee(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Get("available-employees")
@@ -59,7 +64,7 @@ export class UsersController {
 			positionName?: string;
 		}>
 	> {
-		return this.usersService.findEmployeesWithoutUserAccount(user.tenantId, search);
+		return this.usersService.findEmployeesWithoutUserAccount(user.tenantId, search, buildAccessContext(user));
 	}
 
 	@Get()
@@ -68,10 +73,11 @@ export class UsersController {
 	@ApiQuery({ name: "centerId", required: false, description: "Filter by center ID" })
 	@ApiResponse({ status: 200, description: "List of users", type: [UserResponseDto] })
 	findAll(@CurrentUser() user: AuthUserDto, @Query("centerId") centerId?: string): Promise<UserResponseDto[]> {
+		const accessContext = buildAccessContext(user);
 		if (centerId) {
-			return this.usersService.findByCenter(user.tenantId, centerId);
+			return this.usersService.findByCenter(user.tenantId, centerId, accessContext);
 		}
-		return this.usersService.findAll(user.tenantId);
+		return this.usersService.findAll(user.tenantId, accessContext);
 	}
 
 	@Get(":id")
@@ -80,7 +86,7 @@ export class UsersController {
 	@ApiResponse({ status: 200, description: "User details", type: UserResponseDto })
 	@ApiResponse({ status: 404, description: "User not found" })
 	findOne(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<UserResponseDto> {
-		return this.usersService.findOne(user.tenantId, id);
+		return this.usersService.findOne(user.tenantId, id, buildAccessContext(user));
 	}
 
 	@Patch(":id")
@@ -93,7 +99,7 @@ export class UsersController {
 		@Param("id") id: string,
 		@Body() dto: UpdateUserDto,
 	): Promise<UserResponseDto> {
-		return this.usersService.update(user.tenantId, id, dto, user.id);
+		return this.usersService.update(user.tenantId, id, dto, user.id, buildAccessContext(user));
 	}
 
 	@Delete(":id")
@@ -102,7 +108,7 @@ export class UsersController {
 	@ApiResponse({ status: 200, description: "User deleted" })
 	@ApiResponse({ status: 404, description: "User not found" })
 	remove(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<{ message: string }> {
-		return this.usersService.remove(user.tenantId, id, user.id);
+		return this.usersService.remove(user.tenantId, id, user.id, buildAccessContext(user));
 	}
 
 	@Post(":id/unlock")
@@ -111,7 +117,7 @@ export class UsersController {
 	@ApiResponse({ status: 200, description: "User unlocked" })
 	@ApiResponse({ status: 404, description: "User not found" })
 	unlock(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<{ message: string }> {
-		return this.usersService.unlockUser(user.tenantId, id);
+		return this.usersService.unlockUser(user.tenantId, id, buildAccessContext(user));
 	}
 
 	@Post(":id/reset-password")
@@ -126,7 +132,7 @@ export class UsersController {
 		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 	): Promise<{ message: string; newPassword: string }> {
-		return this.usersService.resetToDefaultPassword(user.tenantId, id, user.id);
+		return this.usersService.resetToDefaultPassword(user.tenantId, id, user.id, buildAccessContext(user));
 	}
 
 	@Post(":id/change-status")
@@ -143,6 +149,13 @@ export class UsersController {
 		@Param("id") id: string,
 		@Body() dto: ChangeUserStatusDto,
 	): Promise<UserResponseDto> {
-		return this.usersService.changeUserStatus(user.tenantId, id, dto.status as UserStatus, dto.reason, user.id);
+		return this.usersService.changeUserStatus(
+			user.tenantId,
+			id,
+			dto.status as UserStatus,
+			dto.reason,
+			user.id,
+			buildAccessContext(user),
+		);
 	}
 }

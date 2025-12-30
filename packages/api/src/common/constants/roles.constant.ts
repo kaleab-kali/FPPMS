@@ -31,8 +31,6 @@ export const ROLE_LEVELS = {
 export const ACCESS_SCOPES = {
 	ALL_CENTERS: "ALL_CENTERS",
 	OWN_CENTER: "OWN_CENTER",
-	OWN_DEPARTMENT: "OWN_DEPARTMENT",
-	OWN_RECORDS: "OWN_RECORDS",
 } as const;
 
 export type AccessScope = (typeof ACCESS_SCOPES)[keyof typeof ACCESS_SCOPES];

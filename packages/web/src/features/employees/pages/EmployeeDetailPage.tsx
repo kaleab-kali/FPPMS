@@ -8,7 +8,9 @@ import {
 	Calendar,
 	Clock,
 	CreditCard,
+	ExternalLink,
 	FileText,
+	Gavel,
 	Heart,
 	Home,
 	Mail,
@@ -23,11 +25,14 @@ import {
 	User,
 	UserCheck,
 	Users,
+	UsersRound,
 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useEmployeeCommittees, useEmployeeTermHistory } from "#web/api/committees/committees.queries.ts";
+import { useEmployeeComplaintHistory } from "#web/api/complaints/complaints.queries.ts";
 import { useFamilyMembers } from "#web/api/employees/employee-family.queries.ts";
 import { useMaritalStatusHistory } from "#web/api/employees/employee-marital-status.queries.ts";
 import { useMedicalRecords } from "#web/api/employees/employee-medical.queries.ts";
@@ -50,6 +55,15 @@ import {
 import { Skeleton } from "#web/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#web/components/ui/tabs.tsx";
 import { STORAGE_KEYS } from "#web/config/constants.ts";
+import type { CommitteeMemberTerm, EmployeeCommitteeMembership } from "#web/types/committee.ts";
+import { TERM_STATUS_COLORS, TERM_STATUS_LABELS } from "#web/types/committee.ts";
+import type { EmployeeComplaintHistoryItem } from "#web/types/complaint.ts";
+import {
+	COMPLAINT_ARTICLE_LABELS,
+	COMPLAINT_FINDING_LABELS,
+	COMPLAINT_STATUS_COLORS,
+	COMPLAINT_STATUS_LABELS,
+} from "#web/types/complaint.ts";
 import type { Employee } from "#web/types/employee.ts";
 import type { FamilyMember } from "#web/types/employee-family.ts";
 import type { MaritalStatusRecord } from "#web/types/employee-marital-status.ts";
@@ -630,10 +644,327 @@ const MaritalStatusSection = React.memo(
 );
 MaritalStatusSection.displayName = "MaritalStatusSection";
 
+interface CommitteesTabProps {
+	committees: EmployeeCommitteeMembership[];
+	termHistory: CommitteeMemberTerm[];
+	isLoading: boolean;
+	isTermHistoryLoading: boolean;
+	t: (key: string) => string;
+	tCommittees: (key: string) => string;
+	isAmharic: boolean;
+}
+
+const ROLE_COLORS = {
+	CHAIRMAN: "default",
+	VICE_CHAIRMAN: "default",
+	SECRETARY: "secondary",
+	MEMBER: "outline",
+	ADVISOR: "outline",
+} as const;
+
+const CommitteesTab = React.memo(
+	({ committees, termHistory, isLoading, isTermHistoryLoading, t, tCommittees, isAmharic }: CommitteesTabProps) => {
+		const [showTermHistory, setShowTermHistory] = React.useState(false);
+
+		if (isLoading) {
+			return (
+				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+					<Skeleton className="h-48" />
+					<Skeleton className="h-48" />
+					<Skeleton className="h-48" />
+				</div>
+			);
+		}
+
+		if (committees.length === 0 && termHistory.length === 0) {
+			return (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<UsersRound className="h-12 w-12 text-muted-foreground mb-4" />
+					<p className="text-muted-foreground">{t("committees.noMemberships")}</p>
+				</div>
+			);
+		}
+
+		return (
+			<div className="space-y-6">
+				<div className="flex items-center justify-between">
+					<h3 className="font-semibold">{t("committees.currentMemberships")}</h3>
+					{termHistory.length > 0 && (
+						<Button variant="outline" size="sm" onClick={() => setShowTermHistory(!showTermHistory)}>
+							{showTermHistory ? t("committees.hideTermHistory") : t("committees.showTermHistory")}
+						</Button>
+					)}
+				</div>
+
+				{committees.length > 0 ? (
+					<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+						{committees.map((membership) => {
+							const committeeName =
+								isAmharic && membership.committee?.nameAm ? membership.committee.nameAm : membership.committee?.name;
+							const typeName =
+								isAmharic && membership.committee?.committeeType?.nameAm
+									? membership.committee.committeeType.nameAm
+									: membership.committee?.committeeType?.name;
+							const centerName = membership.committee?.center
+								? isAmharic && membership.committee.center.nameAm
+									? membership.committee.center.nameAm
+									: membership.committee.center.name
+								: tCommittees("committee.hqLevel");
+
+							return (
+								<div key={membership.id} className="rounded-lg border bg-card p-4">
+									<div className="flex items-start justify-between mb-3">
+										<div>
+											<h4 className="font-semibold">{committeeName ?? "-"}</h4>
+											<p className="text-sm text-muted-foreground">{typeName}</p>
+										</div>
+										<Badge variant={ROLE_COLORS[membership.role as keyof typeof ROLE_COLORS] ?? "outline"}>
+											{tCommittees(`role.${membership.role.toLowerCase()}`)}
+										</Badge>
+									</div>
+									<div className="grid grid-cols-2 gap-2 text-sm">
+										<DataField label={tCommittees("committee.center")} value={centerName} />
+										<DataField
+											label={tCommittees("member.appointedDate")}
+											value={formatDate(membership.appointedDate)}
+										/>
+										{membership.endDate && (
+											<DataField label={tCommittees("member.endDate")} value={formatDate(membership.endDate)} />
+										)}
+									</div>
+									<div className="mt-2 pt-2 border-t flex gap-2">
+										<Badge variant={membership.isActive ? "default" : "secondary"}>
+											{membership.isActive ? t("committees.active") : t("committees.inactive")}
+										</Badge>
+										{membership.committee?.status && (
+											<Badge variant="outline">
+												{tCommittees(`status.${membership.committee.status.toLowerCase()}`)}
+											</Badge>
+										)}
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				) : (
+					<p className="text-sm text-muted-foreground">{t("committees.noActiveMemberships")}</p>
+				)}
+
+				{showTermHistory && (
+					<div className="space-y-4">
+						<h3 className="font-semibold border-t pt-4">{t("committees.termHistory")}</h3>
+						{isTermHistoryLoading ? (
+							<div className="space-y-2">
+								<Skeleton className="h-16" />
+								<Skeleton className="h-16" />
+							</div>
+						) : termHistory.length > 0 ? (
+							<div className="space-y-3">
+								{termHistory.map((term) => {
+									const committeeName =
+										isAmharic && term.committee?.nameAm ? term.committee.nameAm : term.committee?.name;
+									const typeName =
+										isAmharic && term.committee?.committeeType?.nameAm
+											? term.committee.committeeType.nameAm
+											: term.committee?.committeeType?.name;
+									const centerName = term.center
+										? isAmharic && term.center.nameAm
+											? term.center.nameAm
+											: term.center.name
+										: tCommittees("committee.hqLevel");
+									const statusLabel = TERM_STATUS_LABELS[term.status];
+									const statusColor = TERM_STATUS_COLORS[term.status];
+
+									return (
+										<div key={term.id} className="rounded-lg border bg-card p-3">
+											<div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+												<div className="flex-1">
+													<div className="flex items-center gap-2 mb-1">
+														<span className="font-medium">{committeeName ?? "-"}</span>
+														<Badge variant="outline" className="text-xs">
+															{t("committees.term")} {term.termNumber}
+														</Badge>
+														<Badge className={statusColor}>{statusLabel}</Badge>
+													</div>
+													<p className="text-sm text-muted-foreground">
+														{typeName} - {centerName}
+													</p>
+												</div>
+												<div className="flex flex-wrap gap-4 text-sm">
+													<div>
+														<span className="text-muted-foreground">{t("committees.termStart")}:</span>{" "}
+														<span className="font-medium">{formatDate(term.startDate)}</span>
+													</div>
+													<div>
+														<span className="text-muted-foreground">{t("committees.termEnd")}:</span>{" "}
+														<span className="font-medium">{formatDate(term.endDate)}</span>
+													</div>
+													<div>
+														<span className="text-muted-foreground">{t("committees.termLimit")}:</span>{" "}
+														<span className="font-medium">
+															{term.termLimitMonths} {t("committees.months")}
+														</span>
+													</div>
+												</div>
+											</div>
+											{term.terminatedReason && (
+												<p className="text-sm text-destructive mt-2">
+													{t("committees.terminatedReason")}: {term.terminatedReason}
+												</p>
+											)}
+										</div>
+									);
+								})}
+							</div>
+						) : (
+							<p className="text-sm text-muted-foreground">{t("committees.noTermHistory")}</p>
+						)}
+					</div>
+				)}
+			</div>
+		);
+	},
+	(prev, next) =>
+		prev.committees === next.committees &&
+		prev.termHistory === next.termHistory &&
+		prev.isLoading === next.isLoading &&
+		prev.isTermHistoryLoading === next.isTermHistoryLoading &&
+		prev.isAmharic === next.isAmharic,
+);
+CommitteesTab.displayName = "CommitteesTab";
+
+interface ComplaintsTabProps {
+	complaints: EmployeeComplaintHistoryItem[];
+	isLoading: boolean;
+	t: (key: string, options?: Record<string, unknown>) => string;
+	onViewDetails: (id: string) => void;
+}
+
+const CLOSED_STATUSES = ["CLOSED_NO_LIABILITY", "CLOSED_FINAL"] as const;
+const GUILTY_FINDINGS = ["GUILTY", "GUILTY_NO_REBUTTAL"] as const;
+
+const ComplaintsTab = React.memo(
+	({ complaints, isLoading, t, onViewDetails }: ComplaintsTabProps) => {
+		const stats = React.useMemo(() => {
+			const total = complaints.length;
+			const open = complaints.filter(
+				(c) => !CLOSED_STATUSES.includes(c.status as (typeof CLOSED_STATUSES)[number]),
+			).length;
+			const closed = total - open;
+			const guilty = complaints.filter((c) =>
+				GUILTY_FINDINGS.includes(c.finding as (typeof GUILTY_FINDINGS)[number]),
+			).length;
+			return { total, open, closed, guilty };
+		}, [complaints]);
+
+		if (isLoading) {
+			return (
+				<div className="space-y-4">
+					<div className="grid gap-4 md:grid-cols-4">
+						<Skeleton className="h-20" />
+						<Skeleton className="h-20" />
+						<Skeleton className="h-20" />
+						<Skeleton className="h-20" />
+					</div>
+					<Skeleton className="h-48" />
+					<Skeleton className="h-48" />
+				</div>
+			);
+		}
+
+		if (complaints.length === 0) {
+			return (
+				<div className="flex flex-col items-center justify-center py-16 text-center">
+					<AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+					<p className="text-muted-foreground">{t("complaints.noComplaints")}</p>
+				</div>
+			);
+		}
+
+		return (
+			<div className="space-y-6">
+				<div className="grid gap-4 md:grid-cols-4">
+					<div className="rounded-lg border bg-card p-4">
+						<div className="flex items-center gap-2 text-muted-foreground text-sm">
+							<FileText className="h-4 w-4" />
+							{t("complaints.totalComplaints")}
+						</div>
+						<p className="text-2xl font-bold mt-1">{stats.total}</p>
+					</div>
+					<div className="rounded-lg border bg-card p-4">
+						<div className="flex items-center gap-2 text-muted-foreground text-sm">
+							<Clock className="h-4 w-4" />
+							{t("complaints.openComplaints")}
+						</div>
+						<p className="text-2xl font-bold mt-1 text-orange-600">{stats.open}</p>
+					</div>
+					<div className="rounded-lg border bg-card p-4">
+						<div className="flex items-center gap-2 text-muted-foreground text-sm">
+							<FileText className="h-4 w-4" />
+							{t("complaints.closedComplaints")}
+						</div>
+						<p className="text-2xl font-bold mt-1 text-green-600">{stats.closed}</p>
+					</div>
+					<div className="rounded-lg border bg-card p-4">
+						<div className="flex items-center gap-2 text-muted-foreground text-sm">
+							<Gavel className="h-4 w-4" />
+							{t("complaints.guiltyFindings")}
+						</div>
+						<p className="text-2xl font-bold mt-1 text-red-600">{stats.guilty}</p>
+					</div>
+				</div>
+
+				<div className="space-y-4">
+					{complaints.map((complaint) => {
+						const articleLabel = COMPLAINT_ARTICLE_LABELS[complaint.article];
+						const statusLabel = COMPLAINT_STATUS_LABELS[complaint.status];
+						const statusColor = COMPLAINT_STATUS_COLORS[complaint.status];
+						const findingLabel = complaint.finding
+							? COMPLAINT_FINDING_LABELS[complaint.finding as keyof typeof COMPLAINT_FINDING_LABELS]
+							: undefined;
+
+						return (
+							<div key={complaint.id} className="rounded-lg border bg-card p-4">
+								<div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+									<div className="flex-1">
+										<div className="flex items-center gap-2 mb-2">
+											<span className="font-mono font-semibold">{complaint.complaintNumber}</span>
+											<Badge variant={complaint.article === "ARTICLE_30" ? "outline" : "default"}>{articleLabel}</Badge>
+											<Badge className={statusColor}>{statusLabel}</Badge>
+										</div>
+										<p className="text-sm text-muted-foreground mb-2">
+											{t("complaints.offense")}: <span className="font-medium">{complaint.offenseCode}</span>
+										</p>
+										<div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+											<DataField label={t("complaints.incidentDate")} value={formatDate(complaint.incidentDate)} />
+											<DataField label={t("complaints.registeredDate")} value={formatDate(complaint.registeredDate)} />
+											{findingLabel && <DataField label={t("complaints.finding")} value={findingLabel} />}
+											{complaint.punishmentDescription && (
+												<DataField label={t("complaints.punishment")} value={complaint.punishmentDescription} />
+											)}
+										</div>
+									</div>
+									<Button variant="outline" size="sm" onClick={() => onViewDetails(complaint.id)}>
+										<ExternalLink className="h-4 w-4 mr-1.5" />
+										{t("complaints.viewDetails")}
+									</Button>
+								</div>
+							</div>
+						);
+					})}
+				</div>
+			</div>
+		);
+	},
+	(prev, next) => prev.complaints === next.complaints && prev.isLoading === next.isLoading,
+);
+ComplaintsTab.displayName = "ComplaintsTab";
+
 export const EmployeeDetailPage = React.memo(
 	() => {
 		const { t } = useTranslation("employees");
 		const { t: tCommon } = useTranslation("common");
+		const { t: tCommittees } = useTranslation("committees");
 		const { i18n } = useTranslation();
 		const navigate = useNavigate();
 		const { id } = useParams<{ id: string }>();
@@ -647,6 +978,9 @@ export const EmployeeDetailPage = React.memo(
 		const { data: maritalStatuses, isLoading: maritalLoading } = useMaritalStatusHistory(id ?? "");
 		const { data: directSuperior } = useDirectSuperior(id ?? "");
 		const { data: subordinates } = useSubordinates(id ?? "");
+		const { data: employeeCommittees, isLoading: committeesLoading } = useEmployeeCommittees(id ?? "");
+		const { data: employeeTermHistory, isLoading: termHistoryLoading } = useEmployeeTermHistory(id ?? "");
+		const { data: employeeComplaints, isLoading: complaintsLoading } = useEmployeeComplaintHistory(id ?? "");
 		const deleteMutation = useDeleteEmployee();
 
 		const isAmharic = i18n.language === "am";
@@ -676,6 +1010,13 @@ export const EmployeeDetailPage = React.memo(
 				});
 			}
 		}, [id, deleteMutation, tCommon, navigate]);
+
+		const handleViewComplaintDetails = React.useCallback(
+			(complaintId: string) => {
+				navigate(`/complaints/${complaintId}`);
+			},
+			[navigate],
+		);
 
 		if (isLoading) {
 			return (
@@ -809,6 +1150,13 @@ export const EmployeeDetailPage = React.memo(
 							<Package className="h-3.5 w-3.5" />
 							{t("tabs.inventory")}
 						</TabsTrigger>
+						<TabsTrigger
+							value="committees"
+							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+						>
+							<UsersRound className="h-3.5 w-3.5" />
+							{t("tabs.committees")}
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="basic" className="mt-5">
@@ -873,10 +1221,11 @@ export const EmployeeDetailPage = React.memo(
 					</TabsContent>
 
 					<TabsContent value="complaint" className="mt-5">
-						<PlaceholderTab
-							title={t("tabs.complaint")}
-							icon={<AlertTriangle className="h-8 w-8 text-muted-foreground" />}
+						<ComplaintsTab
+							complaints={employeeComplaints ?? []}
+							isLoading={complaintsLoading}
 							t={t}
+							onViewDetails={handleViewComplaintDetails}
 						/>
 					</TabsContent>
 
@@ -901,6 +1250,18 @@ export const EmployeeDetailPage = React.memo(
 							title={t("tabs.inventory")}
 							icon={<Package className="h-8 w-8 text-muted-foreground" />}
 							t={t}
+						/>
+					</TabsContent>
+
+					<TabsContent value="committees" className="mt-5">
+						<CommitteesTab
+							committees={employeeCommittees ?? []}
+							termHistory={employeeTermHistory ?? []}
+							isLoading={committeesLoading}
+							isTermHistoryLoading={termHistoryLoading}
+							t={t}
+							tCommittees={tCommittees}
+							isAmharic={isAmharic}
 						/>
 					</TabsContent>
 				</Tabs>

@@ -26,12 +26,18 @@ export const EmployeeSearch = React.memo(
 
 		const { data: employee, isLoading, isError } = useEmployeeByEmployeeId(searchTriggered ? searchId : "");
 
+		const onEmployeeFoundRef = React.useRef(onEmployeeFound);
+		onEmployeeFoundRef.current = onEmployeeFound;
+
+		const onClearRef = React.useRef(onClear);
+		onClearRef.current = onClear;
+
 		React.useEffect(() => {
 			if (employee && searchTriggered) {
-				onEmployeeFound(employee);
+				onEmployeeFoundRef.current(employee);
 				setSearchTriggered(false);
 			}
-		}, [employee, searchTriggered, onEmployeeFound]);
+		}, [employee, searchTriggered]);
 
 		const handleSearch = React.useCallback(() => {
 			if (searchId.trim()) {
@@ -55,8 +61,8 @@ export const EmployeeSearch = React.memo(
 		const handleClear = React.useCallback(() => {
 			setSearchId("");
 			setSearchTriggered(false);
-			onClear();
-		}, [onClear]);
+			onClearRef.current();
+		}, []);
 
 		const displayName = React.useMemo(() => {
 			if (!selectedEmployee) return "";
@@ -117,10 +123,7 @@ export const EmployeeSearch = React.memo(
 			</div>
 		);
 	},
-	(prevProps, nextProps) =>
-		prevProps.selectedEmployee?.id === nextProps.selectedEmployee?.id &&
-		prevProps.onEmployeeFound === nextProps.onEmployeeFound &&
-		prevProps.onClear === nextProps.onClear,
+	(prevProps, nextProps) => prevProps.selectedEmployee?.id === nextProps.selectedEmployee?.id,
 );
 
 EmployeeSearch.displayName = "EmployeeSearch";
