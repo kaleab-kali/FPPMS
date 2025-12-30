@@ -1,8 +1,16 @@
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { EmployeeStatus, TransferSource, TransferStatus } from "@prisma/client";
+import { ACCESS_SCOPES } from "#api/common/constants/roles.constant";
+import type { AccessContext } from "#api/common/interfaces/request-with-user.interface";
 import { PrismaService } from "#api/database/prisma.service";
 import { EmployeeTransferService } from "#api/modules/employees/services/employee-transfer.service";
+
+const mockAccessContext: AccessContext = {
+	centerId: "center-123",
+	roleAccessScope: ACCESS_SCOPES.ALL_CENTERS,
+	effectiveAccessScope: ACCESS_SCOPES.ALL_CENTERS,
+};
 
 const mockPrismaService = {
 	employee: {
@@ -110,7 +118,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(null);
 			mockPrismaService.employeeTransferRequest.create.mockResolvedValue(mockTransfer);
 
-			const result = await service.createTransferRequest(tenantId, createDto, userId);
+			const result = await service.createTransferRequest(tenantId, createDto, userId, mockAccessContext);
 
 			expect(result).toEqual(mockTransfer);
 			expect(mockPrismaService.employeeTransferRequest.create).toHaveBeenCalledWith(
@@ -130,7 +138,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if employee not found", async () => {
 			mockPrismaService.employee.findFirst.mockResolvedValue(null);
 
-			await expect(service.createTransferRequest(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createTransferRequest(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Employee not found"),
 			);
 		});
@@ -141,7 +149,7 @@ describe("EmployeeTransferService", () => {
 				status: EmployeeStatus.TERMINATED,
 			});
 
-			await expect(service.createTransferRequest(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createTransferRequest(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new BadRequestException("Only active employees can be transferred"),
 			);
 		});
@@ -152,7 +160,7 @@ describe("EmployeeTransferService", () => {
 				centerId: null,
 			});
 
-			await expect(service.createTransferRequest(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createTransferRequest(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new BadRequestException("Employee must be assigned to a center before transfer"),
 			);
 		});
@@ -161,7 +169,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employee.findFirst.mockResolvedValue(mockEmployee);
 
 			await expect(
-				service.createTransferRequest(tenantId, { ...createDto, toCenterId: centerId }, userId),
+				service.createTransferRequest(tenantId, { ...createDto, toCenterId: centerId }, userId, mockAccessContext),
 			).rejects.toThrow(new BadRequestException("Employee is already in the target center"));
 		});
 
@@ -169,7 +177,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employee.findFirst.mockResolvedValue(mockEmployee);
 			mockPrismaService.center.findFirst.mockResolvedValue(null);
 
-			await expect(service.createTransferRequest(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createTransferRequest(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Target center not found"),
 			);
 		});
@@ -179,7 +187,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.center.findFirst.mockResolvedValue({ id: toCenterId, tenantId });
 			mockPrismaService.department.findFirst.mockResolvedValue(null);
 
-			await expect(service.createTransferRequest(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createTransferRequest(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Target department not found"),
 			);
 		});
@@ -190,7 +198,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.department.findFirst.mockResolvedValue({ id: "dept-456", tenantId });
 			mockPrismaService.position.findFirst.mockResolvedValue(null);
 
-			await expect(service.createTransferRequest(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createTransferRequest(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Target position not found"),
 			);
 		});
@@ -202,7 +210,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.position.findFirst.mockResolvedValue({ id: "pos-456", tenantId });
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(mockTransfer);
 
-			await expect(service.createTransferRequest(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createTransferRequest(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new BadRequestException("Employee already has a pending transfer request"),
 			);
 		});
@@ -221,7 +229,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.position.findFirst.mockResolvedValue({ id: "pos-789", tenantId });
 			mockPrismaService.$transaction.mockResolvedValue([{ ...mockTransfer, status: TransferStatus.ACCEPTED }]);
 
-			const result = await service.acceptTransfer(tenantId, transferId, acceptDto, userId);
+			const result = await service.acceptTransfer(tenantId, transferId, acceptDto, userId, mockAccessContext);
 
 			expect(result.status).toBe(TransferStatus.ACCEPTED);
 			expect(mockPrismaService.$transaction).toHaveBeenCalled();
@@ -230,7 +238,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if transfer not found", async () => {
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(null);
 
-			await expect(service.acceptTransfer(tenantId, transferId, acceptDto, userId)).rejects.toThrow(
+			await expect(service.acceptTransfer(tenantId, transferId, acceptDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Transfer request not found"),
 			);
 		});
@@ -241,7 +249,7 @@ describe("EmployeeTransferService", () => {
 				status: TransferStatus.ACCEPTED,
 			});
 
-			await expect(service.acceptTransfer(tenantId, transferId, acceptDto, userId)).rejects.toThrow(
+			await expect(service.acceptTransfer(tenantId, transferId, acceptDto, userId, mockAccessContext)).rejects.toThrow(
 				new BadRequestException("Transfer request is already accepted"),
 			);
 		});
@@ -250,7 +258,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(mockTransfer);
 			mockPrismaService.department.findFirst.mockResolvedValue(null);
 
-			await expect(service.acceptTransfer(tenantId, transferId, acceptDto, userId)).rejects.toThrow(
+			await expect(service.acceptTransfer(tenantId, transferId, acceptDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Department not found"),
 			);
 		});
@@ -260,7 +268,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.department.findFirst.mockResolvedValue({ id: "dept-789", tenantId });
 			mockPrismaService.position.findFirst.mockResolvedValue(null);
 
-			await expect(service.acceptTransfer(tenantId, transferId, acceptDto, userId)).rejects.toThrow(
+			await expect(service.acceptTransfer(tenantId, transferId, acceptDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Position not found"),
 			);
 		});
@@ -269,7 +277,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(mockTransfer);
 			mockPrismaService.$transaction.mockResolvedValue([{ ...mockTransfer, status: TransferStatus.ACCEPTED }]);
 
-			const result = await service.acceptTransfer(tenantId, transferId, {}, userId);
+			const result = await service.acceptTransfer(tenantId, transferId, {}, userId, mockAccessContext);
 
 			expect(result.status).toBe(TransferStatus.ACCEPTED);
 		});
@@ -286,7 +294,7 @@ describe("EmployeeTransferService", () => {
 				rejectionReason: rejectDto.rejectionReason,
 			});
 
-			const result = await service.rejectTransfer(tenantId, transferId, rejectDto, userId);
+			const result = await service.rejectTransfer(tenantId, transferId, rejectDto, userId, mockAccessContext);
 
 			expect(result.status).toBe(TransferStatus.REJECTED);
 			expect(result.rejectionReason).toBe(rejectDto.rejectionReason);
@@ -295,7 +303,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if transfer not found", async () => {
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(null);
 
-			await expect(service.rejectTransfer(tenantId, transferId, rejectDto, userId)).rejects.toThrow(
+			await expect(service.rejectTransfer(tenantId, transferId, rejectDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Transfer request not found"),
 			);
 		});
@@ -306,7 +314,7 @@ describe("EmployeeTransferService", () => {
 				status: TransferStatus.REJECTED,
 			});
 
-			await expect(service.rejectTransfer(tenantId, transferId, rejectDto, userId)).rejects.toThrow(
+			await expect(service.rejectTransfer(tenantId, transferId, rejectDto, userId, mockAccessContext)).rejects.toThrow(
 				new BadRequestException("Transfer request is already rejected"),
 			);
 		});
@@ -322,7 +330,7 @@ describe("EmployeeTransferService", () => {
 				status: TransferStatus.CANCELLED,
 			});
 
-			const result = await service.cancelTransfer(tenantId, transferId, cancelDto, userId);
+			const result = await service.cancelTransfer(tenantId, transferId, cancelDto, userId, mockAccessContext);
 
 			expect(result.status).toBe(TransferStatus.CANCELLED);
 		});
@@ -330,7 +338,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if transfer not found", async () => {
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(null);
 
-			await expect(service.cancelTransfer(tenantId, transferId, cancelDto, userId)).rejects.toThrow(
+			await expect(service.cancelTransfer(tenantId, transferId, cancelDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Transfer request not found"),
 			);
 		});
@@ -341,7 +349,7 @@ describe("EmployeeTransferService", () => {
 				status: TransferStatus.ACCEPTED,
 			});
 
-			await expect(service.cancelTransfer(tenantId, transferId, cancelDto, userId)).rejects.toThrow(
+			await expect(service.cancelTransfer(tenantId, transferId, cancelDto, userId, mockAccessContext)).rejects.toThrow(
 				new BadRequestException("Only pending transfers can be cancelled"),
 			);
 		});
@@ -351,7 +359,7 @@ describe("EmployeeTransferService", () => {
 		it("should return transfer by ID", async () => {
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(mockTransfer);
 
-			const result = await service.getTransferById(tenantId, transferId);
+			const result = await service.getTransferById(tenantId, transferId, mockAccessContext);
 
 			expect(result).toEqual(mockTransfer);
 		});
@@ -359,7 +367,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if transfer not found", async () => {
 			mockPrismaService.employeeTransferRequest.findFirst.mockResolvedValue(null);
 
-			await expect(service.getTransferById(tenantId, transferId)).rejects.toThrow(
+			await expect(service.getTransferById(tenantId, transferId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Transfer request not found"),
 			);
 		});
@@ -370,7 +378,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employee.findFirst.mockResolvedValue(mockEmployee);
 			mockPrismaService.employeeTransferRequest.findMany.mockResolvedValue([mockTransfer]);
 
-			const result = await service.getTransferHistory(tenantId, employeeId);
+			const result = await service.getTransferHistory(tenantId, employeeId, mockAccessContext);
 
 			expect(result).toEqual([mockTransfer]);
 		});
@@ -378,7 +386,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if employee not found", async () => {
 			mockPrismaService.employee.findFirst.mockResolvedValue(null);
 
-			await expect(service.getTransferHistory(tenantId, employeeId)).rejects.toThrow(
+			await expect(service.getTransferHistory(tenantId, employeeId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Employee not found"),
 			);
 		});
@@ -388,7 +396,7 @@ describe("EmployeeTransferService", () => {
 		it("should return pending incoming transfers", async () => {
 			mockPrismaService.employeeTransferRequest.findMany.mockResolvedValue([mockTransfer]);
 
-			const result = await service.getPendingTransfersForCenter(tenantId, centerId);
+			const result = await service.getPendingTransfersForCenter(tenantId, centerId, mockAccessContext);
 
 			expect(result).toEqual([mockTransfer]);
 			expect(mockPrismaService.employeeTransferRequest.findMany).toHaveBeenCalledWith(
@@ -407,7 +415,7 @@ describe("EmployeeTransferService", () => {
 		it("should return outgoing pending transfers", async () => {
 			mockPrismaService.employeeTransferRequest.findMany.mockResolvedValue([mockTransfer]);
 
-			const result = await service.getOutgoingTransfersForCenter(tenantId, centerId);
+			const result = await service.getOutgoingTransfersForCenter(tenantId, centerId, mockAccessContext);
 
 			expect(result).toEqual([mockTransfer]);
 			expect(mockPrismaService.employeeTransferRequest.findMany).toHaveBeenCalledWith(
@@ -426,7 +434,7 @@ describe("EmployeeTransferService", () => {
 		it("should return all transfers", async () => {
 			mockPrismaService.employeeTransferRequest.findMany.mockResolvedValue([mockTransfer]);
 
-			const result = await service.getAllTransfers(tenantId);
+			const result = await service.getAllTransfers(tenantId, undefined, mockAccessContext);
 
 			expect(result).toEqual([mockTransfer]);
 		});
@@ -434,7 +442,7 @@ describe("EmployeeTransferService", () => {
 		it("should filter by status", async () => {
 			mockPrismaService.employeeTransferRequest.findMany.mockResolvedValue([mockTransfer]);
 
-			await service.getAllTransfers(tenantId, TransferStatus.PENDING);
+			await service.getAllTransfers(tenantId, TransferStatus.PENDING, mockAccessContext);
 
 			expect(mockPrismaService.employeeTransferRequest.findMany).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -460,7 +468,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employeeDeparture.findUnique.mockResolvedValue(null);
 			mockPrismaService.$transaction.mockResolvedValue([mockDeparture]);
 
-			const result = await service.createDeparture(tenantId, createDto, userId);
+			const result = await service.createDeparture(tenantId, createDto, userId, mockAccessContext);
 
 			expect(result).toEqual(mockDeparture);
 		});
@@ -468,7 +476,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if employee not found", async () => {
 			mockPrismaService.employee.findFirst.mockResolvedValue(null);
 
-			await expect(service.createDeparture(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createDeparture(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Employee not found"),
 			);
 		});
@@ -477,7 +485,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employee.findFirst.mockResolvedValue(mockEmployee);
 			mockPrismaService.employeeDeparture.findUnique.mockResolvedValue(mockDeparture);
 
-			await expect(service.createDeparture(tenantId, createDto, userId)).rejects.toThrow(
+			await expect(service.createDeparture(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
 				new BadRequestException("Departure record already exists for this employee"),
 			);
 		});
@@ -493,7 +501,7 @@ describe("EmployeeTransferService", () => {
 				departureReason: "Retirement",
 			});
 
-			const result = await service.updateDeparture(tenantId, departureId, updateDto);
+			const result = await service.updateDeparture(tenantId, departureId, updateDto, mockAccessContext);
 
 			expect(result.departureReason).toBe("Retirement");
 		});
@@ -501,7 +509,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if departure not found", async () => {
 			mockPrismaService.employeeDeparture.findFirst.mockResolvedValue(null);
 
-			await expect(service.updateDeparture(tenantId, departureId, updateDto)).rejects.toThrow(
+			await expect(service.updateDeparture(tenantId, departureId, updateDto, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Departure record not found"),
 			);
 		});
@@ -511,7 +519,7 @@ describe("EmployeeTransferService", () => {
 		it("should return departure by employee ID", async () => {
 			mockPrismaService.employeeDeparture.findFirst.mockResolvedValue(mockDeparture);
 
-			const result = await service.getDeparture(tenantId, employeeId);
+			const result = await service.getDeparture(tenantId, employeeId, mockAccessContext);
 
 			expect(result).toEqual(mockDeparture);
 		});
@@ -519,7 +527,7 @@ describe("EmployeeTransferService", () => {
 		it("should return null if no departure exists", async () => {
 			mockPrismaService.employeeDeparture.findFirst.mockResolvedValue(null);
 
-			const result = await service.getDeparture(tenantId, employeeId);
+			const result = await service.getDeparture(tenantId, employeeId, mockAccessContext);
 
 			expect(result).toBeNull();
 		});
@@ -529,7 +537,7 @@ describe("EmployeeTransferService", () => {
 		it("should return departure by ID", async () => {
 			mockPrismaService.employeeDeparture.findFirst.mockResolvedValue(mockDeparture);
 
-			const result = await service.getDepartureById(tenantId, departureId);
+			const result = await service.getDepartureById(tenantId, departureId, mockAccessContext);
 
 			expect(result).toEqual(mockDeparture);
 		});
@@ -537,7 +545,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if departure not found", async () => {
 			mockPrismaService.employeeDeparture.findFirst.mockResolvedValue(null);
 
-			await expect(service.getDepartureById(tenantId, departureId)).rejects.toThrow(
+			await expect(service.getDepartureById(tenantId, departureId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Departure record not found"),
 			);
 		});
@@ -547,7 +555,7 @@ describe("EmployeeTransferService", () => {
 		it("should return all departures", async () => {
 			mockPrismaService.employeeDeparture.findMany.mockResolvedValue([mockDeparture]);
 
-			const result = await service.getAllDepartures(tenantId);
+			const result = await service.getAllDepartures(tenantId, mockAccessContext);
 
 			expect(result).toEqual([mockDeparture]);
 		});
@@ -558,7 +566,7 @@ describe("EmployeeTransferService", () => {
 			mockPrismaService.employeeDeparture.findFirst.mockResolvedValue(mockDeparture);
 			mockPrismaService.$transaction.mockResolvedValue([]);
 
-			const result = await service.deleteDeparture(tenantId, departureId, userId);
+			const result = await service.deleteDeparture(tenantId, departureId, userId, mockAccessContext);
 
 			expect(result).toEqual({ message: "Departure record deleted successfully" });
 			expect(mockPrismaService.$transaction).toHaveBeenCalled();
@@ -567,7 +575,7 @@ describe("EmployeeTransferService", () => {
 		it("should throw NotFoundException if departure not found", async () => {
 			mockPrismaService.employeeDeparture.findFirst.mockResolvedValue(null);
 
-			await expect(service.deleteDeparture(tenantId, departureId, userId)).rejects.toThrow(
+			await expect(service.deleteDeparture(tenantId, departureId, userId, mockAccessContext)).rejects.toThrow(
 				new NotFoundException("Departure record not found"),
 			);
 		});
