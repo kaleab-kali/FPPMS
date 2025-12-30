@@ -258,7 +258,8 @@ export const useAvailableActions = (complaint: Complaint, t: TFunction): Availab
 			complaint.article === "ARTICLE_30" &&
 			complaint.decisionAuthority === "DISCIPLINE_COMMITTEE" &&
 			!complaint.assignedCommitteeId;
-		const canForwardToHq = complaint.article === "ARTICLE_31" && complaint.assignedCommitteeId && !complaint.hqCommitteeId;
+		const canForwardToHq =
+			complaint.article === "ARTICLE_31" && complaint.assignedCommitteeId && !complaint.hqCommitteeId;
 		const canSubmitAppeal = !complaint.appeals?.some((a) => !a.decision);
 		const pendingAppeals = complaint.appeals?.filter((a) => !a.decision) ?? [];
 
