@@ -2,12 +2,14 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { STORAGE_KEYS } from "#web/config/constants.ts";
 import { api } from "#web/lib/api-client.ts";
 import type { AuthUser, LoginRequest, LoginResponse } from "#web/types/auth.ts";
+import { canAccessAllCenters } from "#web/types/auth.ts";
 
 interface AuthContextValue {
 	user: AuthUser | undefined;
 	isAuthenticated: boolean;
 	isLoading: boolean;
 	requirePasswordChange: boolean;
+	hasAllCentersAccess: boolean;
 	login: (credentials: LoginRequest) => Promise<void>;
 	logout: () => Promise<void>;
 	updateUser: (user: AuthUser) => void;
@@ -49,6 +51,7 @@ export const AuthProvider = React.memo(
 
 		const isAuthenticated = !!user && !!getStoredToken();
 		const requirePasswordChange = user?.requirePasswordChange ?? false;
+		const hasAllCentersAccess = user ? canAccessAllCenters(user.effectiveAccessScope) : false;
 
 		useEffect(() => {
 			const token = getStoredToken();
@@ -97,11 +100,12 @@ export const AuthProvider = React.memo(
 				isAuthenticated,
 				isLoading,
 				requirePasswordChange,
+				hasAllCentersAccess,
 				login,
 				logout,
 				updateUser,
 			}),
-			[user, isAuthenticated, isLoading, requirePasswordChange, login, logout, updateUser],
+			[user, isAuthenticated, isLoading, requirePasswordChange, hasAllCentersAccess, login, logout, updateUser],
 		);
 
 		return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

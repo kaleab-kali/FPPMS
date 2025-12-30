@@ -61,7 +61,7 @@ const SYSTEM_ROLES = [
 		nameAm: "የክፍል ኃላፊ",
 		description: "Department management and approvals",
 		level: 60,
-		accessScope: "OWN_DEPARTMENT",
+		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
 	{
@@ -70,7 +70,7 @@ const SYSTEM_ROLES = [
 		nameAm: "ተቆጣጣሪ",
 		description: "Team supervision, leave approvals",
 		level: 50,
-		accessScope: "OWN_DEPARTMENT",
+		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
 	{
@@ -106,7 +106,7 @@ const SYSTEM_ROLES = [
 		nameAm: "ተመልካች",
 		description: "Read-only access to allowed modules",
 		level: 10,
-		accessScope: "OWN_RECORDS",
+		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
 ];
@@ -118,7 +118,18 @@ export const seedRoles = async (prisma: PrismaClient): Promise<void> => {
 		});
 
 		if (existingRole) {
-			console.log(`Role ${role.code} already exists, skipping...`);
+			await prisma.role.update({
+				where: { id: existingRole.id },
+				data: {
+					name: role.name,
+					nameAm: role.nameAm,
+					description: role.description,
+					level: role.level,
+					accessScope: role.accessScope,
+					isSystemRole: role.isSystemRole,
+				},
+			});
+			console.log(`Updated role: ${role.name} (${role.code})`);
 			continue;
 		}
 

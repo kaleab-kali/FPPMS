@@ -1,33 +1,36 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UserStatus } from "@prisma/client";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import { ChangeUserStatusDto } from "#api/modules/users/dto/change-user-status.dto";
 import { CreateUserDto, CreateUserFromEmployeeDto } from "#api/modules/users/dto/create-user.dto";
 import { UpdateUserDto } from "#api/modules/users/dto/update-user.dto";
 import { UserResponseDto } from "#api/modules/users/dto/user-response.dto";
-import { UsersService } from "#api/modules/users/users.service";
+import { AccessContext, UsersService } from "#api/modules/users/users.service";
+
+const buildAccessContext = (user: AuthUserDto): AccessContext => ({
+	centerId: user.centerId,
+	effectiveAccessScope: user.effectiveAccessScope,
+});
 
 @ApiTags("users")
 @ApiBearerAuth("JWT-auth")
 @Controller("users")
-@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN, SYSTEM_ROLES.CENTER_ADMIN)
 export class UsersController {
 	constructor(private usersService: UsersService) {}
 
 	@Post()
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("users.create.user")
 	@ApiOperation({ summary: "Create user", description: "Create a new user account with custom username/password" })
 	@ApiResponse({ status: 201, description: "User created", type: UserResponseDto })
 	create(@CurrentUser() user: AuthUserDto, @Body() dto: CreateUserDto): Promise<UserResponseDto> {
-		return this.usersService.create(user.tenantId, dto, user.id);
+		return this.usersService.create(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Post("from-employee")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("users.create.user")
 	@ApiOperation({
 		summary: "Create user from employee",
 		description: "Create a new user account from an employee with auto-generated username and default password",
@@ -37,10 +40,11 @@ export class UsersController {
 		@CurrentUser() user: AuthUserDto,
 		@Body() dto: CreateUserFromEmployeeDto,
 	): Promise<{ user: UserResponseDto; generatedUsername: string; generatedPassword: string }> {
-		return this.usersService.createFromEmployee(user.tenantId, dto, user.id);
+		return this.usersService.createFromEmployee(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Get("available-employees")
+	@Permissions("users.read.user")
 	@ApiOperation({
 		summary: "Get employees without user accounts",
 		description: "Get list of active employees who do not have a user account yet",
@@ -60,30 +64,33 @@ export class UsersController {
 			positionName?: string;
 		}>
 	> {
-		return this.usersService.findEmployeesWithoutUserAccount(user.tenantId, search);
+		return this.usersService.findEmployeesWithoutUserAccount(user.tenantId, search, buildAccessContext(user));
 	}
 
 	@Get()
+	@Permissions("users.read.user")
 	@ApiOperation({ summary: "List all users", description: "Get all users, optionally filtered by center" })
 	@ApiQuery({ name: "centerId", required: false, description: "Filter by center ID" })
 	@ApiResponse({ status: 200, description: "List of users", type: [UserResponseDto] })
 	findAll(@CurrentUser() user: AuthUserDto, @Query("centerId") centerId?: string): Promise<UserResponseDto[]> {
+		const accessContext = buildAccessContext(user);
 		if (centerId) {
-			return this.usersService.findByCenter(user.tenantId, centerId);
+			return this.usersService.findByCenter(user.tenantId, centerId, accessContext);
 		}
-		return this.usersService.findAll(user.tenantId);
+		return this.usersService.findAll(user.tenantId, accessContext);
 	}
 
 	@Get(":id")
+	@Permissions("users.read.user")
 	@ApiOperation({ summary: "Get user by ID", description: "Get a single user by ID" })
 	@ApiResponse({ status: 200, description: "User details", type: UserResponseDto })
 	@ApiResponse({ status: 404, description: "User not found" })
 	findOne(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<UserResponseDto> {
-		return this.usersService.findOne(user.tenantId, id);
+		return this.usersService.findOne(user.tenantId, id, buildAccessContext(user));
 	}
 
 	@Patch(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("users.update.user")
 	@ApiOperation({ summary: "Update user", description: "Update user details" })
 	@ApiResponse({ status: 200, description: "User updated", type: UserResponseDto })
 	@ApiResponse({ status: 404, description: "User not found" })
@@ -92,29 +99,29 @@ export class UsersController {
 		@Param("id") id: string,
 		@Body() dto: UpdateUserDto,
 	): Promise<UserResponseDto> {
-		return this.usersService.update(user.tenantId, id, dto, user.id);
+		return this.usersService.update(user.tenantId, id, dto, user.id, buildAccessContext(user));
 	}
 
 	@Delete(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("users.delete.user")
 	@ApiOperation({ summary: "Delete user", description: "Delete a user account" })
 	@ApiResponse({ status: 200, description: "User deleted" })
 	@ApiResponse({ status: 404, description: "User not found" })
 	remove(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<{ message: string }> {
-		return this.usersService.remove(user.tenantId, id, user.id);
+		return this.usersService.remove(user.tenantId, id, user.id, buildAccessContext(user));
 	}
 
 	@Post(":id/unlock")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("users.manage.user")
 	@ApiOperation({ summary: "Unlock user", description: "Unlock a locked user account" })
 	@ApiResponse({ status: 200, description: "User unlocked" })
 	@ApiResponse({ status: 404, description: "User not found" })
 	unlock(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<{ message: string }> {
-		return this.usersService.unlockUser(user.tenantId, id);
+		return this.usersService.unlockUser(user.tenantId, id, buildAccessContext(user));
 	}
 
 	@Post(":id/reset-password")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("users.manage.user")
 	@ApiOperation({
 		summary: "Reset password to default",
 		description: "Reset user password to default (Police@YYYY). User must change on next login.",
@@ -125,11 +132,11 @@ export class UsersController {
 		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 	): Promise<{ message: string; newPassword: string }> {
-		return this.usersService.resetToDefaultPassword(user.tenantId, id, user.id);
+		return this.usersService.resetToDefaultPassword(user.tenantId, id, user.id, buildAccessContext(user));
 	}
 
 	@Post(":id/change-status")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("users.manage.user")
 	@ApiOperation({
 		summary: "Change user status",
 		description: "Change user status (ACTIVE, INACTIVE, TRANSFERRED, TERMINATED) with reason",
@@ -142,6 +149,13 @@ export class UsersController {
 		@Param("id") id: string,
 		@Body() dto: ChangeUserStatusDto,
 	): Promise<UserResponseDto> {
-		return this.usersService.changeUserStatus(user.tenantId, id, dto.status as UserStatus, dto.reason, user.id);
+		return this.usersService.changeUserStatus(
+			user.tenantId,
+			id,
+			dto.status as UserStatus,
+			dto.reason,
+			user.id,
+			buildAccessContext(user),
+		);
 	}
 }

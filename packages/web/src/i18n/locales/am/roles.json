@@ -20,8 +20,6 @@
 	"deleteConfirm": "ይህን ሮል ለመሰረዝ እርግጠኛ ነዎት?",
 	"scopes": {
 		"ALL_CENTERS": "ሁሉም ማእከሎች",
-		"OWN_CENTER": "የራስ ማእከል",
-		"OWN_DEPARTMENT": "የራስ ዲፓርትመንት",
-		"OWN_RECORDS": "የራስ መዝገቦች"
+		"OWN_CENTER": "የራስ ማእከል"
 	}
 }

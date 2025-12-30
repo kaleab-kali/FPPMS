@@ -31,7 +31,14 @@ export {
 } from "#api/modules/employees/dto/employee-photo.dto";
 export { EmployeeListResponseDto, EmployeeResponseDto } from "#api/modules/employees/dto/employee-response.dto";
 export {
+	AssignSuperiorDto,
+	BulkAssignSuperiorDto,
+	RemoveSuperiorDto,
+} from "#api/modules/employees/dto/employee-superior.dto";
+export {
 	AcceptTransferDto,
+	AssignFromHqToCenterDto,
+	AssignToHqDto,
 	CancelTransferDto,
 	CreateDepartureDto,
 	CreateTransferRequestDto,

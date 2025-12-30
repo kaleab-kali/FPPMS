@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Employee, EmployeeStatus, EmployeeType, MaritalStatus, Prisma, WorkScheduleType } from "@prisma/client";
+import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
 import { PrismaService } from "#api/database/prisma.service";
 import {
 	ChangeEmployeeStatusDto,
@@ -13,6 +14,11 @@ import {
 } from "#api/modules/employees/dto/index";
 import { EmployeeIdGeneratorService } from "#api/modules/employees/services/employee-id-generator.service";
 import { RetirementCalculationService } from "#api/modules/employees/services/retirement-calculation.service";
+
+export interface AccessContext {
+	centerId?: string;
+	effectiveAccessScope: string;
+}
 
 const DEFAULT_PAGE_SIZE = 20;
 const DEFAULT_SALARY_STEP = 0;
@@ -78,7 +84,10 @@ export class EmployeesService {
 		tenantId: string,
 		dto: CreateMilitaryEmployeeDto,
 		createdBy: string,
+		accessContext: AccessContext,
 	): Promise<EmployeeResponseDto> {
+		validateCenterAccess(accessContext.centerId, dto.centerId, accessContext.effectiveAccessScope);
+
 		const rank = await this.prisma.militaryRank.findFirst({
 			where: {
 				id: dto.rankId,
@@ -205,7 +214,10 @@ export class EmployeesService {
 		tenantId: string,
 		dto: CreateCivilianEmployeeDto,
 		createdBy: string,
+		accessContext: AccessContext,
 	): Promise<EmployeeResponseDto> {
+		validateCenterAccess(accessContext.centerId, dto.centerId, accessContext.effectiveAccessScope);
+
 		await this.validateRelations(tenantId, dto);
 
 		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId, EmployeeType.CIVILIAN);
@@ -314,7 +326,10 @@ export class EmployeesService {
 		tenantId: string,
 		dto: CreateTemporaryEmployeeDto,
 		createdBy: string,
+		accessContext: AccessContext,
 	): Promise<EmployeeResponseDto> {
+		validateCenterAccess(accessContext.centerId, dto.centerId, accessContext.effectiveAccessScope);
+
 		await this.validateRelations(tenantId, dto);
 
 		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId, EmployeeType.TEMPORARY);
@@ -421,12 +436,13 @@ export class EmployeesService {
 	async findAll(
 		tenantId: string,
 		filter: EmployeeFilterDto,
+		accessContext: AccessContext,
 	): Promise<{ data: EmployeeListResponseDto[]; total: number; page: number; pageSize: number }> {
 		const page = filter.page ?? 1;
 		const pageSize = filter.pageSize ?? DEFAULT_PAGE_SIZE;
 		const skip = (page - 1) * pageSize;
 
-		const where = this.buildWhereClause(tenantId, filter);
+		const where = this.buildWhereClause(tenantId, filter, accessContext);
 		const orderBy = this.buildOrderBy(filter);
 
 		const [employees, total] = await Promise.all([
@@ -449,7 +465,7 @@ export class EmployeesService {
 		return { data, total, page, pageSize };
 	}
 
-	async findOne(tenantId: string, id: string): Promise<EmployeeResponseDto> {
+	async findOne(tenantId: string, id: string, accessContext: AccessContext): Promise<EmployeeResponseDto> {
 		const employee = await this.prisma.employee.findFirst({
 			where: { id, tenantId, deletedAt: null },
 			include: this.getEmployeeIncludes(),
@@ -459,10 +475,16 @@ export class EmployeesService {
 			throw new NotFoundException(`Employee with ID "${id}" not found`);
 		}
 
+		validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
+
 		return this.mapToResponse(employee);
 	}
 
-	async findByEmployeeId(tenantId: string, employeeId: string): Promise<EmployeeResponseDto> {
+	async findByEmployeeId(
+		tenantId: string,
+		employeeId: string,
+		accessContext: AccessContext,
+	): Promise<EmployeeResponseDto> {
 		const employee = await this.prisma.employee.findFirst({
 			where: { employeeId, tenantId, deletedAt: null },
 			include: this.getEmployeeIncludes(),
@@ -472,10 +494,18 @@ export class EmployeesService {
 			throw new NotFoundException(`Employee with ID "${employeeId}" not found`);
 		}
 
+		validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
+
 		return this.mapToResponse(employee);
 	}
 
-	async update(tenantId: string, id: string, dto: UpdateEmployeeDto, updatedBy: string): Promise<EmployeeResponseDto> {
+	async update(
+		tenantId: string,
+		id: string,
+		dto: UpdateEmployeeDto,
+		updatedBy: string,
+		accessContext: AccessContext,
+	): Promise<EmployeeResponseDto> {
 		const existing = await this.prisma.employee.findFirst({
 			where: { id, tenantId, deletedAt: null },
 		});
@@ -483,6 +513,8 @@ export class EmployeesService {
 		if (!existing) {
 			throw new NotFoundException(`Employee with ID "${id}" not found`);
 		}
+
+		validateCenterAccess(accessContext.centerId, existing.centerId ?? undefined, accessContext.effectiveAccessScope);
 
 		const updateData = this.buildUpdatePayload(dto, existing, updatedBy);
 
@@ -572,7 +604,12 @@ export class EmployeesService {
 		return updateData;
 	}
 
-	async remove(tenantId: string, id: string, deletedBy: string): Promise<{ message: string }> {
+	async remove(
+		tenantId: string,
+		id: string,
+		deletedBy: string,
+		accessContext: AccessContext,
+	): Promise<{ message: string }> {
 		const existing = await this.prisma.employee.findFirst({
 			where: { id, tenantId, deletedAt: null },
 		});
@@ -580,6 +617,8 @@ export class EmployeesService {
 		if (!existing) {
 			throw new NotFoundException(`Employee with ID "${id}" not found`);
 		}
+
+		validateCenterAccess(accessContext.centerId, existing.centerId ?? undefined, accessContext.effectiveAccessScope);
 
 		await this.prisma.employee.update({
 			where: { id },
@@ -598,6 +637,7 @@ export class EmployeesService {
 		id: string,
 		dto: ChangeEmployeeStatusDto,
 		updatedBy: string,
+		accessContext: AccessContext,
 	): Promise<EmployeeResponseDto> {
 		const existing = await this.prisma.employee.findFirst({
 			where: { id, tenantId, deletedAt: null },
@@ -606,6 +646,8 @@ export class EmployeesService {
 		if (!existing) {
 			throw new NotFoundException(`Employee with ID "${id}" not found`);
 		}
+
+		validateCenterAccess(accessContext.centerId, existing.centerId ?? undefined, accessContext.effectiveAccessScope);
 
 		const statusReason = dto.notes ? `${dto.reason}\n\nNotes: ${dto.notes}` : dto.reason;
 
@@ -629,7 +671,12 @@ export class EmployeesService {
 		return this.mapToResponse(employee);
 	}
 
-	async returnToActive(tenantId: string, id: string, updatedBy: string): Promise<EmployeeResponseDto> {
+	async returnToActive(
+		tenantId: string,
+		id: string,
+		updatedBy: string,
+		accessContext: AccessContext,
+	): Promise<EmployeeResponseDto> {
 		const existing = await this.prisma.employee.findFirst({
 			where: { id, tenantId, deletedAt: null },
 		});
@@ -637,6 +684,8 @@ export class EmployeesService {
 		if (!existing) {
 			throw new NotFoundException(`Employee with ID "${id}" not found`);
 		}
+
+		validateCenterAccess(accessContext.centerId, existing.centerId ?? undefined, accessContext.effectiveAccessScope);
 
 		if (existing.status === EmployeeStatus.ACTIVE) {
 			throw new BadRequestException("Employee is already active");
@@ -660,27 +709,35 @@ export class EmployeesService {
 		return this.mapToResponse(employee);
 	}
 
-	async getStatistics(tenantId: string): Promise<{
+	async getStatistics(
+		tenantId: string,
+		accessContext: AccessContext,
+	): Promise<{
 		total: number;
 		byType: Record<string, number>;
 		byStatus: Record<string, number>;
 		byGender: Record<string, number>;
 	}> {
+		const baseWhere: Prisma.EmployeeWhereInput = { tenantId, deletedAt: null };
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			baseWhere.centerId = accessContext.centerId;
+		}
+
 		const [total, byType, byStatus, byGender] = await Promise.all([
-			this.prisma.employee.count({ where: { tenantId, deletedAt: null } }),
+			this.prisma.employee.count({ where: baseWhere }),
 			this.prisma.employee.groupBy({
 				by: ["employeeType"],
-				where: { tenantId, deletedAt: null },
+				where: baseWhere,
 				_count: true,
 			}),
 			this.prisma.employee.groupBy({
 				by: ["status"],
-				where: { tenantId, deletedAt: null },
+				where: baseWhere,
 				_count: true,
 			}),
 			this.prisma.employee.groupBy({
 				by: ["gender"],
-				where: { tenantId, deletedAt: null },
+				where: baseWhere,
 				_count: true,
 			}),
 		]);
@@ -693,8 +750,16 @@ export class EmployeesService {
 		};
 	}
 
-	private buildWhereClause(tenantId: string, filter: EmployeeFilterDto): Prisma.EmployeeWhereInput {
+	private buildWhereClause(
+		tenantId: string,
+		filter: EmployeeFilterDto,
+		accessContext: AccessContext,
+	): Prisma.EmployeeWhereInput {
 		const where: Prisma.EmployeeWhereInput = { tenantId, deletedAt: null };
+
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			where.centerId = accessContext.centerId;
+		}
 
 		if (filter.search) {
 			where.OR = [

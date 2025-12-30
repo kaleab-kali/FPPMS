@@ -1,5 +1,5 @@
 import { Global, Module, ValidationPipe as NestValidationPipe } from "@nestjs/common";
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE, DiscoveryModule } from "@nestjs/core";
 import { AllExceptionsFilter } from "#api/common/filters/all-exceptions.filter";
 import { HttpExceptionFilter } from "#api/common/filters/http-exception.filter";
 import { PrismaExceptionFilter } from "#api/common/filters/prisma-exception.filter";
@@ -9,10 +9,14 @@ import { RolesGuard } from "#api/common/guards/roles.guard";
 import { TenantGuard } from "#api/common/guards/tenant.guard";
 import { LoggingInterceptor } from "#api/common/interceptors/logging.interceptor";
 import { TenantContextInterceptor } from "#api/common/interceptors/tenant-context.interceptor";
+import { PermissionDiscoveryService } from "#api/common/services/permission-discovery.service";
+import { DatabaseModule } from "#api/database/database.module";
 
 @Global()
 @Module({
+	imports: [DiscoveryModule, DatabaseModule],
 	providers: [
+		PermissionDiscoveryService,
 		{
 			provide: APP_FILTER,
 			useClass: AllExceptionsFilter,

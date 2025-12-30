@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#web/
 import { Input } from "#web/components/ui/input.tsx";
 import { Label } from "#web/components/ui/label.tsx";
 import { useAuth } from "#web/context/AuthContext.tsx";
-import { ACCOUNT_DEACTIVATED_KEY } from "#web/lib/api-client.ts";
+import { ACCOUNT_DEACTIVATED_KEY, PERMISSIONS_CHANGED_KEY } from "#web/lib/api-client.ts";
 
 const loginSchema = z.object({
 	username: z.string().min(1, "Username is required"),
@@ -36,6 +36,11 @@ export const LoginPage = React.memo(
 			if (deactivatedMessage) {
 				setError(deactivatedMessage);
 				globalThis.localStorage.removeItem(ACCOUNT_DEACTIVATED_KEY);
+			}
+			const permissionsChangedMessage = globalThis.localStorage.getItem(PERMISSIONS_CHANGED_KEY);
+			if (permissionsChangedMessage) {
+				setError(permissionsChangedMessage);
+				globalThis.localStorage.removeItem(PERMISSIONS_CHANGED_KEY);
 			}
 		}, []);
 

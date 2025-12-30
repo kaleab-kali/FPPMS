@@ -3,9 +3,13 @@ export class LoginUserDto {
 	username: string;
 	tenantId: string;
 	centerId: string | undefined;
+	employeeId: string | undefined;
 	roles: string[];
 	permissions: string[];
+	accessScopes: string[];
+	effectiveAccessScope: string;
 	requirePasswordChange: boolean;
+	permissionVersion: number;
 }
 
 export class LoginResponseDto {

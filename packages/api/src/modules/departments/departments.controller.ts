@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import { DepartmentsService } from "#api/modules/departments/departments.service";
 import { CreateDepartmentDto } from "#api/modules/departments/dto/create-department.dto";
@@ -16,7 +15,7 @@ export class DepartmentsController {
 	constructor(private departmentsService: DepartmentsService) {}
 
 	@Post()
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("departments.create.department")
 	@ApiOperation({ summary: "Create department", description: "Create a new department" })
 	@ApiResponse({ status: 201, description: "Department created", type: DepartmentResponseDto })
 	create(@CurrentUser() user: AuthUserDto, @Body() dto: CreateDepartmentDto): Promise<DepartmentResponseDto> {
@@ -24,6 +23,7 @@ export class DepartmentsController {
 	}
 
 	@Get()
+	@Permissions("departments.read.department")
 	@ApiOperation({ summary: "List all departments", description: "Get all departments for current tenant" })
 	@ApiResponse({ status: 200, description: "List of departments", type: [DepartmentResponseDto] })
 	findAll(@CurrentUser() user: AuthUserDto): Promise<DepartmentResponseDto[]> {
@@ -31,6 +31,7 @@ export class DepartmentsController {
 	}
 
 	@Get("hierarchy")
+	@Permissions("departments.read.department")
 	@ApiOperation({ summary: "Get department hierarchy", description: "Get departments in hierarchical structure" })
 	@ApiQuery({ name: "parentId", required: false, description: "Parent department ID" })
 	@ApiResponse({ status: 200, description: "Department hierarchy", type: [DepartmentResponseDto] })
@@ -42,6 +43,7 @@ export class DepartmentsController {
 	}
 
 	@Get(":id")
+	@Permissions("departments.read.department")
 	@ApiOperation({ summary: "Get department by ID", description: "Get a single department by ID" })
 	@ApiResponse({ status: 200, description: "Department details", type: DepartmentResponseDto })
 	@ApiResponse({ status: 404, description: "Department not found" })
@@ -50,7 +52,7 @@ export class DepartmentsController {
 	}
 
 	@Patch(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("departments.update.department")
 	@ApiOperation({ summary: "Update department", description: "Update department details" })
 	@ApiResponse({ status: 200, description: "Department updated", type: DepartmentResponseDto })
 	@ApiResponse({ status: 404, description: "Department not found" })
@@ -63,7 +65,7 @@ export class DepartmentsController {
 	}
 
 	@Delete(":id")
-	@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
+	@Permissions("departments.delete.department")
 	@ApiOperation({ summary: "Delete department", description: "Delete a department" })
 	@ApiResponse({ status: 200, description: "Department deleted" })
 	@ApiResponse({ status: 404, description: "Department not found" })

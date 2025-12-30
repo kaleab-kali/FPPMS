@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SYSTEM_ROLES } from "#api/common/constants/roles.constant";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
-import { Roles } from "#api/common/decorators/roles.decorator";
+import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import { CreateRoleDto } from "#api/modules/roles/dto/create-role.dto";
 import { RoleResponseDto } from "#api/modules/roles/dto/role-response.dto";
@@ -12,11 +11,11 @@ import { RolesService } from "#api/modules/roles/roles.service";
 @ApiTags("roles")
 @ApiBearerAuth("JWT-auth")
 @Controller("roles")
-@Roles(SYSTEM_ROLES.IT_ADMIN, SYSTEM_ROLES.HQ_ADMIN)
 export class RolesController {
 	constructor(private rolesService: RolesService) {}
 
 	@Post()
+	@Permissions("roles.create.role")
 	@ApiOperation({ summary: "Create role", description: "Create a new role" })
 	@ApiResponse({ status: 201, description: "Role created", type: RoleResponseDto })
 	create(@CurrentUser() user: AuthUserDto, @Body() dto: CreateRoleDto): Promise<RoleResponseDto> {
@@ -24,6 +23,7 @@ export class RolesController {
 	}
 
 	@Get()
+	@Permissions("roles.read.role")
 	@ApiOperation({ summary: "List all roles", description: "Get all roles including system roles" })
 	@ApiResponse({ status: 200, description: "List of roles", type: [RoleResponseDto] })
 	findAll(@CurrentUser() user: AuthUserDto): Promise<RoleResponseDto[]> {
@@ -31,6 +31,7 @@ export class RolesController {
 	}
 
 	@Get(":id")
+	@Permissions("roles.read.role")
 	@ApiOperation({ summary: "Get role by ID", description: "Get a single role by ID" })
 	@ApiResponse({ status: 200, description: "Role details", type: RoleResponseDto })
 	@ApiResponse({ status: 404, description: "Role not found" })
@@ -39,6 +40,7 @@ export class RolesController {
 	}
 
 	@Get("code/:code")
+	@Permissions("roles.read.role")
 	@ApiOperation({ summary: "Get role by code", description: "Get a single role by code" })
 	@ApiResponse({ status: 200, description: "Role details", type: RoleResponseDto })
 	@ApiResponse({ status: 404, description: "Role not found" })
@@ -47,6 +49,7 @@ export class RolesController {
 	}
 
 	@Patch(":id")
+	@Permissions("roles.update.role")
 	@ApiOperation({ summary: "Update role", description: "Update role details and permissions" })
 	@ApiResponse({ status: 200, description: "Role updated", type: RoleResponseDto })
 	@ApiResponse({ status: 404, description: "Role not found" })
@@ -59,6 +62,7 @@ export class RolesController {
 	}
 
 	@Delete(":id")
+	@Permissions("roles.delete.role")
 	@ApiOperation({ summary: "Delete role", description: "Delete a custom role (system roles cannot be deleted)" })
 	@ApiResponse({ status: 200, description: "Role deleted" })
 	@ApiResponse({ status: 400, description: "Cannot delete system role or role in use" })

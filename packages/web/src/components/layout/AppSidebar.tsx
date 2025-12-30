@@ -1,4 +1,5 @@
 import {
+	AlertTriangle,
 	Building2,
 	Calendar,
 	ChevronRight,
@@ -6,6 +7,7 @@ import {
 	Clock,
 	DollarSign,
 	FileText,
+	Gavel,
 	Home,
 	type LucideIcon,
 	Package,
@@ -13,14 +15,17 @@ import {
 	Star,
 	UserCheck,
 	Users,
+	UsersRound,
 } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, useLocation } from "react-router-dom";
+import { useMyCommittees } from "#web/api/committees/committees.queries";
 import logoImage from "#web/assets/fpp.jpg";
-import { NavUser } from "#web/components/layout/NavUser.tsx";
-import { Avatar, AvatarFallback, AvatarImage } from "#web/components/ui/avatar.tsx";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "#web/components/ui/collapsible.tsx";
+import { NavUser } from "#web/components/layout/NavUser";
+import { Avatar, AvatarFallback, AvatarImage } from "#web/components/ui/avatar";
+import { Badge } from "#web/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "#web/components/ui/collapsible";
 import {
 	Sidebar,
 	SidebarContent,
@@ -35,74 +40,129 @@ import {
 	SidebarMenuSub,
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
-} from "#web/components/ui/sidebar.tsx";
-import { useAuth } from "#web/context/AuthContext.tsx";
+} from "#web/components/ui/sidebar";
+import { PERMISSIONS } from "#web/constants/permissions";
+import { useAuth } from "#web/context/AuthContext";
+import { useUserPermissions } from "#web/hooks/usePermissions";
+
+interface NavSubItemConfig {
+	titleKey: string;
+	url: string;
+	permission?: string;
+	permissions?: string[];
+	requiresAllCentersAccess?: boolean;
+}
 
 interface NavItemConfig {
 	titleKey: string;
 	url: string;
 	icon: LucideIcon;
-	items?: { titleKey: string; url: string }[];
+	permission?: string;
+	permissions?: string[];
+	items?: NavSubItemConfig[];
 }
 
 const NAV_ITEMS_CONFIG: NavItemConfig[] = [
 	{
 		titleKey: "dashboard",
-		url: "/dashboard",
+		url: "#",
 		icon: Home,
+		items: [
+			{ titleKey: "overview", url: "/dashboard" },
+			{
+				titleKey: "hqOversight",
+				url: "/dashboard/hq",
+				permission: PERMISSIONS.DASHBOARD_HQ,
+				requiresAllCentersAccess: true,
+			},
+		],
 	},
 	{
 		titleKey: "organization",
 		url: "#",
 		icon: Building2,
+		permissions: [
+			PERMISSIONS.DEPARTMENT_READ,
+			PERMISSIONS.POSITION_READ,
+			PERMISSIONS.CENTER_READ,
+			PERMISSIONS.TENANT_READ,
+			PERMISSIONS.ROLE_READ,
+			PERMISSIONS.USER_READ,
+			PERMISSIONS.RANK_READ,
+			PERMISSIONS.LOOKUP_READ,
+		],
 		items: [
-			{ titleKey: "departments", url: "/organization/departments" },
-			{ titleKey: "positions", url: "/organization/positions" },
-			{ titleKey: "centers", url: "/organization/centers" },
-			{ titleKey: "tenants", url: "/organization/tenants" },
-			{ titleKey: "roles", url: "/roles" },
-			{ titleKey: "users", url: "/users" },
-			{ titleKey: "ranks", url: "/lookups/ranks" },
-			{ titleKey: "regions", url: "/lookups/regions" },
-			{ titleKey: "subCities", url: "/lookups/sub-cities" },
-			{ titleKey: "woredas", url: "/lookups/woredas" },
+			{ titleKey: "departments", url: "/organization/departments", permission: PERMISSIONS.DEPARTMENT_READ },
+			{ titleKey: "positions", url: "/organization/positions", permission: PERMISSIONS.POSITION_READ },
+			{ titleKey: "centers", url: "/organization/centers", permission: PERMISSIONS.CENTER_READ },
+			{ titleKey: "tenants", url: "/organization/tenants", permission: PERMISSIONS.TENANT_READ },
+			{ titleKey: "roles", url: "/roles", permission: PERMISSIONS.ROLE_READ },
+			{ titleKey: "users", url: "/users", permission: PERMISSIONS.USER_READ },
+			{ titleKey: "ranks", url: "/lookups/ranks", permission: PERMISSIONS.RANK_READ },
+			{ titleKey: "regions", url: "/lookups/regions", permission: PERMISSIONS.LOOKUP_READ },
+			{ titleKey: "subCities", url: "/lookups/sub-cities", permission: PERMISSIONS.LOOKUP_READ },
+			{ titleKey: "woredas", url: "/lookups/woredas", permission: PERMISSIONS.LOOKUP_READ },
 		],
 	},
 	{
 		titleKey: "employees",
 		url: "#",
 		icon: Users,
+		permission: PERMISSIONS.EMPLOYEE_READ,
 		items: [
-			{ titleKey: "allEmployees", url: "/employees" },
-			{ titleKey: "formerEmployees", url: "/employees/former" },
-			{ titleKey: "registration", url: "/employees/register" },
-			{ titleKey: "photoCapture", url: "/employees/photo" },
-			{ titleKey: "medicalHistory", url: "/employees/medical" },
-			{ titleKey: "family", url: "/employees/family" },
-			{ titleKey: "maritalStatus", url: "/employees/marital" },
-			{ titleKey: "healthRecords", url: "/employees/health" },
-			{ titleKey: "transfer", url: "/employees/transfer" },
+			{ titleKey: "allEmployees", url: "/employees", permission: PERMISSIONS.EMPLOYEE_READ },
+			{ titleKey: "formerEmployees", url: "/employees/former", permission: PERMISSIONS.EMPLOYEE_READ },
+			{ titleKey: "registration", url: "/employees/register", permission: PERMISSIONS.EMPLOYEE_CREATE },
+			{ titleKey: "photoCapture", url: "/employees/photo", permission: PERMISSIONS.EMPLOYEE_UPDATE },
+			{ titleKey: "medicalHistory", url: "/employees/medical", permission: PERMISSIONS.EMPLOYEE_READ },
+			{ titleKey: "family", url: "/employees/family", permission: PERMISSIONS.EMPLOYEE_READ },
+			{ titleKey: "maritalStatus", url: "/employees/marital", permission: PERMISSIONS.EMPLOYEE_READ },
+			{ titleKey: "healthRecords", url: "/employees/health", permission: PERMISSIONS.EMPLOYEE_READ },
+			{ titleKey: "transfer", url: "/employees/transfer", permission: PERMISSIONS.EMPLOYEE_UPDATE },
+			{ titleKey: "directSuperior", url: "/employees/superior", permission: PERMISSIONS.EMPLOYEE_UPDATE },
+		],
+	},
+	{
+		titleKey: "committees",
+		url: "#",
+		icon: UsersRound,
+		permission: PERMISSIONS.COMMITTEE_READ,
+		items: [
+			{ titleKey: "allCommittees", url: "/committees", permission: PERMISSIONS.COMMITTEE_READ },
+			{ titleKey: "committeeTypes", url: "/committees/types", permission: PERMISSIONS.COMMITTEE_TYPE_READ },
+		],
+	},
+	{
+		titleKey: "complaints",
+		url: "#",
+		icon: AlertTriangle,
+		permission: PERMISSIONS.COMPLAINT_READ,
+		items: [
+			{ titleKey: "allComplaints", url: "/complaints", permission: PERMISSIONS.COMPLAINT_READ },
+			{ titleKey: "registerComplaint", url: "/complaints/register", permission: PERMISSIONS.COMPLAINT_CREATE },
 		],
 	},
 	{
 		titleKey: "leave",
 		url: "#",
 		icon: Calendar,
+		permissions: [PERMISSIONS.LEAVE_READ, PERMISSIONS.LEAVE_TYPE_READ],
 		items: [
-			{ titleKey: "leaveTypes", url: "/leave/types" },
-			{ titleKey: "leaveRequests", url: "/leave/requests" },
-			{ titleKey: "leaveBalance", url: "/leave/balance" },
-			{ titleKey: "leaveCalendar", url: "/leave/calendar" },
-			{ titleKey: "leavePermit", url: "/leave/permit" },
+			{ titleKey: "leaveTypes", url: "/leave/types", permission: PERMISSIONS.LEAVE_TYPE_READ },
+			{ titleKey: "leaveRequests", url: "/leave/requests", permission: PERMISSIONS.LEAVE_READ },
+			{ titleKey: "leaveBalance", url: "/leave/balance", permission: PERMISSIONS.LEAVE_READ },
+			{ titleKey: "leaveCalendar", url: "/leave/calendar", permission: PERMISSIONS.LEAVE_READ },
+			{ titleKey: "leavePermit", url: "/leave/permit", permission: PERMISSIONS.LEAVE_READ },
 		],
 	},
 	{
 		titleKey: "holidays",
 		url: "#",
 		icon: Star,
+		permission: PERMISSIONS.HOLIDAY_READ,
 		items: [
-			{ titleKey: "holidayList", url: "/holidays" },
-			{ titleKey: "holidayCalendar", url: "/holidays/calendar" },
+			{ titleKey: "holidayList", url: "/holidays", permission: PERMISSIONS.HOLIDAY_READ },
+			{ titleKey: "holidayCalendar", url: "/holidays/calendar", permission: PERMISSIONS.HOLIDAY_READ },
 		],
 	},
 	{
@@ -184,12 +244,30 @@ interface NavMainItemProps {
 	item: NavItemConfig;
 	isActive: boolean;
 	t: (key: string) => string;
+	hasPermission: (permission: string) => boolean;
+	hasAnyPermission: (permissions: string[]) => boolean;
+	hasAllCentersAccess: boolean;
 }
 
 const NavMainItem = React.memo(
-	({ item, isActive, t }: NavMainItemProps) => {
+	({ item, isActive, t, hasPermission, hasAnyPermission, hasAllCentersAccess }: NavMainItemProps) => {
 		const hasSubItems = item.items && item.items.length > 0;
 		const title = t(item.titleKey);
+
+		const filteredSubItems = React.useMemo(() => {
+			if (!item.items) return [];
+			return item.items.filter((subItem) => {
+				if (subItem.requiresAllCentersAccess && !hasAllCentersAccess) return false;
+				if (!subItem.permission && !subItem.permissions) return true;
+				if (subItem.permission) return hasPermission(subItem.permission);
+				if (subItem.permissions) return hasAnyPermission(subItem.permissions);
+				return true;
+			});
+		}, [item.items, hasPermission, hasAnyPermission, hasAllCentersAccess]);
+
+		if (hasSubItems && filteredSubItems.length === 0) {
+			return null;
+		}
 
 		if (!hasSubItems) {
 			return (
@@ -221,7 +299,7 @@ const NavMainItem = React.memo(
 					</CollapsibleTrigger>
 					<CollapsibleContent>
 						<SidebarMenuSub>
-							{item.items?.map((subItem) => (
+							{filteredSubItems.map((subItem) => (
 								<SidebarMenuSubItem key={subItem.titleKey}>
 									<SidebarMenuSubButton asChild>
 										<NavLink
@@ -239,7 +317,13 @@ const NavMainItem = React.memo(
 			</Collapsible>
 		);
 	},
-	(prev, next) => prev.item.titleKey === next.item.titleKey && prev.isActive === next.isActive && prev.t === next.t,
+	(prev, next) =>
+		prev.item.titleKey === next.item.titleKey &&
+		prev.isActive === next.isActive &&
+		prev.t === next.t &&
+		prev.hasPermission === next.hasPermission &&
+		prev.hasAnyPermission === next.hasAnyPermission &&
+		prev.hasAllCentersAccess === next.hasAllCentersAccess,
 );
 
 NavMainItem.displayName = "NavMainItem";
@@ -247,8 +331,13 @@ NavMainItem.displayName = "NavMainItem";
 export const AppSidebar = React.memo(
 	({ ...props }: React.ComponentProps<typeof Sidebar>) => {
 		const { t } = useTranslation("navigation");
-		const { user } = useAuth();
+		const { i18n } = useTranslation();
+		const { user, hasAllCentersAccess } = useAuth();
 		const location = useLocation();
+		const isAmharic = i18n.language === "am";
+		const { hasPermission, hasAnyPermission } = useUserPermissions();
+
+		const { data: myCommittees } = useMyCommittees();
 
 		const isItemActive = React.useCallback(
 			(item: NavItemConfig): boolean => {
@@ -261,6 +350,15 @@ export const AppSidebar = React.memo(
 			[location.pathname],
 		);
 
+		const filteredNavItems = React.useMemo(() => {
+			return NAV_ITEMS_CONFIG.filter((item) => {
+				if (!item.permission && !item.permissions) return true;
+				if (item.permission) return hasPermission(item.permission);
+				if (item.permissions) return hasAnyPermission(item.permissions);
+				return true;
+			});
+		}, [hasPermission, hasAnyPermission]);
+
 		const userData = React.useMemo(
 			() => ({
 				name: user?.username ?? "User",
@@ -269,6 +367,10 @@ export const AppSidebar = React.memo(
 			}),
 			[user?.username],
 		);
+
+		const isMyCommitteesActive = React.useMemo(() => {
+			return location.pathname.startsWith("/my-committee");
+		}, [location.pathname]);
 
 		return (
 			<Sidebar variant="inset" {...props}>
@@ -291,11 +393,69 @@ export const AppSidebar = React.memo(
 					</SidebarMenu>
 				</SidebarHeader>
 				<SidebarContent>
+					{myCommittees && myCommittees.length > 0 && (
+						<SidebarGroup>
+							<SidebarGroupLabel>{t("myCommittees")}</SidebarGroupLabel>
+							<SidebarMenu>
+								<Collapsible asChild defaultOpen={isMyCommitteesActive}>
+									<SidebarMenuItem>
+										<SidebarMenuButton asChild tooltip={t("assignedCases")}>
+											<span className="cursor-pointer">
+												<Gavel />
+												<span>{t("assignedCases")}</span>
+											</span>
+										</SidebarMenuButton>
+										<CollapsibleTrigger asChild>
+											<SidebarMenuAction className="data-[state=open]:rotate-90">
+												<ChevronRight />
+												<span className="sr-only">Toggle</span>
+											</SidebarMenuAction>
+										</CollapsibleTrigger>
+										<CollapsibleContent>
+											<SidebarMenuSub>
+												{myCommittees.map((membership) => {
+													const committeeName =
+														isAmharic && membership.committee?.nameAm
+															? membership.committee.nameAm
+															: (membership.committee?.name ?? "Committee");
+													return (
+														<SidebarMenuSubItem key={membership.id}>
+															<SidebarMenuSubButton asChild>
+																<NavLink
+																	to={`/my-committee/${membership.committeeId}/cases`}
+																	className={({ isActive: subActive }) => (subActive ? "bg-sidebar-accent" : "")}
+																>
+																	<span className="flex items-center gap-2">
+																		<span className="truncate max-w-[150px]">{committeeName}</span>
+																		<Badge variant="outline" className="text-xs">
+																			{t(`role.${membership.role.toLowerCase()}`)}
+																		</Badge>
+																	</span>
+																</NavLink>
+															</SidebarMenuSubButton>
+														</SidebarMenuSubItem>
+													);
+												})}
+											</SidebarMenuSub>
+										</CollapsibleContent>
+									</SidebarMenuItem>
+								</Collapsible>
+							</SidebarMenu>
+						</SidebarGroup>
+					)}
 					<SidebarGroup>
 						<SidebarGroupLabel>{t("navigation")}</SidebarGroupLabel>
 						<SidebarMenu>
-							{NAV_ITEMS_CONFIG.map((item) => (
-								<NavMainItem key={item.titleKey} item={item} isActive={isItemActive(item)} t={t} />
+							{filteredNavItems.map((item) => (
+								<NavMainItem
+									key={item.titleKey}
+									item={item}
+									isActive={isItemActive(item)}
+									t={t}
+									hasPermission={hasPermission}
+									hasAnyPermission={hasAnyPermission}
+									hasAllCentersAccess={hasAllCentersAccess}
+								/>
 							))}
 						</SidebarMenu>
 					</SidebarGroup>
