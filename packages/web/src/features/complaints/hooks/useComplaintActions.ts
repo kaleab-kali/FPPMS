@@ -258,7 +258,7 @@ export const useAvailableActions = (complaint: Complaint, t: TFunction): Availab
 			complaint.article === "ARTICLE_30" &&
 			complaint.decisionAuthority === "DISCIPLINE_COMMITTEE" &&
 			!complaint.assignedCommitteeId;
-		const canForwardToHq = complaint.assignedCommitteeId && !complaint.centerId;
+		const canForwardToHq = complaint.article === "ARTICLE_31" && complaint.assignedCommitteeId && !complaint.hqCommitteeId;
 		const canSubmitAppeal = !complaint.appeals?.some((a) => !a.decision);
 		const pendingAppeals = complaint.appeals?.filter((a) => !a.decision) ?? [];
 
@@ -290,7 +290,7 @@ export const useAvailableActions = (complaint: Complaint, t: TFunction): Availab
 				actions.push({ type: "finding", label: t("action.recordFinding") });
 				break;
 			case "INVESTIGATION_COMPLETE":
-				if (complaint.article === "ARTICLE_31" && canForwardToHq) {
+				if (canForwardToHq) {
 					actions.push({ type: "forwardToHq", label: t("action.forwardToHq") });
 				}
 				break;

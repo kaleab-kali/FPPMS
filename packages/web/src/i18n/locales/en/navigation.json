@@ -1,5 +1,7 @@
 {
 	"dashboard": "Dashboard",
+	"overview": "Overview",
+	"hqOversight": "HQ Oversight",
 	"employees": "Employees",
 	"allEmployees": "All Employees",
 	"formerEmployees": "Former Employees",

@@ -3,9 +3,10 @@ import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { CurrentTenant } from "#api/common/decorators/current-tenant.decorator";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
 import { Permissions } from "#api/common/decorators/permissions.decorator";
+import { AuthUserDto } from "#api/common/dto/auth-user.dto";
 import { JwtAuthGuard } from "#api/common/guards/jwt-auth.guard";
 import { PermissionsGuard } from "#api/common/guards/permissions.guard";
-import { ComplaintsService } from "./complaints.service";
+import { AccessContext, ComplaintsService } from "./complaints.service";
 import {
 	AssignCommitteeDto,
 	CloseComplaintDto,
@@ -26,6 +27,11 @@ import {
 	SubmitAppealDto,
 } from "./dto";
 
+const buildAccessContext = (user: AuthUserDto): AccessContext => ({
+	centerId: user.centerId,
+	effectiveAccessScope: user.effectiveAccessScope,
+});
+
 @ApiTags("complaints")
 @Controller("complaints")
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -40,12 +46,8 @@ export class ComplaintsController {
 	@ApiResponse({ status: 401, description: "Unauthorized" })
 	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
 	@ApiResponse({ status: 404, description: "Accused employee not found" })
-	async create(
-		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string; centerId: string },
-		@Body() dto: CreateComplaintDto,
-	) {
-		return this.complaintsService.create(tenantId, user.centerId, user.id, dto);
+	async create(@CurrentTenant() tenantId: string, @CurrentUser() user: AuthUserDto, @Body() dto: CreateComplaintDto) {
+		return this.complaintsService.create(tenantId, user.centerId ?? "", user.id, dto, buildAccessContext(user));
 	}
 
 	@Get()
@@ -54,8 +56,12 @@ export class ComplaintsController {
 	@ApiResponse({ status: 200, description: "List of complaints", type: [ComplaintListResponseDto] })
 	@ApiResponse({ status: 401, description: "Unauthorized" })
 	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
-	async findAll(@CurrentTenant() tenantId: string, @Query() filters: ComplaintFilterDto) {
-		return this.complaintsService.findAll(tenantId, filters);
+	async findAll(
+		@CurrentTenant() tenantId: string,
+		@CurrentUser() user: AuthUserDto,
+		@Query() filters: ComplaintFilterDto,
+	) {
+		return this.complaintsService.findAll(tenantId, filters, buildAccessContext(user));
 	}
 
 	@Get("employee/:employeeId")
@@ -92,8 +98,8 @@ export class ComplaintsController {
 	@ApiResponse({ status: 401, description: "Unauthorized" })
 	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
 	@ApiResponse({ status: 404, description: "Complaint not found" })
-	async findOne(@CurrentTenant() tenantId: string, @Param("id") id: string) {
-		return this.complaintsService.findOne(tenantId, id);
+	async findOne(@CurrentTenant() tenantId: string, @CurrentUser() user: AuthUserDto, @Param("id") id: string) {
+		return this.complaintsService.findOne(tenantId, id, buildAccessContext(user));
 	}
 
 	@Get(":id/timeline")
@@ -119,7 +125,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint not found" })
 	async recordNotification(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: RecordNotificationDto,
 	) {
@@ -137,7 +143,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint not found" })
 	async recordRebuttal(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: RecordRebuttalDto,
 	) {
@@ -155,7 +161,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint not found" })
 	async markRebuttalDeadlinePassed(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 	) {
 		return this.complaintsService.markRebuttalDeadlinePassed(tenantId, id, user.id);
@@ -172,7 +178,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint not found" })
 	async recordFinding(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: RecordFindingDto,
 	) {
@@ -190,7 +196,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint not found" })
 	async recordDecision(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: RecordDecisionDto,
 	) {
@@ -208,7 +214,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint or committee not found" })
 	async assignCommittee(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: AssignCommitteeDto,
 	) {
@@ -226,7 +232,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint or committee not found" })
 	async forwardToCommittee(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: ForwardToCommitteeDto,
 	) {
@@ -244,7 +250,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint or HQ committee not found" })
 	async forwardToHq(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: ForwardToHqDto,
 	) {
@@ -262,7 +268,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint not found" })
 	async recordHqDecision(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: RecordHqDecisionDto,
 	) {
@@ -280,7 +286,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint not found" })
 	async submitAppeal(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: SubmitAppealDto,
 	) {
@@ -299,7 +305,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint or appeal not found" })
 	async recordAppealDecision(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Param("appealId") appealId: string,
 		@Body() dto: RecordAppealDecisionDto,
@@ -318,7 +324,7 @@ export class ComplaintsController {
 	@ApiResponse({ status: 404, description: "Complaint not found" })
 	async closeComplaint(
 		@CurrentTenant() tenantId: string,
-		@CurrentUser() user: { id: string },
+		@CurrentUser() user: AuthUserDto,
 		@Param("id") id: string,
 		@Body() dto: CloseComplaintDto,
 	) {

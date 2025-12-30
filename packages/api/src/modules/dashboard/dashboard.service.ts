@@ -1,7 +1,13 @@
-import { Injectable } from "@nestjs/common";
+import { ForbiddenException, Injectable } from "@nestjs/common";
 import { ComplaintStatus, TermStatus } from "@prisma/client";
+import { canAccessAllCenters } from "#api/common/utils/access-scope.util";
 import { PrismaService } from "#api/database/prisma.service";
 import type { CenterStatistics, ComplaintStatusCount, HqDashboardResponseDto } from "./dto/dashboard.dto";
+
+export interface AccessContext {
+	centerId?: string;
+	effectiveAccessScope: string;
+}
 
 const DASHBOARD_CONFIG = {
 	EXPIRING_TERMS_DAYS: 30,
@@ -13,7 +19,11 @@ const DASHBOARD_CONFIG = {
 export class DashboardService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async getHqOverview(tenantId: string, _userId: string): Promise<HqDashboardResponseDto> {
+	async getHqOverview(tenantId: string, accessContext: AccessContext): Promise<HqDashboardResponseDto> {
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			throw new ForbiddenException("HQ dashboard is only accessible to users with ALL_CENTERS access scope");
+		}
+
 		const totalEmployees = await this.prisma.employee.count({
 			where: {
 				tenantId,

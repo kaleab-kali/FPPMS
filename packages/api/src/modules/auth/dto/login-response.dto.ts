@@ -6,6 +6,8 @@ export class LoginUserDto {
 	employeeId: string | undefined;
 	roles: string[];
 	permissions: string[];
+	accessScopes: string[];
+	effectiveAccessScope: string;
 	requirePasswordChange: boolean;
 	permissionVersion: number;
 }

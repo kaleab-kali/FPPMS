@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { v4 as uuidv4 } from "uuid";
+import { ACCESS_SCOPES } from "#api/common/constants/roles.constant";
 import { comparePassword, hashPassword } from "#api/common/utils/hash.util";
 import { PrismaService } from "#api/database/prisma.service";
 import { ChangePasswordDto } from "#api/modules/auth/dto/change-password.dto";
@@ -16,8 +17,31 @@ interface JwtPayloadData {
 	employeeId?: string;
 	roles: string[];
 	permissions: string[];
+	accessScopes: string[];
+	effectiveAccessScope: string;
 	permissionVersion: number;
 }
+
+const ACCESS_SCOPE_PRIORITY = {
+	[ACCESS_SCOPES.ALL_CENTERS]: 2,
+	[ACCESS_SCOPES.OWN_CENTER]: 1,
+} as const;
+
+const computeEffectiveAccessScope = (scopes: string[]): string => {
+	if (scopes.length === 0) {
+		return ACCESS_SCOPES.OWN_CENTER;
+	}
+	let highestScope: string = ACCESS_SCOPES.OWN_CENTER;
+	let highestPriority = 0;
+	for (const scope of scopes) {
+		const priority = ACCESS_SCOPE_PRIORITY[scope as keyof typeof ACCESS_SCOPE_PRIORITY] ?? 0;
+		if (priority > highestPriority) {
+			highestPriority = priority;
+			highestScope = scope;
+		}
+	}
+	return highestScope;
+};
 
 const AUTH_CONFIG = {
 	MAX_FAILED_LOGIN_ATTEMPTS: 5,
@@ -96,6 +120,8 @@ export class AuthService {
 				),
 			),
 		];
+		const accessScopes = [...new Set(user.userRoles.map((ur) => ur.role.accessScope))];
+		const effectiveAccessScope = computeEffectiveAccessScope(accessScopes);
 
 		return {
 			id: user.id,
@@ -105,6 +131,8 @@ export class AuthService {
 			employeeId: user.employeeId || undefined,
 			roles,
 			permissions,
+			accessScopes,
+			effectiveAccessScope,
 			requirePasswordChange: user.mustChangePassword,
 			permissionVersion: user.permissionVersion,
 		};
@@ -119,6 +147,8 @@ export class AuthService {
 			employeeId: user.employeeId,
 			roles: user.roles,
 			permissions: user.permissions,
+			accessScopes: user.accessScopes,
+			effectiveAccessScope: user.effectiveAccessScope,
 			permissionVersion: user.permissionVersion,
 		};
 
@@ -195,6 +225,8 @@ export class AuthService {
 				),
 			),
 		];
+		const accessScopes = [...new Set(user.userRoles.map((ur) => ur.role.accessScope))];
+		const effectiveAccessScope = computeEffectiveAccessScope(accessScopes);
 
 		const payload: JwtPayloadData = {
 			sub: user.id,
@@ -204,6 +236,8 @@ export class AuthService {
 			employeeId: user.employeeId || undefined,
 			roles,
 			permissions,
+			accessScopes,
+			effectiveAccessScope,
 			permissionVersion: user.permissionVersion,
 		};
 
@@ -349,6 +383,8 @@ export class AuthService {
 				),
 			),
 		];
+		const accessScopes = [...new Set(user.userRoles.map((ur) => ur.role.accessScope))];
+		const effectiveAccessScope = computeEffectiveAccessScope(accessScopes);
 
 		return {
 			id: user.id,
@@ -358,6 +394,8 @@ export class AuthService {
 			employeeId: user.employeeId || undefined,
 			roles,
 			permissions,
+			accessScopes,
+			effectiveAccessScope,
 			requirePasswordChange: user.mustChangePassword,
 			permissionVersion: user.permissionVersion,
 		};

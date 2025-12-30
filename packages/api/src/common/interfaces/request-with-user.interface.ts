@@ -8,6 +8,8 @@ export interface JwtPayload {
 	employeeId?: string;
 	roles: string[];
 	permissions: string[];
+	accessScopes: string[];
+	effectiveAccessScope: string;
 	iat?: number;
 	exp?: number;
 }
@@ -20,6 +22,8 @@ export interface RequestUser {
 	employeeId?: string;
 	roles: string[];
 	permissions: string[];
+	accessScopes: string[];
+	effectiveAccessScope: string;
 }
 
 export interface RequestWithUser extends Request {

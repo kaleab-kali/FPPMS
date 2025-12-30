@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { EmployeeStatus, TransferSource, TransferStatus } from "@prisma/client";
+import { EmployeeStatus, Prisma, TransferSource, TransferStatus } from "@prisma/client";
+import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
 import { PrismaService } from "#api/database/prisma.service";
 import {
 	AcceptTransferDto,
@@ -9,6 +10,11 @@ import {
 	RejectTransferDto,
 	UpdateDepartureDto,
 } from "#api/modules/employees/dto";
+
+export interface AccessContext {
+	centerId?: string;
+	effectiveAccessScope: string;
+}
 
 const TRANSFER_INCLUDE = {
 	employee: {
@@ -43,7 +49,12 @@ const TRANSFER_INCLUDE = {
 export class EmployeeTransferService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async createTransferRequest(tenantId: string, dto: CreateTransferRequestDto, initiatedBy: string) {
+	async createTransferRequest(
+		tenantId: string,
+		dto: CreateTransferRequestDto,
+		initiatedBy: string,
+		accessContext: AccessContext,
+	) {
 		const employee = await this.prisma.employee.findFirst({
 			where: { id: dto.employeeId, tenantId, deletedAt: null },
 		});
@@ -51,6 +62,8 @@ export class EmployeeTransferService {
 		if (!employee) {
 			throw new NotFoundException("Employee not found");
 		}
+
+		validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
 
 		if (employee.status !== EmployeeStatus.ACTIVE) {
 			throw new BadRequestException("Only active employees can be transferred");
@@ -123,7 +136,13 @@ export class EmployeeTransferService {
 		});
 	}
 
-	async acceptTransfer(tenantId: string, transferId: string, dto: AcceptTransferDto, reviewedBy: string) {
+	async acceptTransfer(
+		tenantId: string,
+		transferId: string,
+		dto: AcceptTransferDto,
+		reviewedBy: string,
+		accessContext: AccessContext,
+	) {
 		const transfer = await this.prisma.employeeTransferRequest.findFirst({
 			where: { id: transferId, tenantId },
 			include: { employee: true },
@@ -132,6 +151,8 @@ export class EmployeeTransferService {
 		if (!transfer) {
 			throw new NotFoundException("Transfer request not found");
 		}
+
+		validateCenterAccess(accessContext.centerId, transfer.toCenterId ?? undefined, accessContext.effectiveAccessScope);
 
 		if (transfer.status !== TransferStatus.PENDING) {
 			throw new BadRequestException(`Transfer request is already ${transfer.status.toLowerCase()}`);
@@ -186,7 +207,13 @@ export class EmployeeTransferService {
 		return updatedTransfer;
 	}
 
-	async rejectTransfer(tenantId: string, transferId: string, dto: RejectTransferDto, reviewedBy: string) {
+	async rejectTransfer(
+		tenantId: string,
+		transferId: string,
+		dto: RejectTransferDto,
+		reviewedBy: string,
+		accessContext: AccessContext,
+	) {
 		const transfer = await this.prisma.employeeTransferRequest.findFirst({
 			where: { id: transferId, tenantId },
 		});
@@ -194,6 +221,8 @@ export class EmployeeTransferService {
 		if (!transfer) {
 			throw new NotFoundException("Transfer request not found");
 		}
+
+		validateCenterAccess(accessContext.centerId, transfer.toCenterId ?? undefined, accessContext.effectiveAccessScope);
 
 		if (transfer.status !== TransferStatus.PENDING) {
 			throw new BadRequestException(`Transfer request is already ${transfer.status.toLowerCase()}`);
@@ -211,7 +240,13 @@ export class EmployeeTransferService {
 		});
 	}
 
-	async cancelTransfer(tenantId: string, transferId: string, dto: CancelTransferDto, cancelledBy: string) {
+	async cancelTransfer(
+		tenantId: string,
+		transferId: string,
+		dto: CancelTransferDto,
+		cancelledBy: string,
+		accessContext: AccessContext,
+	) {
 		const transfer = await this.prisma.employeeTransferRequest.findFirst({
 			where: { id: transferId, tenantId },
 		});
@@ -219,6 +254,12 @@ export class EmployeeTransferService {
 		if (!transfer) {
 			throw new NotFoundException("Transfer request not found");
 		}
+
+		validateCenterAccess(
+			accessContext.centerId,
+			transfer.fromCenterId ?? undefined,
+			accessContext.effectiveAccessScope,
+		);
 
 		if (transfer.status !== TransferStatus.PENDING) {
 			throw new BadRequestException(`Only pending transfers can be cancelled`);
@@ -236,7 +277,7 @@ export class EmployeeTransferService {
 		});
 	}
 
-	async getTransferById(tenantId: string, transferId: string) {
+	async getTransferById(tenantId: string, transferId: string, accessContext: AccessContext) {
 		const transfer = await this.prisma.employeeTransferRequest.findFirst({
 			where: { id: transferId, tenantId },
 			include: TRANSFER_INCLUDE,
@@ -246,10 +287,19 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Transfer request not found");
 		}
 
+		const hasAccessToFrom =
+			canAccessAllCenters(accessContext.effectiveAccessScope) || accessContext.centerId === transfer.fromCenterId;
+		const hasAccessToTo =
+			canAccessAllCenters(accessContext.effectiveAccessScope) || accessContext.centerId === transfer.toCenterId;
+
+		if (!hasAccessToFrom && !hasAccessToTo) {
+			throw new NotFoundException("Transfer request not found");
+		}
+
 		return transfer;
 	}
 
-	async getTransferHistory(tenantId: string, employeeId: string) {
+	async getTransferHistory(tenantId: string, employeeId: string, accessContext: AccessContext) {
 		const employee = await this.prisma.employee.findFirst({
 			where: { id: employeeId, tenantId, deletedAt: null },
 		});
@@ -258,6 +308,8 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Employee not found");
 		}
 
+		validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
+
 		return this.prisma.employeeTransferRequest.findMany({
 			where: { tenantId, employeeId },
 			include: TRANSFER_INCLUDE,
@@ -265,7 +317,9 @@ export class EmployeeTransferService {
 		});
 	}
 
-	async getPendingTransfersForCenter(tenantId: string, centerId: string) {
+	async getPendingTransfersForCenter(tenantId: string, centerId: string, accessContext: AccessContext) {
+		validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+
 		return this.prisma.employeeTransferRequest.findMany({
 			where: {
 				tenantId,
@@ -277,7 +331,9 @@ export class EmployeeTransferService {
 		});
 	}
 
-	async getOutgoingTransfersForCenter(tenantId: string, centerId: string) {
+	async getOutgoingTransfersForCenter(tenantId: string, centerId: string, accessContext: AccessContext) {
+		validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+
 		return this.prisma.employeeTransferRequest.findMany({
 			where: {
 				tenantId,
@@ -289,18 +345,24 @@ export class EmployeeTransferService {
 		});
 	}
 
-	async getAllTransfers(tenantId: string, status?: TransferStatus) {
+	async getAllTransfers(tenantId: string, status: TransferStatus | undefined, accessContext: AccessContext) {
+		const where: Prisma.EmployeeTransferRequestWhereInput = {
+			tenantId,
+			...(status && { status }),
+		};
+
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			where.OR = [{ fromCenterId: accessContext.centerId }, { toCenterId: accessContext.centerId }];
+		}
+
 		return this.prisma.employeeTransferRequest.findMany({
-			where: {
-				tenantId,
-				...(status && { status }),
-			},
+			where,
 			include: TRANSFER_INCLUDE,
 			orderBy: { createdAt: "desc" },
 		});
 	}
 
-	async createDeparture(tenantId: string, dto: CreateDepartureDto, recordedBy: string) {
+	async createDeparture(tenantId: string, dto: CreateDepartureDto, recordedBy: string, accessContext: AccessContext) {
 		const employee = await this.prisma.employee.findFirst({
 			where: { id: dto.employeeId, tenantId, deletedAt: null },
 		});
@@ -308,6 +370,8 @@ export class EmployeeTransferService {
 		if (!employee) {
 			throw new NotFoundException("Employee not found");
 		}
+
+		validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
 
 		const existingDeparture = await this.prisma.employeeDeparture.findUnique({
 			where: { employeeId: dto.employeeId },
@@ -356,14 +420,21 @@ export class EmployeeTransferService {
 		return departure;
 	}
 
-	async updateDeparture(tenantId: string, departureId: string, dto: UpdateDepartureDto) {
+	async updateDeparture(tenantId: string, departureId: string, dto: UpdateDepartureDto, accessContext: AccessContext) {
 		const departure = await this.prisma.employeeDeparture.findFirst({
 			where: { id: departureId, tenantId },
+			include: { employee: { select: { centerId: true } } },
 		});
 
 		if (!departure) {
 			throw new NotFoundException("Departure record not found");
 		}
+
+		validateCenterAccess(
+			accessContext.centerId,
+			departure.employee.centerId ?? undefined,
+			accessContext.effectiveAccessScope,
+		);
 
 		return this.prisma.employeeDeparture.update({
 			where: { id: departureId },
@@ -389,7 +460,15 @@ export class EmployeeTransferService {
 		});
 	}
 
-	async getDeparture(tenantId: string, employeeId: string) {
+	async getDeparture(tenantId: string, employeeId: string, accessContext: AccessContext) {
+		const employee = await this.prisma.employee.findFirst({
+			where: { id: employeeId, tenantId, deletedAt: null },
+		});
+
+		if (employee) {
+			validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
+		}
+
 		const departure = await this.prisma.employeeDeparture.findFirst({
 			where: { employeeId, tenantId },
 			include: {
@@ -408,7 +487,7 @@ export class EmployeeTransferService {
 		return departure;
 	}
 
-	async getDepartureById(tenantId: string, departureId: string) {
+	async getDepartureById(tenantId: string, departureId: string, accessContext: AccessContext) {
 		const departure = await this.prisma.employeeDeparture.findFirst({
 			where: { id: departureId, tenantId },
 			include: {
@@ -418,6 +497,7 @@ export class EmployeeTransferService {
 						employeeId: true,
 						fullName: true,
 						fullNameAm: true,
+						centerId: true,
 					},
 				},
 				attachments: true,
@@ -428,12 +508,24 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Departure record not found");
 		}
 
+		validateCenterAccess(
+			accessContext.centerId,
+			departure.employee.centerId ?? undefined,
+			accessContext.effectiveAccessScope,
+		);
+
 		return departure;
 	}
 
-	async getAllDepartures(tenantId: string) {
+	async getAllDepartures(tenantId: string, accessContext: AccessContext) {
+		const where: Prisma.EmployeeDepartureWhereInput = { tenantId };
+
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			where.employee = { centerId: accessContext.centerId };
+		}
+
 		return this.prisma.employeeDeparture.findMany({
-			where: { tenantId },
+			where,
 			include: {
 				employee: {
 					select: {
@@ -449,14 +541,21 @@ export class EmployeeTransferService {
 		});
 	}
 
-	async deleteDeparture(tenantId: string, departureId: string, deletedBy: string) {
+	async deleteDeparture(tenantId: string, departureId: string, deletedBy: string, accessContext: AccessContext) {
 		const departure = await this.prisma.employeeDeparture.findFirst({
 			where: { id: departureId, tenantId },
+			include: { employee: { select: { centerId: true } } },
 		});
 
 		if (!departure) {
 			throw new NotFoundException("Departure record not found");
 		}
+
+		validateCenterAccess(
+			accessContext.centerId,
+			departure.employee.centerId ?? undefined,
+			accessContext.effectiveAccessScope,
+		);
 
 		await this.prisma.$transaction([
 			this.prisma.employeeDeparture.delete({

@@ -142,3 +142,74 @@ export class UpdateDepartureDto {
 	@IsOptional()
 	finalSettlementAmount?: number;
 }
+
+export class AssignToHqDto {
+	@ApiProperty({ description: "Employee ID to assign to HQ" })
+	@IsString()
+	@IsNotEmpty()
+	employeeId: string;
+
+	@ApiProperty({ description: "Effective date of HQ assignment" })
+	@Type(() => Date)
+	@IsDate()
+	@IsNotEmpty()
+	effectiveDate: Date;
+
+	@ApiProperty({ description: "Reason for HQ assignment" })
+	@IsString()
+	@IsNotEmpty()
+	reason: string;
+
+	@ApiPropertyOptional({ description: "Additional remarks" })
+	@IsString()
+	@IsOptional()
+	remarks?: string;
+
+	@ApiPropertyOptional({ description: "Order/reference number" })
+	@IsString()
+	@IsOptional()
+	orderNumber?: string;
+}
+
+export class AssignFromHqToCenterDto {
+	@ApiProperty({ description: "Employee ID to assign from HQ to center" })
+	@IsString()
+	@IsNotEmpty()
+	employeeId: string;
+
+	@ApiProperty({ description: "Target center ID" })
+	@IsString()
+	@IsNotEmpty()
+	centerId: string;
+
+	@ApiPropertyOptional({ description: "Target department ID" })
+	@IsString()
+	@IsOptional()
+	departmentId?: string;
+
+	@ApiPropertyOptional({ description: "Target position ID" })
+	@IsString()
+	@IsOptional()
+	positionId?: string;
+
+	@ApiProperty({ description: "Effective date of center assignment" })
+	@Type(() => Date)
+	@IsDate()
+	@IsNotEmpty()
+	effectiveDate: Date;
+
+	@ApiProperty({ description: "Reason for center assignment" })
+	@IsString()
+	@IsNotEmpty()
+	reason: string;
+
+	@ApiPropertyOptional({ description: "Additional remarks" })
+	@IsString()
+	@IsOptional()
+	remarks?: string;
+
+	@ApiPropertyOptional({ description: "Order/reference number" })
+	@IsString()
+	@IsOptional()
+	orderNumber?: string;
+}

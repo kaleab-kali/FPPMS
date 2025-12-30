@@ -13,7 +13,12 @@ import {
 	EmployeeResponseDto,
 	UpdateEmployeeDto,
 } from "#api/modules/employees/dto/index";
-import { EmployeesService } from "#api/modules/employees/employees.service";
+import { AccessContext, EmployeesService } from "#api/modules/employees/employees.service";
+
+const buildAccessContext = (user: AuthUserDto): AccessContext => ({
+	centerId: user.centerId,
+	effectiveAccessScope: user.effectiveAccessScope,
+});
 
 @ApiTags("employees")
 @ApiBearerAuth("JWT-auth")
@@ -30,7 +35,7 @@ export class EmployeesController {
 		@CurrentUser() user: AuthUserDto,
 		@Body() dto: CreateMilitaryEmployeeDto,
 	): Promise<EmployeeResponseDto> {
-		return this.employeesService.registerMilitaryEmployee(user.tenantId, dto, user.id);
+		return this.employeesService.registerMilitaryEmployee(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Post("civilian")
@@ -42,7 +47,7 @@ export class EmployeesController {
 		@CurrentUser() user: AuthUserDto,
 		@Body() dto: CreateCivilianEmployeeDto,
 	): Promise<EmployeeResponseDto> {
-		return this.employeesService.registerCivilianEmployee(user.tenantId, dto, user.id);
+		return this.employeesService.registerCivilianEmployee(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Post("temporary")
@@ -54,7 +59,7 @@ export class EmployeesController {
 		@CurrentUser() user: AuthUserDto,
 		@Body() dto: CreateTemporaryEmployeeDto,
 	): Promise<EmployeeResponseDto> {
-		return this.employeesService.registerTemporaryEmployee(user.tenantId, dto, user.id);
+		return this.employeesService.registerTemporaryEmployee(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Get()
@@ -79,7 +84,7 @@ export class EmployeesController {
 		@CurrentUser() user: AuthUserDto,
 		@Query() filter: EmployeeFilterDto,
 	): Promise<{ data: EmployeeListResponseDto[]; total: number; page: number; pageSize: number }> {
-		return this.employeesService.findAll(user.tenantId, filter);
+		return this.employeesService.findAll(user.tenantId, filter, buildAccessContext(user));
 	}
 
 	@Get("statistics")
@@ -92,7 +97,7 @@ export class EmployeesController {
 		byStatus: Record<string, number>;
 		byGender: Record<string, number>;
 	}> {
-		return this.employeesService.getStatistics(user.tenantId);
+		return this.employeesService.getStatistics(user.tenantId, buildAccessContext(user));
 	}
 
 	@Get("by-employee-id/:employeeId")
@@ -104,7 +109,7 @@ export class EmployeesController {
 		@CurrentUser() user: AuthUserDto,
 		@Param("employeeId") employeeId: string,
 	): Promise<EmployeeResponseDto> {
-		return this.employeesService.findByEmployeeId(user.tenantId, employeeId);
+		return this.employeesService.findByEmployeeId(user.tenantId, employeeId, buildAccessContext(user));
 	}
 
 	@Get(":id")
@@ -113,7 +118,7 @@ export class EmployeesController {
 	@ApiResponse({ status: 200, description: "Employee details", type: EmployeeResponseDto })
 	@ApiResponse({ status: 404, description: "Employee not found" })
 	findOne(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<EmployeeResponseDto> {
-		return this.employeesService.findOne(user.tenantId, id);
+		return this.employeesService.findOne(user.tenantId, id, buildAccessContext(user));
 	}
 
 	@Patch(":id")
@@ -126,7 +131,7 @@ export class EmployeesController {
 		@Param("id") id: string,
 		@Body() dto: UpdateEmployeeDto,
 	): Promise<EmployeeResponseDto> {
-		return this.employeesService.update(user.tenantId, id, dto, user.id);
+		return this.employeesService.update(user.tenantId, id, dto, user.id, buildAccessContext(user));
 	}
 
 	@Delete(":id")
@@ -135,7 +140,7 @@ export class EmployeesController {
 	@ApiResponse({ status: 200, description: "Employee deleted" })
 	@ApiResponse({ status: 404, description: "Employee not found" })
 	remove(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<{ message: string }> {
-		return this.employeesService.remove(user.tenantId, id, user.id);
+		return this.employeesService.remove(user.tenantId, id, user.id, buildAccessContext(user));
 	}
 
 	@Patch(":id/status")
@@ -148,7 +153,7 @@ export class EmployeesController {
 		@Param("id") id: string,
 		@Body() dto: ChangeEmployeeStatusDto,
 	): Promise<EmployeeResponseDto> {
-		return this.employeesService.changeStatus(user.tenantId, id, dto, user.id);
+		return this.employeesService.changeStatus(user.tenantId, id, dto, user.id, buildAccessContext(user));
 	}
 
 	@Patch(":id/return-to-active")
@@ -158,6 +163,6 @@ export class EmployeesController {
 	@ApiResponse({ status: 404, description: "Employee not found" })
 	@ApiResponse({ status: 400, description: "Employee is already active or deceased" })
 	returnToActive(@CurrentUser() user: AuthUserDto, @Param("id") id: string): Promise<EmployeeResponseDto> {
-		return this.employeesService.returnToActive(user.tenantId, id, user.id);
+		return this.employeesService.returnToActive(user.tenantId, id, user.id, buildAccessContext(user));
 	}
 }

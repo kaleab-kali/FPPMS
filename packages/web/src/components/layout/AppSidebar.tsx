@@ -50,6 +50,7 @@ interface NavSubItemConfig {
 	url: string;
 	permission?: string;
 	permissions?: string[];
+	requiresAllCentersAccess?: boolean;
 }
 
 interface NavItemConfig {
@@ -64,8 +65,17 @@ interface NavItemConfig {
 const NAV_ITEMS_CONFIG: NavItemConfig[] = [
 	{
 		titleKey: "dashboard",
-		url: "/dashboard",
+		url: "#",
 		icon: Home,
+		items: [
+			{ titleKey: "overview", url: "/dashboard" },
+			{
+				titleKey: "hqOversight",
+				url: "/dashboard/hq",
+				permission: PERMISSIONS.DASHBOARD_HQ,
+				requiresAllCentersAccess: true,
+			},
+		],
 	},
 	{
 		titleKey: "organization",
@@ -236,22 +246,24 @@ interface NavMainItemProps {
 	t: (key: string) => string;
 	hasPermission: (permission: string) => boolean;
 	hasAnyPermission: (permissions: string[]) => boolean;
+	hasAllCentersAccess: boolean;
 }
 
 const NavMainItem = React.memo(
-	({ item, isActive, t, hasPermission, hasAnyPermission }: NavMainItemProps) => {
+	({ item, isActive, t, hasPermission, hasAnyPermission, hasAllCentersAccess }: NavMainItemProps) => {
 		const hasSubItems = item.items && item.items.length > 0;
 		const title = t(item.titleKey);
 
 		const filteredSubItems = React.useMemo(() => {
 			if (!item.items) return [];
 			return item.items.filter((subItem) => {
+				if (subItem.requiresAllCentersAccess && !hasAllCentersAccess) return false;
 				if (!subItem.permission && !subItem.permissions) return true;
 				if (subItem.permission) return hasPermission(subItem.permission);
 				if (subItem.permissions) return hasAnyPermission(subItem.permissions);
 				return true;
 			});
-		}, [item.items, hasPermission, hasAnyPermission]);
+		}, [item.items, hasPermission, hasAnyPermission, hasAllCentersAccess]);
 
 		if (hasSubItems && filteredSubItems.length === 0) {
 			return null;
@@ -310,7 +322,8 @@ const NavMainItem = React.memo(
 		prev.isActive === next.isActive &&
 		prev.t === next.t &&
 		prev.hasPermission === next.hasPermission &&
-		prev.hasAnyPermission === next.hasAnyPermission,
+		prev.hasAnyPermission === next.hasAnyPermission &&
+		prev.hasAllCentersAccess === next.hasAllCentersAccess,
 );
 
 NavMainItem.displayName = "NavMainItem";
@@ -319,7 +332,7 @@ export const AppSidebar = React.memo(
 	({ ...props }: React.ComponentProps<typeof Sidebar>) => {
 		const { t } = useTranslation("navigation");
 		const { i18n } = useTranslation();
-		const { user } = useAuth();
+		const { user, hasAllCentersAccess } = useAuth();
 		const location = useLocation();
 		const isAmharic = i18n.language === "am";
 		const { hasPermission, hasAnyPermission } = useUserPermissions();
@@ -441,6 +454,7 @@ export const AppSidebar = React.memo(
 									t={t}
 									hasPermission={hasPermission}
 									hasAnyPermission={hasAnyPermission}
+									hasAllCentersAccess={hasAllCentersAccess}
 								/>
 							))}
 						</SidebarMenu>

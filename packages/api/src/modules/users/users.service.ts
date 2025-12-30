@@ -1,10 +1,16 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { UserStatus } from "@prisma/client";
+import { Prisma, UserStatus } from "@prisma/client";
+import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
 import { hashPassword } from "#api/common/utils/hash.util";
 import { PrismaService } from "#api/database/prisma.service";
 import { CreateUserDto, CreateUserFromEmployeeDto } from "#api/modules/users/dto/create-user.dto";
 import { UpdateUserDto } from "#api/modules/users/dto/update-user.dto";
 import { UserResponseDto } from "#api/modules/users/dto/user-response.dto";
+
+export interface AccessContext {
+	centerId?: string;
+	effectiveAccessScope: string;
+}
 
 const DEFAULT_PASSWORD_PREFIX = "Police@";
 
@@ -25,6 +31,7 @@ export class UsersService {
 		tenantId: string,
 		dto: CreateUserFromEmployeeDto,
 		createdBy: string,
+		accessContext: AccessContext,
 	): Promise<{ user: UserResponseDto; generatedUsername: string; generatedPassword: string }> {
 		const employee = await this.prisma.employee.findFirst({
 			where: { id: dto.employeeId, tenantId },
@@ -33,6 +40,9 @@ export class UsersService {
 		if (!employee) {
 			throw new BadRequestException("Employee not found in this tenant");
 		}
+
+		const targetCenterId = dto.centerId || employee.centerId;
+		validateCenterAccess(accessContext.centerId, targetCenterId ?? undefined, accessContext.effectiveAccessScope);
 
 		const existingUserForEmployee = await this.prisma.user.findFirst({
 			where: { employeeId: dto.employeeId, tenantId, deletedAt: null },
@@ -125,7 +135,12 @@ export class UsersService {
 		};
 	}
 
-	async create(tenantId: string, dto: CreateUserDto, createdBy: string): Promise<UserResponseDto> {
+	async create(
+		tenantId: string,
+		dto: CreateUserDto,
+		createdBy: string,
+		accessContext: AccessContext,
+	): Promise<UserResponseDto> {
 		const employee = await this.prisma.employee.findFirst({
 			where: { id: dto.employeeId, tenantId },
 		});
@@ -133,6 +148,9 @@ export class UsersService {
 		if (!employee) {
 			throw new BadRequestException("Employee not found in this tenant");
 		}
+
+		const targetCenterId = dto.centerId || employee.centerId;
+		validateCenterAccess(accessContext.centerId, targetCenterId ?? undefined, accessContext.effectiveAccessScope);
 
 		const existingUserForEmployee = await this.prisma.user.findFirst({
 			where: { employeeId: dto.employeeId, tenantId, deletedAt: null },
@@ -192,6 +210,7 @@ export class UsersService {
 		tenantId: string,
 		userId: string,
 		resetBy: string,
+		accessContext: AccessContext,
 	): Promise<{ message: string; newPassword: string }> {
 		const user = await this.prisma.user.findFirst({
 			where: { id: userId, tenantId, deletedAt: null },
@@ -200,6 +219,8 @@ export class UsersService {
 		if (!user) {
 			throw new NotFoundException(`User with ID "${userId}" not found`);
 		}
+
+		validateCenterAccess(accessContext.centerId, user.centerId ?? undefined, accessContext.effectiveAccessScope);
 
 		const newPassword = this.generateDefaultPassword();
 		const passwordHash = await hashPassword(newPassword);
@@ -236,9 +257,15 @@ export class UsersService {
 		};
 	}
 
-	async findAll(tenantId: string): Promise<UserResponseDto[]> {
+	async findAll(tenantId: string, accessContext: AccessContext): Promise<UserResponseDto[]> {
+		const where: Prisma.UserWhereInput = { tenantId, deletedAt: null };
+
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			where.centerId = accessContext.centerId;
+		}
+
 		const users = await this.prisma.user.findMany({
-			where: { tenantId, deletedAt: null },
+			where,
 			include: {
 				userRoles: {
 					include: { role: true },
@@ -250,7 +277,9 @@ export class UsersService {
 		return users.map((u) => this.mapToResponse(u));
 	}
 
-	async findByCenter(tenantId: string, centerId: string): Promise<UserResponseDto[]> {
+	async findByCenter(tenantId: string, centerId: string, accessContext: AccessContext): Promise<UserResponseDto[]> {
+		validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+
 		const users = await this.prisma.user.findMany({
 			where: { tenantId, centerId, deletedAt: null },
 			include: {
@@ -264,7 +293,7 @@ export class UsersService {
 		return users.map((u) => this.mapToResponse(u));
 	}
 
-	async findOne(tenantId: string, id: string): Promise<UserResponseDto> {
+	async findOne(tenantId: string, id: string, accessContext?: AccessContext): Promise<UserResponseDto> {
 		const user = await this.prisma.user.findFirst({
 			where: { id, tenantId, deletedAt: null },
 			include: {
@@ -278,12 +307,17 @@ export class UsersService {
 			throw new NotFoundException(`User with ID "${id}" not found`);
 		}
 
+		if (accessContext) {
+			validateCenterAccess(accessContext.centerId, user.centerId ?? undefined, accessContext.effectiveAccessScope);
+		}
+
 		return this.mapToResponse(user);
 	}
 
 	async findEmployeesWithoutUserAccount(
 		tenantId: string,
-		search?: string,
+		search: string | undefined,
+		accessContext: AccessContext,
 	): Promise<
 		Array<{
 			id: string;
@@ -308,11 +342,15 @@ export class UsersService {
 			.map((u) => u.employeeId)
 			.filter((id): id is string => id !== null);
 
-		const whereClause: Record<string, unknown> = {
+		const whereClause: Prisma.EmployeeWhereInput = {
 			tenantId,
 			status: "ACTIVE",
 			id: { notIn: employeeIdsWithUsers },
 		};
+
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			whereClause.centerId = accessContext.centerId;
+		}
 
 		if (search) {
 			whereClause.OR = [
@@ -343,7 +381,13 @@ export class UsersService {
 		}));
 	}
 
-	async update(tenantId: string, id: string, dto: UpdateUserDto, updatedBy: string): Promise<UserResponseDto> {
+	async update(
+		tenantId: string,
+		id: string,
+		dto: UpdateUserDto,
+		updatedBy: string,
+		accessContext: AccessContext,
+	): Promise<UserResponseDto> {
 		const existingUser = await this.prisma.user.findFirst({
 			where: { id, tenantId, deletedAt: null },
 		});
@@ -352,7 +396,15 @@ export class UsersService {
 			throw new NotFoundException(`User with ID "${id}" not found`);
 		}
 
+		validateCenterAccess(
+			accessContext.centerId,
+			existingUser.centerId ?? undefined,
+			accessContext.effectiveAccessScope,
+		);
+
 		if (dto.centerId) {
+			validateCenterAccess(accessContext.centerId, dto.centerId, accessContext.effectiveAccessScope);
+
 			const center = await this.prisma.center.findFirst({
 				where: { id: dto.centerId, tenantId },
 			});
@@ -386,7 +438,12 @@ export class UsersService {
 		return this.findOne(tenantId, id);
 	}
 
-	async remove(tenantId: string, id: string, deletedBy: string): Promise<{ message: string }> {
+	async remove(
+		tenantId: string,
+		id: string,
+		deletedBy: string,
+		accessContext: AccessContext,
+	): Promise<{ message: string }> {
 		const existingUser = await this.prisma.user.findFirst({
 			where: { id, tenantId, deletedAt: null },
 		});
@@ -394,6 +451,12 @@ export class UsersService {
 		if (!existingUser) {
 			throw new NotFoundException(`User with ID "${id}" not found`);
 		}
+
+		validateCenterAccess(
+			accessContext.centerId,
+			existingUser.centerId ?? undefined,
+			accessContext.effectiveAccessScope,
+		);
 
 		await this.prisma.user.update({
 			where: { id },
@@ -407,7 +470,7 @@ export class UsersService {
 		return { message: "User deleted successfully" };
 	}
 
-	async unlockUser(tenantId: string, id: string): Promise<{ message: string }> {
+	async unlockUser(tenantId: string, id: string, accessContext: AccessContext): Promise<{ message: string }> {
 		const existingUser = await this.prisma.user.findFirst({
 			where: { id, tenantId, deletedAt: null },
 		});
@@ -415,6 +478,12 @@ export class UsersService {
 		if (!existingUser) {
 			throw new NotFoundException(`User with ID "${id}" not found`);
 		}
+
+		validateCenterAccess(
+			accessContext.centerId,
+			existingUser.centerId ?? undefined,
+			accessContext.effectiveAccessScope,
+		);
 
 		await this.prisma.user.update({
 			where: { id },
@@ -434,6 +503,7 @@ export class UsersService {
 		status: UserStatus,
 		reason: string,
 		changedBy: string,
+		accessContext: AccessContext,
 	): Promise<UserResponseDto> {
 		const existingUser = await this.prisma.user.findFirst({
 			where: { id, tenantId, deletedAt: null },
@@ -442,6 +512,12 @@ export class UsersService {
 		if (!existingUser) {
 			throw new NotFoundException(`User with ID "${id}" not found`);
 		}
+
+		validateCenterAccess(
+			accessContext.centerId,
+			existingUser.centerId ?? undefined,
+			accessContext.effectiveAccessScope,
+		);
 
 		const validTransitions: Record<UserStatus, UserStatus[]> = {
 			[UserStatus.ACTIVE]: [UserStatus.INACTIVE, UserStatus.LOCKED, UserStatus.TRANSFERRED, UserStatus.TERMINATED],

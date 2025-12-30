@@ -26,7 +26,7 @@ const MAX_NAME_LENGTH = 100;
 const MAX_DESCRIPTION_LENGTH = 500;
 const DEFAULT_LEVEL = 0;
 
-const ACCESS_SCOPES = ["ALL_CENTERS", "OWN_CENTER", "OWN_DEPARTMENT", "OWN_RECORDS"] as const;
+const ACCESS_SCOPES = ["ALL_CENTERS", "OWN_CENTER"] as const;
 
 const roleSchema = z.object({
 	code: z.string().min(1, "Code is required").max(MAX_CODE_LENGTH),
@@ -132,13 +132,13 @@ export const RoleFormDialog = React.memo(
 					const updatePayload: UpdateRoleRequest = {
 						nameAm,
 						description,
+						accessScope: formData.accessScope,
 						isActive: formData.isActive,
 						permissionIds: formData.permissionIds,
 					};
 					if (!isSystemRole) {
 						updatePayload.name = formData.name;
 						updatePayload.level = formData.level;
-						updatePayload.accessScope = formData.accessScope;
 					}
 					onSubmit(updatePayload);
 				} else {
@@ -268,7 +268,7 @@ export const RoleFormDialog = React.memo(
 									</div>
 									<div className="space-y-2">
 										<Label htmlFor="accessScope">{t("accessScope")}</Label>
-										<Select value={accessScope} onValueChange={handleAccessScopeChange} disabled={isSystemRole}>
+										<Select value={accessScope} onValueChange={handleAccessScopeChange}>
 											<SelectTrigger aria-invalid={!!errors.accessScope}>
 												<SelectValue placeholder={t("selectAccessScope")} />
 											</SelectTrigger>

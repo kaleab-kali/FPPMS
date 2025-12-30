@@ -12,7 +12,12 @@ import {
 	RejectTransferDto,
 	UpdateDepartureDto,
 } from "#api/modules/employees/dto";
-import { EmployeeTransferService } from "#api/modules/employees/services/employee-transfer.service";
+import { AccessContext, EmployeeTransferService } from "#api/modules/employees/services/employee-transfer.service";
+
+const buildAccessContext = (user: AuthUserDto): AccessContext => ({
+	centerId: user.centerId,
+	effectiveAccessScope: user.effectiveAccessScope,
+});
 
 @ApiTags("employee-transfer")
 @ApiBearerAuth("JWT-auth")
@@ -25,7 +30,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Create a transfer request (source center initiates)" })
 	@ApiResponse({ status: 201, description: "Transfer request created" })
 	createTransferRequest(@CurrentUser() user: AuthUserDto, @Body() dto: CreateTransferRequestDto) {
-		return this.transferService.createTransferRequest(user.tenantId, dto, user.id);
+		return this.transferService.createTransferRequest(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Post(":id/accept")
@@ -33,7 +38,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Accept a transfer request (target center confirms)" })
 	@ApiResponse({ status: 200, description: "Transfer accepted and employee moved" })
 	acceptTransfer(@CurrentUser() user: AuthUserDto, @Param("id") transferId: string, @Body() dto: AcceptTransferDto) {
-		return this.transferService.acceptTransfer(user.tenantId, transferId, dto, user.id);
+		return this.transferService.acceptTransfer(user.tenantId, transferId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Post(":id/reject")
@@ -41,7 +46,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Reject a transfer request (target center declines)" })
 	@ApiResponse({ status: 200, description: "Transfer rejected" })
 	rejectTransfer(@CurrentUser() user: AuthUserDto, @Param("id") transferId: string, @Body() dto: RejectTransferDto) {
-		return this.transferService.rejectTransfer(user.tenantId, transferId, dto, user.id);
+		return this.transferService.rejectTransfer(user.tenantId, transferId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Post(":id/cancel")
@@ -49,7 +54,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Cancel a pending transfer request (source center cancels)" })
 	@ApiResponse({ status: 200, description: "Transfer cancelled" })
 	cancelTransfer(@CurrentUser() user: AuthUserDto, @Param("id") transferId: string, @Body() dto: CancelTransferDto) {
-		return this.transferService.cancelTransfer(user.tenantId, transferId, dto, user.id);
+		return this.transferService.cancelTransfer(user.tenantId, transferId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Get("all")
@@ -58,7 +63,7 @@ export class EmployeeTransferController {
 	@ApiQuery({ name: "status", required: false, enum: TransferStatus })
 	@ApiResponse({ status: 200, description: "List of all transfer requests" })
 	getAllTransfers(@CurrentUser() user: AuthUserDto, @Query("status") status?: TransferStatus) {
-		return this.transferService.getAllTransfers(user.tenantId, status);
+		return this.transferService.getAllTransfers(user.tenantId, status, buildAccessContext(user));
 	}
 
 	@Get(":id")
@@ -66,7 +71,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Get transfer request by ID" })
 	@ApiResponse({ status: 200, description: "Transfer request details" })
 	getTransferById(@CurrentUser() user: AuthUserDto, @Param("id") transferId: string) {
-		return this.transferService.getTransferById(user.tenantId, transferId);
+		return this.transferService.getTransferById(user.tenantId, transferId, buildAccessContext(user));
 	}
 
 	@Get("history/:employeeId")
@@ -74,7 +79,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Get transfer history for an employee" })
 	@ApiResponse({ status: 200, description: "Transfer history" })
 	getTransferHistory(@CurrentUser() user: AuthUserDto, @Param("employeeId") employeeId: string) {
-		return this.transferService.getTransferHistory(user.tenantId, employeeId);
+		return this.transferService.getTransferHistory(user.tenantId, employeeId, buildAccessContext(user));
 	}
 
 	@Get("center/:centerId/pending")
@@ -82,7 +87,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Get pending incoming transfers for a center" })
 	@ApiResponse({ status: 200, description: "Pending incoming transfers" })
 	getPendingTransfersForCenter(@CurrentUser() user: AuthUserDto, @Param("centerId") centerId: string) {
-		return this.transferService.getPendingTransfersForCenter(user.tenantId, centerId);
+		return this.transferService.getPendingTransfersForCenter(user.tenantId, centerId, buildAccessContext(user));
 	}
 
 	@Get("center/:centerId/outgoing")
@@ -90,7 +95,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Get outgoing pending transfers from a center" })
 	@ApiResponse({ status: 200, description: "Outgoing pending transfers" })
 	getOutgoingTransfersForCenter(@CurrentUser() user: AuthUserDto, @Param("centerId") centerId: string) {
-		return this.transferService.getOutgoingTransfersForCenter(user.tenantId, centerId);
+		return this.transferService.getOutgoingTransfersForCenter(user.tenantId, centerId, buildAccessContext(user));
 	}
 
 	@Post("departure")
@@ -98,7 +103,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Record an employee departure (leaving the organization)" })
 	@ApiResponse({ status: 201, description: "Departure record created" })
 	createDeparture(@CurrentUser() user: AuthUserDto, @Body() dto: CreateDepartureDto) {
-		return this.transferService.createDeparture(user.tenantId, dto, user.id);
+		return this.transferService.createDeparture(user.tenantId, dto, user.id, buildAccessContext(user));
 	}
 
 	@Get("departure/all")
@@ -106,7 +111,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Get all departure records" })
 	@ApiResponse({ status: 200, description: "List of all departures" })
 	getAllDepartures(@CurrentUser() user: AuthUserDto) {
-		return this.transferService.getAllDepartures(user.tenantId);
+		return this.transferService.getAllDepartures(user.tenantId, buildAccessContext(user));
 	}
 
 	@Get("departure/employee/:employeeId")
@@ -114,7 +119,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Get departure record for an employee" })
 	@ApiResponse({ status: 200, description: "Departure record" })
 	getDeparture(@CurrentUser() user: AuthUserDto, @Param("employeeId") employeeId: string) {
-		return this.transferService.getDeparture(user.tenantId, employeeId);
+		return this.transferService.getDeparture(user.tenantId, employeeId, buildAccessContext(user));
 	}
 
 	@Get("departure/:id")
@@ -122,7 +127,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Get departure record by ID" })
 	@ApiResponse({ status: 200, description: "Departure record" })
 	getDepartureById(@CurrentUser() user: AuthUserDto, @Param("id") departureId: string) {
-		return this.transferService.getDepartureById(user.tenantId, departureId);
+		return this.transferService.getDepartureById(user.tenantId, departureId, buildAccessContext(user));
 	}
 
 	@Put("departure/:id")
@@ -130,7 +135,7 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Update a departure record" })
 	@ApiResponse({ status: 200, description: "Departure record updated" })
 	updateDeparture(@CurrentUser() user: AuthUserDto, @Param("id") departureId: string, @Body() dto: UpdateDepartureDto) {
-		return this.transferService.updateDeparture(user.tenantId, departureId, dto);
+		return this.transferService.updateDeparture(user.tenantId, departureId, dto, buildAccessContext(user));
 	}
 
 	@Delete("departure/:id")
@@ -138,6 +143,6 @@ export class EmployeeTransferController {
 	@ApiOperation({ summary: "Delete a departure record (reinstates employee)" })
 	@ApiResponse({ status: 200, description: "Departure record deleted and employee reinstated" })
 	deleteDeparture(@CurrentUser() user: AuthUserDto, @Param("id") departureId: string) {
-		return this.transferService.deleteDeparture(user.tenantId, departureId, user.id);
+		return this.transferService.deleteDeparture(user.tenantId, departureId, user.id, buildAccessContext(user));
 	}
 }

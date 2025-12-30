@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { ComplaintArticle, ComplaintFinding, ComplaintStatus, DecisionAuthority, Prisma } from "@prisma/client";
+import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
 import { PrismaService } from "#api/database/prisma.service";
 import {
 	AssignCommitteeDto,
@@ -16,6 +17,11 @@ import {
 	RecordRebuttalDto,
 	SubmitAppealDto,
 } from "./dto";
+
+export interface AccessContext {
+	centerId?: string;
+	effectiveAccessScope: string;
+}
 
 const REBUTTAL_DEADLINE_DAYS = 3;
 
@@ -48,7 +54,15 @@ export class ComplaintsService {
 		return `CMP-${paddedNumber}/${year}`;
 	}
 
-	async create(tenantId: string, centerId: string, userId: string, dto: CreateComplaintDto) {
+	async create(
+		tenantId: string,
+		centerId: string,
+		userId: string,
+		dto: CreateComplaintDto,
+		accessContext: AccessContext,
+	) {
+		validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+
 		const complaintNumber = await this.generateComplaintNumber(tenantId);
 
 		const accusedEmployee = await this.prisma.employee.findFirst({
@@ -130,11 +144,15 @@ export class ComplaintsService {
 		return this.findOne(tenantId, complaint.id);
 	}
 
-	async findAll(tenantId: string, filters: ComplaintFilterDto) {
+	async findAll(tenantId: string, filters: ComplaintFilterDto, accessContext: AccessContext) {
 		const where: Prisma.ComplaintWhereInput = {
 			tenantId,
 			deletedAt: null,
 		};
+
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			where.centerId = accessContext.centerId;
+		}
 
 		if (filters.article) {
 			where.article = filters.article;
@@ -145,7 +163,9 @@ export class ComplaintsService {
 		}
 
 		if (filters.centerId) {
-			where.centerId = filters.centerId;
+			if (canAccessAllCenters(accessContext.effectiveAccessScope)) {
+				where.centerId = filters.centerId;
+			}
 		}
 
 		if (filters.accusedEmployeeId) {
@@ -186,7 +206,7 @@ export class ComplaintsService {
 		});
 	}
 
-	async findOne(tenantId: string, id: string) {
+	async findOne(tenantId: string, id: string, accessContext?: AccessContext) {
 		const complaint = await this.prisma.complaint.findFirst({
 			where: { id, tenantId, deletedAt: null },
 			include: {
@@ -223,6 +243,10 @@ export class ComplaintsService {
 
 		if (!complaint) {
 			throw new NotFoundException("Complaint not found");
+		}
+
+		if (accessContext) {
+			validateCenterAccess(accessContext.centerId, complaint.centerId ?? undefined, accessContext.effectiveAccessScope);
 		}
 
 		return complaint;

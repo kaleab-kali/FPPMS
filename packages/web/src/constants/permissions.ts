@@ -1,6 +1,7 @@
 export const PERMISSIONS = {
 	// Dashboard
 	DASHBOARD_VIEW: "dashboard.read.dashboard",
+	DASHBOARD_HQ: "dashboard.read.hq",
 
 	// Employees
 	EMPLOYEE_READ: "employees.read.employee",
