@@ -50,8 +50,8 @@ jobs:
         run: npx prisma generate
         working-directory: packages/api
 
-      - name: Run database migrations
-        run: npx prisma migrate deploy
+      - name: Push database schema
+        run: npx prisma db push --skip-generate
         working-directory: packages/api
 
       - name: Seed database
