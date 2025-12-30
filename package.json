@@ -8,11 +8,13 @@
 	"type": "module",
 	"workspaces": [
 		"packages/api",
-		"packages/web"
+		"packages/web",
+		"packages/e2e"
 	],
 	"imports": {
 		"#api/*": "./packages/api/src/*",
-		"#web/*": "./packages/web/src/*"
+		"#web/*": "./packages/web/src/*",
+		"#e2e/*": "./packages/e2e/tests/*"
 	},
 	"scripts": {
 		"typecheck": "npm run typecheck --workspaces",
@@ -24,7 +26,7 @@
 		"build:web": "npm --workspace=packages/web run build",
 		"test": "npm --workspace=packages/api run test",
 		"test:api": "npm --workspace=packages/api run test",
-		"test:e2e": "npm --workspace=packages/api run test:e2e",
+		"test:e2e": "npm --workspace=packages/e2e run test",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"lint:ci": "biome ci --max-diagnostics=none",
