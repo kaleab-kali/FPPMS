@@ -3,7 +3,7 @@ import { expect, test as setup } from "@playwright/test";
 const AUTH_FILE = "playwright/.auth/user.json";
 
 setup("authenticate", async ({ page }) => {
-	const username = process.env.TEST_USERNAME ?? "FPCIV-0001-25";
+	const username = process.env.TEST_USERNAME ?? "FPCIV-0004-25";
 	const password = process.env.TEST_PASSWORD ?? "Police@2025";
 
 	await page.goto("/");
