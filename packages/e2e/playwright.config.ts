@@ -2,14 +2,15 @@ import { defineConfig, devices } from "@playwright/test";
 
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5173";
 const API_URL = process.env.API_URL ?? "http://localhost:3000";
+const IS_CI = !!process.env.CI;
 
 export default defineConfig({
 	testDir: "./tests",
 	fullyParallel: true,
-	forbidOnly: !!process.env.CI,
-	retries: process.env.CI ? 2 : 0,
-	workers: process.env.CI ? 1 : undefined,
-	reporter: [["html"], ["list"]],
+	forbidOnly: IS_CI,
+	retries: IS_CI ? 2 : 0,
+	workers: IS_CI ? 1 : undefined,
+	reporter: IS_CI ? [["github"], ["html"]] : [["html"], ["list"]],
 	timeout: 30000,
 	expect: {
 		timeout: 10000,
@@ -21,28 +22,8 @@ export default defineConfig({
 		video: "retain-on-failure",
 	},
 
-	webServer: process.env.CI
-		? [
-				{
-					command: "node ../../packages/api/dist/main.js",
-					url: API_URL,
-					timeout: 120000,
-					reuseExistingServer: false,
-					env: {
-						DATABASE_URL: process.env.DATABASE_URL ?? "",
-						JWT_SECRET: process.env.JWT_SECRET ?? "test-secret",
-						JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? "1d",
-						NODE_ENV: "test",
-					},
-				},
-				{
-					command: "npm run preview --workspace=packages/web",
-					url: BASE_URL,
-					timeout: 120000,
-					reuseExistingServer: false,
-					cwd: "../..",
-				},
-			]
+	webServer: IS_CI
+		? undefined
 		: [
 				{
 					command: "npm run dev:api",
@@ -73,7 +54,7 @@ export default defineConfig({
 			},
 			dependencies: ["setup"],
 		},
-		...(process.env.CI
+		...(IS_CI
 			? []
 			: [
 					{
