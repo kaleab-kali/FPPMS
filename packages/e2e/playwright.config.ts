@@ -21,22 +21,44 @@ export default defineConfig({
 		video: "retain-on-failure",
 	},
 
-	webServer: [
-		{
-			command: process.env.CI ? "npm run start:prod --workspace=packages/api" : "npm run dev:api",
-			url: API_URL,
-			timeout: 120000,
-			reuseExistingServer: !process.env.CI,
-			cwd: "../..",
-		},
-		{
-			command: process.env.CI ? "npm run preview --workspace=packages/web" : "npm run dev:web",
-			url: BASE_URL,
-			timeout: 120000,
-			reuseExistingServer: !process.env.CI,
-			cwd: "../..",
-		},
-	],
+	webServer: process.env.CI
+		? [
+				{
+					command: "node ../../packages/api/dist/main.js",
+					url: API_URL,
+					timeout: 120000,
+					reuseExistingServer: false,
+					env: {
+						DATABASE_URL: process.env.DATABASE_URL ?? "",
+						JWT_SECRET: process.env.JWT_SECRET ?? "test-secret",
+						JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN ?? "1d",
+						NODE_ENV: "test",
+					},
+				},
+				{
+					command: "npm run preview --workspace=packages/web",
+					url: BASE_URL,
+					timeout: 120000,
+					reuseExistingServer: false,
+					cwd: "../..",
+				},
+			]
+		: [
+				{
+					command: "npm run dev:api",
+					url: API_URL,
+					timeout: 120000,
+					reuseExistingServer: true,
+					cwd: "../..",
+				},
+				{
+					command: "npm run dev:web",
+					url: BASE_URL,
+					timeout: 120000,
+					reuseExistingServer: true,
+					cwd: "../..",
+				},
+			],
 
 	projects: [
 		{
