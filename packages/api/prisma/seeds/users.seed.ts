@@ -223,7 +223,7 @@ export const seedITAdmin = async (prisma: PrismaClient, tenantId: string): Promi
 			passwordHash,
 			passwordSalt: "bcrypt",
 			status: UserStatus.ACTIVE,
-			mustChangePassword: true,
+			mustChangePassword: false,
 		},
 	});
 
@@ -290,7 +290,7 @@ export const seedUsersFromEmployees = async (prisma: PrismaClient, tenantId: str
 				passwordHash,
 				passwordSalt: "bcrypt",
 				status: UserStatus.ACTIVE,
-				mustChangePassword: true,
+				mustChangePassword: false,
 			},
 		});
 

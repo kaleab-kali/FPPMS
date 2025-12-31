@@ -11,6 +11,7 @@
 	"scripts": {
 		"typecheck": "tsc --noEmit",
 		"test": "playwright test",
+		"e2e:ci": "playwright test --config ./playwright.config.ts",
 		"test:headed": "playwright test --headed",
 		"test:debug": "playwright test --debug",
 		"test:ui": "playwright test --ui",
@@ -23,6 +24,7 @@
 	"devDependencies": {
 		"@playwright/test": "^1.57.0",
 		"@types/node": "22.19.1",
-		"typescript": "5.9.3"
+		"typescript": "5.9.3",
+		"wait-on": "^9.0.3"
 	}
 }
