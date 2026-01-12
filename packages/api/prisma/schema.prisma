@@ -308,6 +308,7 @@ model Center {
   transfersTo          EmployeeTransferRequest[] @relation("TransferToCenter")
   committees           Committee[]
   committeeMemberTerms CommitteeMemberTerm[]
+  complaints           Complaint[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -593,9 +594,12 @@ model MilitaryRank {
   createdAt            DateTime @default(now()) @map("created_at")
   updatedAt            DateTime @updatedAt @map("updated_at")
 
-  tenant      Tenant?                  @relation(fields: [tenantId], references: [id])
-  salarySteps MilitaryRankSalaryStep[]
-  employees   Employee[]
+  tenant                   Tenant?                  @relation(fields: [tenantId], references: [id])
+  salarySteps              MilitaryRankSalaryStep[]
+  employees                Employee[]
+  salaryHistory            EmployeeSalaryHistory[]
+  previousRankHistory      EmployeeSalaryHistory[]  @relation("PreviousRankHistory")
+  salaryEligibilities      SalaryStepEligibility[]
 
   @@unique([tenantId, code])
   @@unique([tenantId, level])
@@ -717,6 +721,8 @@ model Employee {
   committeeMembershipTerms CommitteeMemberTerm[]
   complaintsAgainst        Complaint[]        @relation("AccusedComplaints")
   appealReviewsGiven       ComplaintAppeal[]  @relation("AppealReviewer")
+  salaryHistory            EmployeeSalaryHistory[]
+  salaryEligibilities      SalaryStepEligibility[]
 
   @@index([tenantId])
   @@index([tenantId, centerId])
@@ -1001,10 +1007,10 @@ model EmployeeTransferRequest {
   employeeId         String         @map("employee_id")
   transferSource     TransferSource @default(MANUAL) @map("transfer_source")
   status             TransferStatus @default(PENDING)
-  fromCenterId       String         @map("from_center_id")
+  fromCenterId       String?        @map("from_center_id")
   fromDepartmentId   String?        @map("from_department_id")
   fromPositionId     String?        @map("from_position_id")
-  toCenterId         String         @map("to_center_id")
+  toCenterId         String?        @map("to_center_id")
   toDepartmentId     String?        @map("to_department_id")
   toPositionId       String?        @map("to_position_id")
   effectiveDate      DateTime       @map("effective_date") @db.Date
@@ -1023,8 +1029,8 @@ model EmployeeTransferRequest {
   updatedAt          DateTime       @updatedAt @map("updated_at")
 
   employee       Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  fromCenter     Center      @relation("TransferFromCenter", fields: [fromCenterId], references: [id])
-  toCenter       Center      @relation("TransferToCenter", fields: [toCenterId], references: [id])
+  fromCenter     Center?     @relation("TransferFromCenter", fields: [fromCenterId], references: [id])
+  toCenter       Center?     @relation("TransferToCenter", fields: [toCenterId], references: [id])
   fromDepartment Department? @relation("TransferFromDepartment", fields: [fromDepartmentId], references: [id])
   toDepartment   Department? @relation("TransferToDepartment", fields: [toDepartmentId], references: [id])
   fromPosition   Position?   @relation("TransferFromPosition", fields: [fromPositionId], references: [id])
@@ -1953,7 +1959,7 @@ model CommitteeHistory {
 model Complaint {
   id                     String              @id @default(cuid())
   tenantId               String              @map("tenant_id")
-  centerId               String              @map("center_id")
+  centerId               String?             @map("center_id")
   complaintNumber        String              @unique @map("complaint_number")
   article                ComplaintArticle
   offenseCode            String              @map("offense_code")
@@ -2009,6 +2015,7 @@ model Complaint {
   deletedAt              DateTime?           @map("deleted_at")
 
   accusedEmployee        Employee            @relation("AccusedComplaints", fields: [accusedEmployeeId], references: [id])
+  center                 Center?             @relation(fields: [centerId], references: [id])
   timeline               ComplaintTimeline[]
   documents              ComplaintDocument[]
   appeals                ComplaintAppeal[]
@@ -2088,4 +2095,90 @@ model ComplaintAppeal {
   @@index([tenantId])
   @@index([reviewerEmployeeId])
   @@map("complaint_appeals")
+}
+
+// ============================================================================
+// SALARY MANAGEMENT
+// ============================================================================
+
+enum SalaryChangeType {
+  INITIAL
+  STEP_INCREMENT
+  MANUAL_JUMP
+  MASS_RAISE
+  PROMOTION
+  SCALE_REVISION
+}
+
+enum SalaryEligibilityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model EmployeeSalaryHistory {
+  id                 String           @id @default(cuid())
+  tenantId           String           @map("tenant_id")
+  employeeId         String           @map("employee_id")
+  rankId             String           @map("rank_id")
+  changeType         SalaryChangeType @map("change_type")
+  fromStep           Int?             @map("from_step")
+  toStep             Int              @map("to_step")
+  fromSalary         Decimal?         @map("from_salary") @db.Decimal(12, 2)
+  toSalary           Decimal          @map("to_salary") @db.Decimal(12, 2)
+  effectiveDate      DateTime         @map("effective_date") @db.Date
+  reason             String?
+  orderReference     String?          @map("order_reference")
+  documentPath       String?          @map("document_path")
+  previousRankId     String?          @map("previous_rank_id")
+  isAutomatic        Boolean          @default(false) @map("is_automatic")
+  processedBy        String?          @map("processed_by")
+  processedAt        DateTime         @default(now()) @map("processed_at")
+  approvedBy         String?          @map("approved_by")
+  approvedAt         DateTime?        @map("approved_at")
+  notes              String?
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  employee           Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  rank               MilitaryRank     @relation(fields: [rankId], references: [id])
+  previousRank       MilitaryRank?    @relation("PreviousRankHistory", fields: [previousRankId], references: [id])
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([effectiveDate])
+  @@index([tenantId, changeType])
+  @@index([tenantId, effectiveDate])
+  @@map("employee_salary_history")
+}
+
+model SalaryStepEligibility {
+  id                   String                  @id @default(cuid())
+  tenantId             String                  @map("tenant_id")
+  employeeId           String                  @map("employee_id")
+  rankId               String                  @map("rank_id")
+  currentStep          Int                     @map("current_step")
+  nextStepNumber       Int                     @map("next_step_number")
+  currentSalary        Decimal                 @map("current_salary") @db.Decimal(12, 2)
+  nextSalary           Decimal                 @map("next_salary") @db.Decimal(12, 2)
+  eligibilityDate      DateTime                @map("eligibility_date") @db.Date
+  status               SalaryEligibilityStatus @default(PENDING)
+  processedAt          DateTime?               @map("processed_at")
+  processedBy          String?                 @map("processed_by")
+  rejectionReason      String?                 @map("rejection_reason")
+  salaryHistoryId      String?                 @map("salary_history_id")
+  notifiedAt           DateTime?               @map("notified_at")
+  createdAt            DateTime                @default(now()) @map("created_at")
+  updatedAt            DateTime                @updatedAt @map("updated_at")
+
+  employee             Employee                @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  rank                 MilitaryRank            @relation(fields: [rankId], references: [id])
+
+  @@unique([employeeId, nextStepNumber, rankId])
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([eligibilityDate])
+  @@index([status])
+  @@index([tenantId, status, eligibilityDate])
+  @@map("salary_step_eligibility")
 }
