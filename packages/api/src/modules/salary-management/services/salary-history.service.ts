@@ -1,8 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import { EmployeeSalaryHistory, Prisma, SalaryChangeType } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/client";
-import { PrismaService } from "#api/database/prisma.service";
 import { calculateSkip, paginate } from "#api/common/utils/pagination.util";
+import { PrismaService } from "#api/database/prisma.service";
 
 interface CreateHistoryEntryData {
 	tenantId: string;

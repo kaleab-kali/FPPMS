@@ -10,17 +10,7 @@ import { SalaryProgressionService } from "#api/modules/salary-management/service
 @Module({
 	imports: [DatabaseModule, ScheduleModule.forRoot()],
 	controllers: [SalaryManagementController],
-	providers: [
-		SalaryManagementService,
-		SalaryCalculationService,
-		SalaryHistoryService,
-		SalaryProgressionService,
-	],
-	exports: [
-		SalaryManagementService,
-		SalaryCalculationService,
-		SalaryHistoryService,
-		SalaryProgressionService,
-	],
+	providers: [SalaryManagementService, SalaryCalculationService, SalaryHistoryService, SalaryProgressionService],
+	exports: [SalaryManagementService, SalaryCalculationService, SalaryHistoryService, SalaryProgressionService],
 })
 export class SalaryManagementModule {}

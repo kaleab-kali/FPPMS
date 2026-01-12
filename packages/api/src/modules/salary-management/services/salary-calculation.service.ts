@@ -203,7 +203,7 @@ export class SalaryCalculationService {
 	}
 
 	async calculatePromotionStep(
-		currentRankId: string,
+		_currentRankId: string,
 		newRankId: string,
 		currentSalary: Decimal,
 	): Promise<{
@@ -243,14 +243,15 @@ export class SalaryCalculationService {
 		return step >= MIN_STEP && step <= MAX_STEP;
 	}
 
-	calculateSalaryIncrease(fromSalary: Decimal, toSalary: Decimal): {
+	calculateSalaryIncrease(
+		fromSalary: Decimal,
+		toSalary: Decimal,
+	): {
 		increase: Decimal;
 		percentageIncrease: Decimal;
 	} {
 		const increase = toSalary.minus(fromSalary);
-		const percentageIncrease = fromSalary.isZero()
-			? new Decimal(0)
-			: increase.dividedBy(fromSalary).times(100);
+		const percentageIncrease = fromSalary.isZero() ? new Decimal(0) : increase.dividedBy(fromSalary).times(100);
 
 		return {
 			increase,

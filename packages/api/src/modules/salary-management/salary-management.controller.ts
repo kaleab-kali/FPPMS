@@ -1,35 +1,38 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { SalaryChangeType, SalaryEligibilityStatus } from "@prisma/client";
-import { JwtAuthGuard } from "#api/common/guards/jwt-auth.guard";
 import { CurrentTenant } from "#api/common/decorators/current-tenant.decorator";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
 import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
-import { SalaryManagementService } from "#api/modules/salary-management/salary-management.service";
-import { SalaryEligibilityQueryDto } from "#api/modules/salary-management/dto/salary-eligibility-query.dto";
-import {
-	ProcessSingleIncrementDto,
-	ProcessBatchIncrementDto,
-	RejectEligibilityDto,
-} from "#api/modules/salary-management/dto/process-step-increment.dto";
+import { JwtAuthGuard } from "#api/common/guards/jwt-auth.guard";
 import { ManualStepJumpDto } from "#api/modules/salary-management/dto/manual-step-jump.dto";
 import { MassRaiseDto, MassRaisePreviewDto } from "#api/modules/salary-management/dto/mass-raise.dto";
+import {
+	ProcessBatchIncrementDto,
+	ProcessSingleIncrementDto,
+	RejectEligibilityDto,
+} from "#api/modules/salary-management/dto/process-step-increment.dto";
 import {
 	ProcessPromotionSalaryDto,
 	PromotionSalaryPreviewDto,
 } from "#api/modules/salary-management/dto/promotion-salary.dto";
+import { SalaryEligibilityQueryDto } from "#api/modules/salary-management/dto/salary-eligibility-query.dto";
 import {
 	SalaryEligibilityListResponseDto,
 	SalaryEligibilitySummaryDto,
 	TodayEligibilityResponseDto,
 } from "#api/modules/salary-management/dto/salary-eligibility-response.dto";
-import { SalaryHistoryListResponseDto, SalaryHistoryQueryDto } from "#api/modules/salary-management/dto/salary-history-response.dto";
+import {
+	SalaryHistoryListResponseDto,
+	SalaryHistoryQueryDto,
+} from "#api/modules/salary-management/dto/salary-history-response.dto";
 import {
 	RankSalaryStepsResponseDto,
 	SalaryProjectionResponseDto,
 	StepDistributionReportDto,
 } from "#api/modules/salary-management/dto/salary-projection.dto";
+import { SalaryManagementService } from "#api/modules/salary-management/salary-management.service";
 
 @ApiTags("salary-management")
 @ApiBearerAuth("JWT-auth")
@@ -68,7 +71,10 @@ export class SalaryManagementController {
 		@CurrentTenant() tenantId: string,
 		@Query() query: SalaryEligibilityQueryDto,
 	): Promise<SalaryEligibilityListResponseDto> {
-		return this.salaryManagementService.getEligibilityList(tenantId, query) as Promise<SalaryEligibilityListResponseDto>;
+		return this.salaryManagementService.getEligibilityList(
+			tenantId,
+			query,
+		) as Promise<SalaryEligibilityListResponseDto>;
 	}
 
 	@Get("eligibility/today")
@@ -479,7 +485,10 @@ export class SalaryManagementController {
 		@CurrentTenant() tenantId: string,
 		@Param("id") employeeId: string,
 	): Promise<SalaryProjectionResponseDto> {
-		return this.salaryManagementService.getEmployeeSalaryProjection(tenantId, employeeId) as Promise<SalaryProjectionResponseDto>;
+		return this.salaryManagementService.getEmployeeSalaryProjection(
+			tenantId,
+			employeeId,
+		) as Promise<SalaryProjectionResponseDto>;
 	}
 
 	@Get("reports/step-distribution")
@@ -496,7 +505,10 @@ export class SalaryManagementController {
 		@CurrentTenant() tenantId: string,
 		@Query("centerId") centerId?: string,
 	): Promise<StepDistributionReportDto> {
-		return this.salaryManagementService.getStepDistributionReport(tenantId, centerId) as Promise<StepDistributionReportDto>;
+		return this.salaryManagementService.getStepDistributionReport(
+			tenantId,
+			centerId,
+		) as Promise<StepDistributionReportDto>;
 	}
 
 	@Get("ranks/:rankId/steps")

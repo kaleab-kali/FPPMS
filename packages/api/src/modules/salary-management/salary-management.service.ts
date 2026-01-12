@@ -1,13 +1,12 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { EmployeeType, Prisma, SalaryEligibilityStatus } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/client";
-import { PrismaService } from "#api/database/prisma.service";
 import { calculateSkip, paginate } from "#api/common/utils/pagination.util";
+import { PrismaService } from "#api/database/prisma.service";
+import { MassRaiseType } from "#api/modules/salary-management/dto/mass-raise.dto";
+import { SalaryEligibilityQueryDto } from "#api/modules/salary-management/dto/salary-eligibility-query.dto";
 import { SalaryCalculationService } from "#api/modules/salary-management/services/salary-calculation.service";
 import { SalaryHistoryService } from "#api/modules/salary-management/services/salary-history.service";
 import { SalaryProgressionService } from "#api/modules/salary-management/services/salary-progression.service";
-import { SalaryEligibilityQueryDto } from "#api/modules/salary-management/dto/salary-eligibility-query.dto";
-import { MassRaiseType } from "#api/modules/salary-management/dto/mass-raise.dto";
 
 const ELIGIBILITY_INCLUDE = {
 	employee: {
@@ -55,7 +54,10 @@ export class SalaryManagementService {
 		private readonly salaryProgression: SalaryProgressionService,
 	) {}
 
-	async getEligibilityList(tenantId: string, query: SalaryEligibilityQueryDto): Promise<{
+	async getEligibilityList(
+		tenantId: string,
+		query: SalaryEligibilityQueryDto,
+	): Promise<{
 		data: Array<{
 			id: string;
 			tenantId: string;
@@ -526,7 +528,10 @@ export class SalaryManagementService {
 		});
 	}
 
-	async getEmployeeSalaryProjection(tenantId: string, employeeId: string): Promise<{
+	async getEmployeeSalaryProjection(
+		tenantId: string,
+		employeeId: string,
+	): Promise<{
 		employeeId: string;
 		employeeCode: string;
 		employeeName: string;
@@ -586,19 +591,23 @@ export class SalaryManagementService {
 			employee.employmentDate,
 		);
 
-		const { nextStep, eligibilityDate, isAtCeiling } = await this.salaryCalculation.calculateNextEligibilityDate(
+		const {
+			nextStep: _nextStep,
+			eligibilityDate,
+			isAtCeiling,
+		} = await this.salaryCalculation.calculateNextEligibilityDate(
 			employee.employmentDate,
 			employee.currentSalaryStep,
 			employee.rank.stepPeriodYears,
 		);
 
 		const maxStep = this.salaryCalculation.getMaxStep();
-		const yearsToReachCeiling = isAtCeiling ? 0 : (maxStep - employee.currentSalaryStep) * employee.rank.stepPeriodYears;
+		const yearsToReachCeiling = isAtCeiling
+			? 0
+			: (maxStep - employee.currentSalaryStep) * employee.rank.stepPeriodYears;
 
 		const ceilingProjection = projections.find((p) => p.isCeiling);
-		const projectedCeilingDate = ceilingProjection
-			? ceilingProjection.effectiveDate.toISOString().split("T")[0]
-			: null;
+		const projectedCeilingDate = ceilingProjection ? ceilingProjection.effectiveDate.toISOString().split("T")[0] : null;
 
 		const now = new Date();
 		const daysUntilNextEligibility = isAtCeiling
@@ -635,7 +644,10 @@ export class SalaryManagementService {
 		};
 	}
 
-	async getStepDistributionReport(tenantId: string, centerId?: string): Promise<{
+	async getStepDistributionReport(
+		tenantId: string,
+		centerId?: string,
+	): Promise<{
 		tenantId: string;
 		generatedAt: Date;
 		totalMilitaryEmployees: number;
@@ -695,7 +707,7 @@ export class SalaryManagementService {
 			orderBy: { level: "asc" },
 		});
 
-		const rankMap = new Map(ranks.map((r) => [r.id, r]));
+		const _rankMap = new Map(ranks.map((r) => [r.id, r]));
 		const totalMilitaryEmployees = employees.length;
 
 		const overallStepCounts: Record<number, number> = {};
@@ -780,7 +792,10 @@ export class SalaryManagementService {
 		};
 	}
 
-	async getRankSalarySteps(tenantId: string, rankId: string): Promise<{
+	async getRankSalarySteps(
+		tenantId: string,
+		rankId: string,
+	): Promise<{
 		rankId: string;
 		rankCode: string;
 		rankName: string;

@@ -3,9 +3,9 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { EmployeeType, Prisma, SalaryChangeType, SalaryEligibilityStatus } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/client";
 import { PrismaService } from "#api/database/prisma.service";
+import { MassRaiseType } from "#api/modules/salary-management/dto/mass-raise.dto";
 import { SalaryCalculationService } from "#api/modules/salary-management/services/salary-calculation.service";
 import { SalaryHistoryService } from "#api/modules/salary-management/services/salary-history.service";
-import { MassRaiseType } from "#api/modules/salary-management/dto/mass-raise.dto";
 
 const MAX_STEP = 9;
 
@@ -99,7 +99,7 @@ export class SalaryProgressionService {
 						tenantId,
 						employeeId: employee.id,
 						nextStepNumber: nextStep,
-						rankId: employee.rankId!,
+						rankId: employee.rank.id,
 						status: { in: [SalaryEligibilityStatus.PENDING, SalaryEligibilityStatus.APPROVED] },
 					},
 				});
@@ -112,7 +112,7 @@ export class SalaryProgressionService {
 							data: {
 								tenantId,
 								employeeId: employee.id,
-								rankId: employee.rankId!,
+								rankId: employee.rank.id,
 								currentStep: employee.currentSalaryStep,
 								nextStepNumber: nextStep,
 								currentSalary: employee.currentSalary ?? employee.rank.baseSalary,
@@ -707,15 +707,13 @@ export class SalaryProgressionService {
 
 			const willBeSkipped = newStep <= employee.currentSalaryStep;
 			const stepInfo = rank.salarySteps.find((s) => s.stepNumber === newStep);
-			const newSalary = stepInfo?.salaryAmount ?? (employee.currentSalary ?? new Decimal(0));
+			const newSalary = stepInfo?.salaryAmount ?? employee.currentSalary ?? new Decimal(0);
 
 			if (willBeSkipped) {
 				skippedEmployees++;
 			} else {
 				affectedEmployees++;
-				totalSalaryIncrease = totalSalaryIncrease.plus(
-					newSalary.minus(employee.currentSalary ?? new Decimal(0)),
-				);
+				totalSalaryIncrease = totalSalaryIncrease.plus(newSalary.minus(employee.currentSalary ?? new Decimal(0)));
 			}
 
 			preview.push({
