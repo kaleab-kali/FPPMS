@@ -28,13 +28,26 @@ const mockRank = {
 	updatedAt: new Date(),
 };
 
+const mockSalarySteps = [
+	{ id: "step-0", rankId: MOCK_RANK_ID, stepNumber: 0, salaryAmount: { toString: () => "15000.00" }, yearsRequired: 0 },
+	{ id: "step-1", rankId: MOCK_RANK_ID, stepNumber: 1, salaryAmount: { toString: () => "15500.00" }, yearsRequired: 2 },
+];
+
 const mockPrismaService = {
 	militaryRank: {
 		findFirst: jest.fn(),
 		findMany: jest.fn(),
+		findUnique: jest.fn(),
 		create: jest.fn(),
 		update: jest.fn(),
 		delete: jest.fn(),
+	},
+	militaryRankSalaryStep: {
+		createMany: jest.fn(),
+		deleteMany: jest.fn(),
+	},
+	employee: {
+		count: jest.fn(),
 	},
 };
 
@@ -60,25 +73,32 @@ describe("RanksService", () => {
 			nameAm: "\u121C\u1300\u122D",
 			level: 11,
 			category: "OFFICER",
-			baseSalary: "18000.00",
-			ceilingSalary: "25000.00",
+			baseSalary: 18000,
+			ceilingSalary: 25000,
 			retirementAge: 55,
 		};
 
 		it("should create a new rank", async () => {
-			prisma.militaryRank.findFirst.mockResolvedValue(null);
-			prisma.militaryRank.create.mockResolvedValue({
+			const createdRank = {
 				...mockRank,
 				...createDto,
 				id: "new-id",
-				baseSalary: { toString: () => createDto.baseSalary },
-				ceilingSalary: { toString: () => createDto.ceilingSalary },
+				baseSalary: { toString: () => "18000.00" },
+				ceilingSalary: { toString: () => "25000.00" },
+			};
+			prisma.militaryRank.findFirst.mockResolvedValue(null);
+			prisma.militaryRank.create.mockResolvedValue(createdRank);
+			prisma.militaryRankSalaryStep.createMany.mockResolvedValue({ count: 10 });
+			prisma.militaryRank.findUnique.mockResolvedValue({
+				...createdRank,
+				salarySteps: mockSalarySteps,
 			});
 
 			const result = await service.create(MOCK_TENANT_ID, createDto);
 
 			expect(result.code).toBe("MAJ");
 			expect(prisma.militaryRank.create).toHaveBeenCalled();
+			expect(prisma.militaryRankSalaryStep.createMany).toHaveBeenCalled();
 		});
 
 		it("should throw BadRequestException if rank code exists", async () => {
@@ -130,8 +150,13 @@ describe("RanksService", () => {
 		const updateDto = { name: "Updated Name" };
 
 		it("should update a rank", async () => {
+			const updatedRank = { ...mockRank, ...updateDto };
 			prisma.militaryRank.findFirst.mockResolvedValue(mockRank);
-			prisma.militaryRank.update.mockResolvedValue({ ...mockRank, ...updateDto });
+			prisma.militaryRank.update.mockResolvedValue(updatedRank);
+			prisma.militaryRank.findUnique.mockResolvedValue({
+				...updatedRank,
+				salarySteps: mockSalarySteps,
+			});
 
 			const result = await service.update(MOCK_TENANT_ID, MOCK_RANK_ID, updateDto);
 
@@ -148,6 +173,8 @@ describe("RanksService", () => {
 	describe("remove", () => {
 		it("should delete a rank", async () => {
 			prisma.militaryRank.findFirst.mockResolvedValue(mockRank);
+			prisma.employee.count.mockResolvedValue(0);
+			prisma.militaryRankSalaryStep.deleteMany.mockResolvedValue({ count: 10 });
 			prisma.militaryRank.delete.mockResolvedValue(mockRank);
 
 			const result = await service.remove(MOCK_TENANT_ID, MOCK_RANK_ID);
@@ -159,6 +186,13 @@ describe("RanksService", () => {
 			prisma.militaryRank.findFirst.mockResolvedValue(null);
 
 			await expect(service.remove(MOCK_TENANT_ID, "nonexistent")).rejects.toThrow(NotFoundException);
+		});
+
+		it("should throw BadRequestException if employees are assigned", async () => {
+			prisma.militaryRank.findFirst.mockResolvedValue(mockRank);
+			prisma.employee.count.mockResolvedValue(5);
+
+			await expect(service.remove(MOCK_TENANT_ID, MOCK_RANK_ID)).rejects.toThrow(BadRequestException);
 		});
 	});
 });
