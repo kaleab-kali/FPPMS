@@ -19,6 +19,7 @@ import { PositionsModule } from "#api/modules/positions/positions.module";
 import { RanksModule } from "#api/modules/ranks/ranks.module";
 import { RolesModule } from "#api/modules/roles/roles.module";
 import { SalaryManagementModule } from "#api/modules/salary-management/salary-management.module";
+import { SalaryScaleModule } from "#api/modules/salary-scale/salary-scale.module";
 import { TenantsModule } from "#api/modules/tenants/tenants.module";
 import { UsersModule } from "#api/modules/users/users.module";
 
@@ -40,6 +41,7 @@ import { UsersModule } from "#api/modules/users/users.module";
 		RanksModule,
 		RolesModule,
 		SalaryManagementModule,
+		SalaryScaleModule,
 		UsersModule,
 		EmployeesModule,
 	],

@@ -270,6 +270,7 @@ model Tenant {
   committeeMembers     CommitteeMember[]
   committeeMemberTerms CommitteeMemberTerm[]
   committeeHistory     CommitteeHistory[]
+  salaryScaleVersions  SalaryScaleVersion[]
 
   @@index([code])
   @@map("tenants")
@@ -2181,4 +2182,80 @@ model SalaryStepEligibility {
   @@index([status])
   @@index([tenantId, status, eligibilityDate])
   @@map("salary_step_eligibility")
+}
+
+// ============================================================================
+// VERSIONED SALARY SCALE SYSTEM
+// ============================================================================
+
+enum SalaryScaleStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model SalaryScaleVersion {
+  id              String             @id @default(cuid())
+  tenantId        String?            @map("tenant_id")
+  code            String             // e.g., "2018-EC", "2020-EC"
+  name            String             // e.g., "Police Salary Scale 2018 EC"
+  nameAm          String?            @map("name_am")
+  description     String?
+  effectiveDate   DateTime           @map("effective_date") @db.Date
+  expiryDate      DateTime?          @map("expiry_date") @db.Date
+  status          SalaryScaleStatus  @default(DRAFT)
+  stepCount       Int                @default(9) @map("step_count")
+  stepPeriodYears Int                @default(2) @map("step_period_years")
+  approvedBy      String?            @map("approved_by")
+  approvedAt      DateTime?          @map("approved_at")
+  createdBy       String?            @map("created_by")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  tenant          Tenant?            @relation(fields: [tenantId], references: [id])
+  rankSalaries    SalaryScaleRank[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([status])
+  @@index([effectiveDate])
+  @@map("salary_scale_versions")
+}
+
+model SalaryScaleRank {
+  id              String              @id @default(cuid())
+  scaleVersionId  String              @map("scale_version_id")
+  rankCode        String              @map("rank_code") // Links to MilitaryRank.code
+  rankName        String              @map("rank_name")
+  rankNameAm      String?             @map("rank_name_am")
+  category        String              // ENLISTED, NCO, JUNIOR_OFFICER, etc.
+  level           Int                 // Hierarchical level
+  baseSalary      Decimal             @map("base_salary") @db.Decimal(12, 2)
+  ceilingSalary   Decimal             @map("ceiling_salary") @db.Decimal(12, 2)
+  sortOrder       Int                 @default(0) @map("sort_order")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  scaleVersion    SalaryScaleVersion  @relation(fields: [scaleVersionId], references: [id], onDelete: Cascade)
+  salarySteps     SalaryScaleStep[]
+
+  @@unique([scaleVersionId, rankCode])
+  @@index([scaleVersionId])
+  @@index([rankCode])
+  @@map("salary_scale_ranks")
+}
+
+model SalaryScaleStep {
+  id              String          @id @default(cuid())
+  scaleRankId     String          @map("scale_rank_id")
+  stepNumber      Int             @map("step_number") // 0 = base, 1-9 = steps
+  salaryAmount    Decimal         @map("salary_amount") @db.Decimal(12, 2)
+  yearsRequired   Int             @map("years_required")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  scaleRank       SalaryScaleRank @relation(fields: [scaleRankId], references: [id], onDelete: Cascade)
+
+  @@unique([scaleRankId, stepNumber])
+  @@index([scaleRankId])
+  @@map("salary_scale_steps")
 }
