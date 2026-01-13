@@ -1,4 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import React from "react";
 import { RouterProvider } from "react-router-dom";
 import { Toaster } from "#web/components/ui/sonner.tsx";
@@ -15,6 +16,7 @@ const App = React.memo(
 					<RouterProvider router={router} />
 					<Toaster position="top-right" />
 				</AuthProvider>
+				<ReactQueryDevtools initialIsOpen={false} />
 			</QueryClientProvider>
 		);
 	},

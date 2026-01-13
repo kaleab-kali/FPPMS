@@ -80,48 +80,119 @@ export const EmployeeSalaryTab = React.memo(
 			);
 		}
 
+		const hasSalaryScaleConfig = activeSalaryScale && employee.rankCode && rankSalary;
+		const scaleDisplayName = activeSalaryScale && isAmharic && activeSalaryScale.nameAm ? activeSalaryScale.nameAm : activeSalaryScale?.name;
+		const rankDisplayName = rankSalary && isAmharic && rankSalary.rankNameAm ? rankSalary.rankNameAm : rankSalary?.rankName;
+
+		const renderHistorySection = (): React.ReactNode => (
+			<Card>
+				<CardHeader>
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2">
+							<History className="h-5 w-5" />
+							<CardTitle>{tSalaryMgmt("history.title")}</CardTitle>
+						</div>
+					</div>
+				</CardHeader>
+				<CardContent>
+					{isLoadingHistory ? (
+						<Skeleton className="h-32" />
+					) : !salaryHistory?.data?.length ? (
+						<p className="text-center text-muted-foreground py-4">{tSalaryMgmt("history.noHistory")}</p>
+					) : (
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>{tSalaryMgmt("history.changeType")}</TableHead>
+									<TableHead className="text-center">{tSalaryMgmt("history.fromStep")}</TableHead>
+									<TableHead className="text-center">{tSalaryMgmt("history.toStep")}</TableHead>
+									<TableHead className="text-right">{tSalaryMgmt("history.fromSalary")}</TableHead>
+									<TableHead className="text-right">{tSalaryMgmt("history.toSalary")}</TableHead>
+									<TableHead>{tSalaryMgmt("history.effectiveDate")}</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{salaryHistory.data.map((record) => {
+									const changeTypeLabels: Record<string, string> = {
+										STEP_INCREMENT: tSalaryMgmt("history.stepIncrement"),
+										MANUAL_JUMP: tSalaryMgmt("history.manualJump"),
+										MASS_RAISE: tSalaryMgmt("history.massRaise"),
+										PROMOTION: tSalaryMgmt("history.promotion"),
+										INITIAL: tSalaryMgmt("history.initial"),
+									};
+									return (
+										<TableRow key={record.id}>
+											<TableCell>
+												<Badge variant="outline">{changeTypeLabels[record.changeType] ?? record.changeType}</Badge>
+											</TableCell>
+											<TableCell className="text-center">{record.fromStep ?? "-"}</TableCell>
+											<TableCell className="text-center">
+												<div className="flex items-center justify-center gap-1">
+													{record.fromStep !== null && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
+													{record.toStep}
+												</div>
+											</TableCell>
+											<TableCell className="text-right">{formatCurrency(record.fromSalary ?? undefined)}</TableCell>
+											<TableCell className="text-right text-green-600">{formatCurrency(record.toSalary)}</TableCell>
+											<TableCell>{new Date(record.effectiveDate).toLocaleDateString()}</TableCell>
+										</TableRow>
+									);
+								})}
+							</TableBody>
+						</Table>
+					)}
+				</CardContent>
+			</Card>
+		);
+
 		if (!activeSalaryScale) {
 			return (
-				<div className="flex flex-col items-center justify-center py-16 text-center">
-					<DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-					<h3 className="text-lg font-semibold mb-2">{t("noActiveScale")}</h3>
-					<p className="text-muted-foreground text-sm max-w-md mb-4">{t("noActiveScaleDescription")}</p>
-					<Button variant="outline" onClick={() => navigate("/salary/scale")}>
-						<ExternalLink className="mr-2 h-4 w-4" />
-						{t("viewSalaryScales")}
-					</Button>
+				<div className="space-y-6">
+					<div className="flex flex-col items-center justify-center py-8 text-center">
+						<DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
+						<h3 className="text-lg font-semibold mb-2">{t("noActiveScale")}</h3>
+						<p className="text-muted-foreground text-sm max-w-md mb-4">{t("noActiveScaleDescription")}</p>
+						<Button variant="outline" onClick={() => navigate("/salary/scale")}>
+							<ExternalLink className="mr-2 h-4 w-4" />
+							{t("viewSalaryScales")}
+						</Button>
+					</div>
+					{renderHistorySection()}
 				</div>
 			);
 		}
 
 		if (!employee.rankCode) {
 			return (
-				<div className="flex flex-col items-center justify-center py-16 text-center">
-					<TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
-					<h3 className="text-lg font-semibold mb-2">{tEmployees("noRankAssigned")}</h3>
-					<p className="text-muted-foreground text-sm max-w-md">{tEmployees("noRankAssignedDescription")}</p>
+				<div className="space-y-6">
+					<div className="flex flex-col items-center justify-center py-8 text-center">
+						<TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
+						<h3 className="text-lg font-semibold mb-2">{tEmployees("noRankAssigned")}</h3>
+						<p className="text-muted-foreground text-sm max-w-md">{tEmployees("noRankAssignedDescription")}</p>
+					</div>
+					{renderHistorySection()}
 				</div>
 			);
 		}
 
 		if (!rankSalary) {
 			return (
-				<div className="flex flex-col items-center justify-center py-16 text-center">
-					<DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
-					<h3 className="text-lg font-semibold mb-2">{t("rankNotInScale")}</h3>
-					<p className="text-muted-foreground text-sm max-w-md mb-4">
-						{t("rankNotInScaleDescription", { rankCode: employee.rankCode })}
-					</p>
-					<Button variant="outline" onClick={handleViewSalaryScale}>
-						<ExternalLink className="mr-2 h-4 w-4" />
-						{t("viewSalaryScale")}
-					</Button>
+				<div className="space-y-6">
+					<div className="flex flex-col items-center justify-center py-8 text-center">
+						<DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
+						<h3 className="text-lg font-semibold mb-2">{t("rankNotInScale")}</h3>
+						<p className="text-muted-foreground text-sm max-w-md mb-4">
+							{t("rankNotInScaleDescription", { rankCode: employee.rankCode })}
+						</p>
+						<Button variant="outline" onClick={handleViewSalaryScale}>
+							<ExternalLink className="mr-2 h-4 w-4" />
+							{t("viewSalaryScale")}
+						</Button>
+					</div>
+					{renderHistorySection()}
 				</div>
 			);
 		}
-
-		const scaleDisplayName = isAmharic && activeSalaryScale.nameAm ? activeSalaryScale.nameAm : activeSalaryScale.name;
-		const rankDisplayName = isAmharic && rankSalary.rankNameAm ? rankSalary.rankNameAm : rankSalary.rankName;
 
 		return (
 			<div className="space-y-6">
@@ -292,65 +363,7 @@ export const EmployeeSalaryTab = React.memo(
 					</Card>
 				)}
 
-				{/* Salary History */}
-				<Card>
-					<CardHeader>
-						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-2">
-								<History className="h-5 w-5" />
-								<CardTitle>{tSalaryMgmt("history.title")}</CardTitle>
-							</div>
-						</div>
-					</CardHeader>
-					<CardContent>
-						{isLoadingHistory ? (
-							<Skeleton className="h-32" />
-						) : !salaryHistory?.data?.length ? (
-							<p className="text-center text-muted-foreground py-4">{tSalaryMgmt("history.noHistory")}</p>
-						) : (
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>{tSalaryMgmt("history.changeType")}</TableHead>
-										<TableHead className="text-center">{tSalaryMgmt("history.fromStep")}</TableHead>
-										<TableHead className="text-center">{tSalaryMgmt("history.toStep")}</TableHead>
-										<TableHead className="text-right">{tSalaryMgmt("history.fromSalary")}</TableHead>
-										<TableHead className="text-right">{tSalaryMgmt("history.toSalary")}</TableHead>
-										<TableHead>{tSalaryMgmt("history.effectiveDate")}</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{salaryHistory.data.map((record) => {
-										const changeTypeLabels: Record<string, string> = {
-											STEP_INCREMENT: tSalaryMgmt("history.stepIncrement"),
-											MANUAL_JUMP: tSalaryMgmt("history.manualJump"),
-											MASS_RAISE: tSalaryMgmt("history.massRaise"),
-											PROMOTION: tSalaryMgmt("history.promotion"),
-											INITIAL: tSalaryMgmt("history.initial"),
-										};
-										return (
-											<TableRow key={record.id}>
-												<TableCell>
-													<Badge variant="outline">{changeTypeLabels[record.changeType] ?? record.changeType}</Badge>
-												</TableCell>
-												<TableCell className="text-center">{record.fromStep ?? "-"}</TableCell>
-												<TableCell className="text-center">
-													<div className="flex items-center justify-center gap-1">
-														{record.fromStep !== null && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
-														{record.toStep}
-													</div>
-												</TableCell>
-												<TableCell className="text-right">{formatCurrency(record.fromSalary ?? undefined)}</TableCell>
-												<TableCell className="text-right text-green-600">{formatCurrency(record.toSalary)}</TableCell>
-												<TableCell>{new Date(record.effectiveDate).toLocaleDateString()}</TableCell>
-											</TableRow>
-										);
-									})}
-								</TableBody>
-							</Table>
-						)}
-					</CardContent>
-				</Card>
+				{renderHistorySection()}
 			</div>
 		);
 	},

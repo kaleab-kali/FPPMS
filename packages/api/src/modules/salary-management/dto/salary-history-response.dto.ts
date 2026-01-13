@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { SalaryChangeType } from "@prisma/client";
+import { Transform } from "class-transformer";
+import { IsDateString, IsEnum, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
 class RankMinimalDto {
 	@ApiProperty({ description: "Rank ID" })
@@ -137,34 +139,51 @@ export class SalaryHistoryQueryDto {
 		description: "Filter by salary change type",
 		enum: SalaryChangeType,
 	})
+	@IsEnum(SalaryChangeType)
+	@IsOptional()
 	changeType?: SalaryChangeType;
 
 	@ApiPropertyOptional({
 		description: "Filter by date range start (ISO date string)",
 		example: "2025-01-01",
 	})
+	@IsDateString()
+	@IsOptional()
 	dateFrom?: string;
 
 	@ApiPropertyOptional({
 		description: "Filter by date range end (ISO date string)",
 		example: "2025-12-31",
 	})
+	@IsDateString()
+	@IsOptional()
 	dateTo?: string;
 
 	@ApiPropertyOptional({
 		description: "Filter by rank ID",
 	})
+	@IsString()
+	@IsOptional()
 	rankId?: string;
 
 	@ApiPropertyOptional({
 		description: "Page number (default: 1)",
 		example: 1,
 	})
+	@IsInt()
+	@Min(1)
+	@Transform(({ value }) => (value !== undefined && value !== null && value !== "" ? parseInt(value, 10) : undefined))
+	@IsOptional()
 	page?: number;
 
 	@ApiPropertyOptional({
 		description: "Items per page (default: 20, max: 100)",
 		example: 20,
 	})
+	@IsInt()
+	@Min(1)
+	@Max(100)
+	@Transform(({ value }) => (value !== undefined && value !== null && value !== "" ? parseInt(value, 10) : undefined))
+	@IsOptional()
 	limit?: number;
 }

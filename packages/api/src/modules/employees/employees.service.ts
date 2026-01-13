@@ -60,7 +60,7 @@ type EmployeeWithRelations = Employee & {
 	center?: { id: string; name: string } | null;
 	department?: { id: string; name: string } | null;
 	position?: { id: string; name: string } | null;
-	rank?: { id: string; name: string } | null;
+	rank?: { id: string; name: string; code: string } | null;
 	addresses?: EmployeeAddressRelation[];
 	motherInfo?: EmployeeMotherInfoRelation | null;
 	emergencyContacts?: EmployeeEmergencyContactRelation[];
@@ -69,7 +69,7 @@ type EmployeeWithRelations = Employee & {
 type EmployeeListItem = Employee & {
 	department?: { name: string } | null;
 	position?: { name: string } | null;
-	rank?: { name: string } | null;
+	rank?: { name: string; code: string } | null;
 };
 
 @Injectable()
@@ -454,7 +454,7 @@ export class EmployeesService {
 				include: {
 					department: { select: { name: true } },
 					position: { select: { name: true } },
-					rank: { select: { name: true } },
+					rank: { select: { name: true, code: true } },
 				},
 			}),
 			this.prisma.employee.count({ where }),
@@ -811,7 +811,7 @@ export class EmployeesService {
 			center: { select: { id: true, name: true } },
 			department: { select: { id: true, name: true } },
 			position: { select: { id: true, name: true } },
-			rank: { select: { id: true, name: true } },
+			rank: { select: { id: true, name: true, code: true } },
 			addresses: {
 				select: {
 					id: true,
@@ -911,6 +911,7 @@ export class EmployeesService {
 			positionName: e.position?.name,
 			rankId: n(e.rankId),
 			rankName: e.rank?.name,
+			rankCode: e.rank?.code,
 			employmentDate: e.employmentDate,
 			originalEmploymentDate: n(e.originalEmploymentDate),
 			isTransfer: e.isTransfer,
