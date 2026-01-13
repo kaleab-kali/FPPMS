@@ -264,6 +264,8 @@ export const seedMilitaryRanks = async (prisma: PrismaClient): Promise<void> => 
 			});
 		}
 
-		console.log(`Created rank: ${rank.name} (${rank.code}) with ${DEFAULT_STEP_COUNT + 1} salary steps (base + 9 steps)`);
+		console.log(
+			`Created rank: ${rank.name} (${rank.code}) with ${DEFAULT_STEP_COUNT + 1} salary steps (base + 9 steps)`,
+		);
 	}
 };
