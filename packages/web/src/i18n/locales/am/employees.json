@@ -455,5 +455,7 @@
 			"WIDOWED": "የሞተበት/ባት",
 			"SEPARATED": "የተለያየ"
 		}
-	}
+	},
+	"noRankAssigned": "ማዕረግ አልተሰጠም",
+	"noRankAssignedDescription": "ይህ ሰራተኛ ማዕረግ አልተሰጠውም። ወታደራዊ ሰራተኞች የደመወዝ መረጃ ለማየት ማዕረግ ሊኖራቸው ይገባል።"
 }

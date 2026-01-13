@@ -55,6 +55,7 @@ import {
 import { Skeleton } from "#web/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#web/components/ui/tabs.tsx";
 import { STORAGE_KEYS } from "#web/config/constants.ts";
+import { EmployeeSalaryTab } from "#web/features/employees/components/EmployeeSalaryTab.tsx";
 import type { CommitteeMemberTerm, EmployeeCommitteeMembership } from "#web/types/committee.ts";
 import { TERM_STATUS_COLORS, TERM_STATUS_LABELS } from "#web/types/committee.ts";
 import type { EmployeeComplaintHistoryItem } from "#web/types/complaint.ts";
@@ -1238,11 +1239,7 @@ export const EmployeeDetailPage = React.memo(
 					</TabsContent>
 
 					<TabsContent value="salary" className="mt-5">
-						<PlaceholderTab
-							title={t("tabs.salary")}
-							icon={<TrendingUp className="h-8 w-8 text-muted-foreground" />}
-							t={t}
-						/>
+						<EmployeeSalaryTab employee={employee} isAmharic={isAmharic} />
 					</TabsContent>
 
 					<TabsContent value="inventory" className="mt-5">

@@ -43,6 +43,7 @@ export interface Employee {
 	positionId?: string;
 	positionName?: string;
 	rankId?: string;
+	rankCode?: string;
 	rankName?: string;
 	employmentDate: string;
 	originalEmploymentDate?: string;
