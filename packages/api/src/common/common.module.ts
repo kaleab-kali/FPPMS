@@ -7,6 +7,7 @@ import { JwtAuthGuard } from "#api/common/guards/jwt-auth.guard";
 import { PermissionsGuard } from "#api/common/guards/permissions.guard";
 import { RolesGuard } from "#api/common/guards/roles.guard";
 import { TenantGuard } from "#api/common/guards/tenant.guard";
+import { AuditInterceptor } from "#api/common/interceptors/audit.interceptor";
 import { LoggingInterceptor } from "#api/common/interceptors/logging.interceptor";
 import { TenantContextInterceptor } from "#api/common/interceptors/tenant-context.interceptor";
 import { PermissionDiscoveryService } from "#api/common/services/permission-discovery.service";
@@ -62,6 +63,10 @@ import { DatabaseModule } from "#api/database/database.module";
 		{
 			provide: APP_INTERCEPTOR,
 			useClass: LoggingInterceptor,
+		},
+		{
+			provide: APP_INTERCEPTOR,
+			useClass: AuditInterceptor,
 		},
 	],
 })

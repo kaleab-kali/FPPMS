@@ -26,15 +26,21 @@ export class AuditInterceptor implements NestInterceptor {
 		const request = context.switchToHttp().getRequest<RequestWithUser>();
 		const { method, originalUrl, body, headers } = request;
 
+		this.logger.log(`AuditInterceptor called: ${method} ${originalUrl}`);
+
 		const shouldSkip = EXCLUDED_PATHS.some((path) => originalUrl.includes(path));
 		if (shouldSkip) {
+			this.logger.log(`Skipping audit for excluded path: ${originalUrl}`);
 			return next.handle();
 		}
 
 		const userId = request.user?.id;
 		const tenantId = request.user?.tenantId ?? request.tenantId;
 
+		this.logger.log(`User: ${userId}, Tenant: ${tenantId}`);
+
 		if (!tenantId) {
+			this.logger.warn(`No tenantId found for request: ${method} ${originalUrl}`);
 			return next.handle();
 		}
 
@@ -50,6 +56,7 @@ export class AuditInterceptor implements NestInterceptor {
 				next: (responseData) => {
 					const extractedResourceId = resourceId ?? this.extractResourceIdFromResponse(responseData);
 
+					this.logger.log(`Creating audit log for: ${action} ${module}/${resource}`);
 					this.auditLogService
 						.create({
 							tenantId,
@@ -71,6 +78,9 @@ export class AuditInterceptor implements NestInterceptor {
 								action === AuditAction.CREATE || action === AuditAction.UPDATE ? this.sanitizeBody(body) : undefined,
 							changedFields: action === AuditAction.UPDATE ? Object.keys(this.sanitizeBody(body)) : [],
 							description: this.generateDescription(action, module, resource),
+						})
+						.then((result) => {
+							this.logger.log(`Audit log created successfully: ${result.id}`);
 						})
 						.catch((error) => {
 							this.logger.error(`Failed to create audit log: ${error.message}`, error.stack);

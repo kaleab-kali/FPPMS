@@ -11,6 +11,7 @@ import {
 	Home,
 	type LucideIcon,
 	Package,
+	ScrollText,
 	Settings,
 	Star,
 	UserCheck,
@@ -245,6 +246,16 @@ const NAV_ITEMS_CONFIG: NavItemConfig[] = [
 		items: [
 			{ titleKey: "general", url: "/settings/general" },
 			{ titleKey: "notifications", url: "/settings/notifications" },
+		],
+	},
+	{
+		titleKey: "auditLogs",
+		url: "#",
+		icon: ScrollText,
+		permission: PERMISSIONS.AUDIT_LOG_READ,
+		items: [
+			{ titleKey: "allAuditLogs", url: "/audit-logs", permission: PERMISSIONS.AUDIT_LOG_READ },
+			{ titleKey: "loginHistory", url: "/audit-logs/login-history", permission: PERMISSIONS.AUDIT_HISTORY_READ },
 		],
 	},
 ];

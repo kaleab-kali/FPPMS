@@ -188,7 +188,9 @@ export class LoginHistoryQueryDto {
 		example: true,
 	})
 	@IsOptional()
-	@Transform(({ value }) => value === "true" || value === true)
+	@Transform(({ value }) =>
+		value === undefined || value === null || value === "" ? undefined : value === "true" || value === true,
+	)
 	isSuccessful?: boolean;
 
 	@ApiPropertyOptional({

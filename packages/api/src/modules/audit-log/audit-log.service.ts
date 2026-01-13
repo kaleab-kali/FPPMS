@@ -15,6 +15,7 @@ export class AuditLogService {
 	constructor(private readonly prisma: PrismaService) {}
 
 	async create(dto: CreateAuditLogDto): Promise<AuditLogResponseDto> {
+		this.logger.log(`Creating audit log: ${dto.action} ${dto.module}/${dto.resource} for tenant ${dto.tenantId}`);
 		const auditLog = await this.prisma.auditLog.create({
 			data: {
 				tenantId: dto.tenantId,
@@ -46,7 +47,9 @@ export class AuditLogService {
 	}
 
 	async findAll(tenantId: string, query: AuditLogQueryDto): Promise<PaginatedResult<AuditLogResponseDto>> {
+		this.logger.log(`Finding audit logs for tenant ${tenantId} with query: ${JSON.stringify(query)}`);
 		const where = this.buildWhereClause(tenantId, query);
+		this.logger.log(`Where clause: ${JSON.stringify(where)}`);
 		const orderBy = this.buildOrderBy(query.sortBy ?? "timestamp", query.sortOrder ?? "desc");
 		const page = query.page ?? 1;
 		const limit = query.limit ?? 20;
@@ -97,9 +100,11 @@ export class AuditLogService {
 		}
 
 		if (query?.dateTo) {
+			const endOfDay = new Date(query.dateTo);
+			endOfDay.setHours(23, 59, 59, 999);
 			where.timestamp = {
 				...(where.timestamp as Prisma.DateTimeFilter),
-				lte: new Date(query.dateTo),
+				lte: endOfDay,
 			};
 		}
 
@@ -145,9 +150,11 @@ export class AuditLogService {
 		}
 
 		if (query?.dateTo) {
+			const endOfDay = new Date(query.dateTo);
+			endOfDay.setHours(23, 59, 59, 999);
 			where.timestamp = {
 				...(where.timestamp as Prisma.DateTimeFilter),
-				lte: new Date(query.dateTo),
+				lte: endOfDay,
 			};
 		}
 
@@ -171,10 +178,14 @@ export class AuditLogService {
 		tenantId: string,
 		query: LoginHistoryQueryDto,
 	): Promise<PaginatedResult<LoginHistoryResponseDto>> {
+		this.logger.log(`=== LOGIN HISTORY DEBUG START ===`);
+		this.logger.log(`Tenant: ${tenantId}`);
+		this.logger.log(`Query params: ${JSON.stringify(query)}`);
 		const page = query.page ?? 1;
 		const limit = query.limit ?? 20;
 
 		const where = this.buildLoginHistoryWhereClause(tenantId, query);
+		this.logger.log(`Where clause built: ${JSON.stringify(where)}`);
 		const orderBy = this.buildLoginHistoryOrderBy(query.sortBy ?? "loginAt", query.sortOrder ?? "desc");
 
 		const [loginHistory, total] = await Promise.all([
@@ -183,9 +194,20 @@ export class AuditLogService {
 				orderBy,
 				skip: calculateSkip(page, limit),
 				take: limit,
+				include: {
+					user: {
+						select: {
+							username: true,
+							employeeId: true,
+						},
+					},
+				},
 			}),
 			this.prisma.loginHistory.count({ where }),
 		]);
+
+		this.logger.log(`Query results: total=${total}, returned=${loginHistory.length}`);
+		this.logger.log(`=== LOGIN HISTORY DEBUG END ===`);
 
 		const data = loginHistory.map((entry) => this.mapLoginHistoryToResponse(entry));
 		return paginate(data, total, page, limit);
@@ -244,9 +266,11 @@ export class AuditLogService {
 		}
 
 		if (query?.dateTo) {
+			const endOfDay = new Date(query.dateTo);
+			endOfDay.setHours(23, 59, 59, 999);
 			where.loginAt = {
 				...(where.loginAt as Prisma.DateTimeFilter),
-				lte: new Date(query.dateTo),
+				lte: endOfDay,
 			};
 		}
 
@@ -262,6 +286,14 @@ export class AuditLogService {
 				orderBy,
 				skip: calculateSkip(page, limit),
 				take: limit,
+				include: {
+					user: {
+						select: {
+							username: true,
+							employeeId: true,
+						},
+					},
+				},
 			}),
 			this.prisma.loginHistory.count({ where }),
 		]);
@@ -278,9 +310,11 @@ export class AuditLogService {
 		}
 
 		if (query.dateTo) {
+			const endOfDay = new Date(query.dateTo);
+			endOfDay.setHours(23, 59, 59, 999);
 			where.timestamp = {
 				...(where.timestamp as Prisma.DateTimeFilter),
-				lte: new Date(query.dateTo),
+				lte: endOfDay,
 			};
 		}
 
@@ -328,9 +362,11 @@ export class AuditLogService {
 		}
 
 		if (query.dateTo) {
+			const endOfDay = new Date(query.dateTo);
+			endOfDay.setHours(23, 59, 59, 999);
 			where.loginAt = {
 				...(where.loginAt as Prisma.DateTimeFilter),
-				lte: new Date(query.dateTo),
+				lte: endOfDay,
 			};
 		}
 
@@ -439,10 +475,16 @@ export class AuditLogService {
 		sessionId: string;
 		isSuccessful: boolean;
 		failureReason: string | null;
+		user?: {
+			username: string;
+			employeeId: string | null;
+		} | null;
 	}): LoginHistoryResponseDto {
 		return {
 			id: entry.id,
 			userId: entry.userId,
+			username: entry.user?.username ?? null,
+			employeeId: entry.user?.employeeId ?? null,
 			loginAt: entry.loginAt,
 			logoutAt: entry.logoutAt,
 			ipAddress: entry.ipAddress,

@@ -28,8 +28,8 @@ import { UsersModule } from "#api/modules/users/users.module";
 	imports: [
 		ConfigModule,
 		DatabaseModule,
-		CommonModule,
 		AuditLogModule,
+		CommonModule,
 		AuthModule,
 		TenantsModule,
 		CentersModule,

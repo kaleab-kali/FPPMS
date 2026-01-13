@@ -95,6 +95,18 @@ export class LoginHistoryResponseDto {
 	})
 	userId: string;
 
+	@ApiPropertyOptional({
+		description: "Username of the user",
+		example: "FPC-0001-25",
+	})
+	username: string | null;
+
+	@ApiPropertyOptional({
+		description: "Employee ID linked to the user",
+		example: "emp_12345",
+	})
+	employeeId: string | null;
+
 	@ApiProperty({
 		description: "Timestamp of the login attempt",
 		example: "2025-01-15T10:30:00.000Z",

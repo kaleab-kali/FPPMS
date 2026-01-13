@@ -83,5 +83,8 @@
 	"general": "General",
 	"notifications": "Notifications",
 	"profile": "Profile",
-	"navigation": "Navigation"
+	"navigation": "Navigation",
+	"auditLogs": "Audit Logs",
+	"allAuditLogs": "All Audit Logs",
+	"loginHistory": "Login History"
 }

@@ -352,6 +352,7 @@ model User {
   center        Center?        @relation(fields: [centerId], references: [id])
   userRoles     UserRole[]
   refreshTokens RefreshToken[]
+  loginHistory  LoginHistory[]
 
   @@unique([tenantId, username])
   @@index([tenantId])
@@ -1771,6 +1772,8 @@ model LoginHistory {
   sessionId     String    @map("session_id")
   isSuccessful  Boolean   @default(true) @map("is_successful")
   failureReason String?   @map("failure_reason")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([loginAt])

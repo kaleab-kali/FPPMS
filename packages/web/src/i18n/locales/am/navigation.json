@@ -83,5 +83,8 @@
 	"general": "አጠቃላይ",
 	"notifications": "ማሳወቂያዎች",
 	"profile": "መገለጫ",
-	"navigation": "አሰሳ"
+	"navigation": "አሰሳ",
+	"auditLogs": "የኦዲት መዝገቦች",
+	"allAuditLogs": "ሁሉም የኦዲት መዝገቦች",
+	"loginHistory": "የመግቢያ ታሪክ"
 }

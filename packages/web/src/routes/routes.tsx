@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ComingSoonPage } from "#web/components/common/ComingSoonPage.tsx";
 import { AppLayout } from "#web/components/layout/AppLayout.tsx";
 import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
+import { AuditLogListPage } from "#web/features/audit-log/pages/AuditLogListPage.tsx";
+import { LoginHistoryPage } from "#web/features/audit-log/pages/LoginHistoryPage.tsx";
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
 import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
 import { CommitteeDetailPage } from "#web/features/committees/pages/CommitteeDetailPage.tsx";
@@ -263,6 +265,14 @@ export const router = createBrowserRouter([
 			{
 				path: "/settings/*",
 				element: <ComingSoonPage />,
+			},
+			{
+				path: "/audit-logs",
+				element: <AuditLogListPage />,
+			},
+			{
+				path: "/audit-logs/login-history",
+				element: <LoginHistoryPage />,
 			},
 		],
 	},
