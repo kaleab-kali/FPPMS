@@ -108,6 +108,10 @@ export const PERMISSIONS = {
 	SALARY_HISTORY_READ: "salary.read.history",
 	SALARY_PROJECTION_READ: "salary.read.projection",
 	SALARY_REPORTS_READ: "salary.read.reports",
+
+	// Audit Logs
+	AUDIT_LOG_READ: "audit.read.log",
+	AUDIT_HISTORY_READ: "audit.read.history",
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

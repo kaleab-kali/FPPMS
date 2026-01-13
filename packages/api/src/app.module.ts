@@ -6,6 +6,7 @@ import { LoggerMiddleware } from "#api/common/middleware/logger.middleware";
 import { TenantMiddleware } from "#api/common/middleware/tenant.middleware";
 import { ConfigModule } from "#api/config";
 import { DatabaseModule } from "#api/database";
+import { AuditLogModule } from "#api/modules/audit-log/audit-log.module";
 import { AuthModule } from "#api/modules/auth/auth.module";
 import { CentersModule } from "#api/modules/centers/centers.module";
 import { CommitteesModule } from "#api/modules/committees/committees.module";
@@ -27,6 +28,7 @@ import { UsersModule } from "#api/modules/users/users.module";
 	imports: [
 		ConfigModule,
 		DatabaseModule,
+		AuditLogModule,
 		CommonModule,
 		AuthModule,
 		TenantsModule,

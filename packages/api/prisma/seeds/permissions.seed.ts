@@ -115,6 +115,9 @@ const PERMISSIONS = [
 	{ module: "admin", action: "manage", resource: "position", description: "Manage positions" },
 	{ module: "admin", action: "manage", resource: "lookup", description: "Manage lookups" },
 	{ module: "admin", action: "read", resource: "audit", description: "View audit logs" },
+
+	{ module: "audit", action: "read", resource: "log", description: "View audit logs" },
+	{ module: "audit", action: "read", resource: "history", description: "View login history" },
 ];
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
@@ -140,6 +143,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 		"admin:manage:position",
 		"admin:manage:lookup",
 		"admin:read:audit",
+		"audit:*",
 	],
 
 	HR_DIRECTOR: [

@@ -2,6 +2,7 @@ import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 import { APP_CONFIG, STORAGE_KEYS } from "#web/config/constants.ts";
+import amAuditLog from "#web/i18n/locales/am/auditLog.json";
 import amAuth from "#web/i18n/locales/am/auth.json";
 import amCommittees from "#web/i18n/locales/am/committees.json";
 import amCommon from "#web/i18n/locales/am/common.json";
@@ -17,6 +18,7 @@ import amSalaryManagement from "#web/i18n/locales/am/salary-management.json";
 import amSalaryScale from "#web/i18n/locales/am/salary-scale.json";
 import amUsers from "#web/i18n/locales/am/users.json";
 import amValidation from "#web/i18n/locales/am/validation.json";
+import enAuditLog from "#web/i18n/locales/en/auditLog.json";
 import enAuth from "#web/i18n/locales/en/auth.json";
 import enCommittees from "#web/i18n/locales/en/committees.json";
 import enCommon from "#web/i18n/locales/en/common.json";
@@ -37,6 +39,7 @@ const resources = {
 	en: {
 		common: enCommon,
 		auth: enAuth,
+		auditLog: enAuditLog,
 		committees: enCommittees,
 		complaints: enComplaints,
 		navigation: enNavigation,
@@ -54,6 +57,7 @@ const resources = {
 	am: {
 		common: amCommon,
 		auth: amAuth,
+		auditLog: amAuditLog,
 		committees: amCommittees,
 		complaints: amComplaints,
 		navigation: amNavigation,
@@ -81,6 +85,7 @@ i18n
 		ns: [
 			"common",
 			"auth",
+			"auditLog",
 			"committees",
 			"complaints",
 			"navigation",
