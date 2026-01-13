@@ -323,6 +323,8 @@ model Center {
   committees           Committee[]
   committeeMemberTerms CommitteeMemberTerm[]
   complaints           Complaint[]
+  inventoryAssignments InventoryAssignment[]
+  centerInventory      CenterInventory[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -1633,8 +1635,9 @@ model InventoryItemType {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  category    InventoryCategory     @relation(fields: [categoryId], references: [id])
-  assignments InventoryAssignment[]
+  category        InventoryCategory     @relation(fields: [categoryId], references: [id])
+  assignments     InventoryAssignment[]
+  centerInventory CenterInventory[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -1647,10 +1650,13 @@ model InventoryAssignment {
   tenantId              String    @map("tenant_id")
   employeeId            String    @map("employee_id")
   itemTypeId            String    @map("item_type_id")
+  centerId              String?   @map("center_id")
   serialNumber          String?   @map("serial_number")
   assetTag              String?   @map("asset_tag")
   size                  String?
   quantity              Int       @default(1)
+  isPermanent           Boolean   @default(false) @map("is_permanent")
+  expectedReturnDate    DateTime? @map("expected_return_date") @db.Date
   assignedDate          DateTime  @map("assigned_date") @db.Date
   assignedBy            String    @map("assigned_by")
   conditionAtAssignment String    @map("condition_at_assignment")
@@ -1668,11 +1674,35 @@ model InventoryAssignment {
 
   employee Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   itemType InventoryItemType @relation(fields: [itemTypeId], references: [id])
+  center   Center?           @relation(fields: [centerId], references: [id])
 
   @@index([tenantId])
   @@index([employeeId])
+  @@index([centerId])
   @@index([employeeId, isReturned])
   @@map("inventory_assignments")
+}
+
+model CenterInventory {
+  id                String   @id @default(cuid())
+  tenantId          String   @map("tenant_id")
+  centerId          String   @map("center_id")
+  itemTypeId        String   @map("item_type_id")
+  totalQuantity     Int      @map("total_quantity")
+  assignedQuantity  Int      @default(0) @map("assigned_quantity")
+  availableQuantity Int      @map("available_quantity")
+  minStockLevel     Int?     @map("min_stock_level")
+  remarks           String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  center   Center            @relation(fields: [centerId], references: [id])
+  itemType InventoryItemType @relation(fields: [itemTypeId], references: [id])
+
+  @@unique([centerId, itemTypeId])
+  @@index([tenantId])
+  @@index([centerId])
+  @@map("center_inventory")
 }
 
 // ============================================================================
