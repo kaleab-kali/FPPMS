@@ -119,6 +119,9 @@ export class EmployeeResponseDto {
 	@ApiPropertyOptional({ description: "Rank name (military only)" })
 	rankName?: string;
 
+	@ApiPropertyOptional({ description: "Rank code (military only)" })
+	rankCode?: string;
+
 	@ApiProperty({ description: "Employment date" })
 	employmentDate: Date;
 

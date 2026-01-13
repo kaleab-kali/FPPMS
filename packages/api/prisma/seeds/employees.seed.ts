@@ -100,7 +100,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "HQ",
 		departmentCode: "ADM",
 		positionCode: "DIR",
-		rankCode: "COL",
+		rankCode: "COMM",
 		currentSalaryStep: 5,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2012-06-15"),
@@ -148,7 +148,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "HQ",
 		departmentCode: "HR",
 		positionCode: "DHEAD",
-		rankCode: "LTCOL",
+		rankCode: "DEP_COMM",
 		currentSalaryStep: 4,
 		maritalStatus: MaritalStatus.SINGLE,
 		workScheduleType: WorkScheduleType.REGULAR,
@@ -192,7 +192,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "KLT",
 		departmentCode: "SEC",
 		positionCode: "DIR",
-		rankCode: "COL",
+		rankCode: "COMM",
 		currentSalaryStep: 7,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2008-09-20"),
@@ -238,7 +238,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "KLT",
 		departmentCode: "HR",
 		positionCode: "HRSP",
-		rankCode: "CPT",
+		rankCode: "CHIEF_INSP",
 		currentSalaryStep: 3,
 		maritalStatus: MaritalStatus.SINGLE,
 		workScheduleType: WorkScheduleType.REGULAR,
@@ -280,7 +280,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "ZWY",
 		departmentCode: "SEC",
 		positionCode: "DIR",
-		rankCode: "LTCOL",
+		rankCode: "DEP_COMM",
 		currentSalaryStep: 5,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2014-01-25"),
@@ -326,7 +326,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "ZWY",
 		departmentCode: "HR",
 		positionCode: "HRSP",
-		rankCode: "1LT",
+		rankCode: "INSP",
 		currentSalaryStep: 2,
 		maritalStatus: MaritalStatus.SINGLE,
 		workScheduleType: WorkScheduleType.REGULAR,
@@ -369,7 +369,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "DRD",
 		departmentCode: "SEC",
 		positionCode: "DIR",
-		rankCode: "COL",
+		rankCode: "COMM",
 		currentSalaryStep: 6,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2010-12-10"),
@@ -456,7 +456,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "SRB",
 		departmentCode: "SEC",
 		positionCode: "DIR",
-		rankCode: "LTCOL",
+		rankCode: "DEP_COMM",
 		currentSalaryStep: 5,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2013-04-18"),
@@ -501,7 +501,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "SRB",
 		departmentCode: "HR",
 		positionCode: "HRSP",
-		rankCode: "2LT",
+		rankCode: "DEP_INSP",
 		currentSalaryStep: 1,
 		maritalStatus: MaritalStatus.SINGLE,
 		workScheduleType: WorkScheduleType.REGULAR,
@@ -543,7 +543,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "HQ",
 		departmentCode: "SEC",
 		positionCode: "SOFF",
-		rankCode: "MAJ",
+		rankCode: "CMDR",
 		currentSalaryStep: 6,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2011-08-22"),
@@ -588,7 +588,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "KLT",
 		departmentCode: "FIN",
 		positionCode: "ACCT",
-		rankCode: "CPT",
+		rankCode: "CHIEF_INSP",
 		currentSalaryStep: 4,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2018-02-14"),
@@ -842,7 +842,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "HQ",
 		departmentCode: "LEG",
 		positionCode: "LEGAL",
-		rankCode: "MAJ",
+		rankCode: "CMDR",
 		currentSalaryStep: 6,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2010-05-30"),
@@ -887,7 +887,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "ZWY",
 		departmentCode: "FIN",
 		positionCode: "ACCT",
-		rankCode: "1LT",
+		rankCode: "INSP",
 		currentSalaryStep: 2,
 		maritalStatus: MaritalStatus.SINGLE,
 		workScheduleType: WorkScheduleType.REGULAR,
@@ -930,7 +930,7 @@ const EMPLOYEES_DATA: BaseEmployeeData[] = [
 		centerCode: "DRD",
 		departmentCode: "TRN",
 		positionCode: "DHEAD",
-		rankCode: "COL",
+		rankCode: "COMM",
 		currentSalaryStep: 8,
 		maritalStatus: MaritalStatus.MARRIED,
 		marriageDate: new Date("2007-03-18"),
@@ -987,13 +987,19 @@ export const seedEmployees = async (prisma: PrismaClient, tenantId: string): Pro
 	}
 
 	for (const emp of EMPLOYEES_DATA) {
-		const center = await prisma.center.findFirst({
-			where: { tenantId, code: emp.centerCode },
-		});
+		const isHqEmployee = emp.centerCode === "HQ";
+		let centerId: string | null = null;
 
-		if (!center) {
-			console.log(`Center ${emp.centerCode} not found, skipping employee ${emp.firstName}...`);
-			continue;
+		if (!isHqEmployee) {
+			const center = await prisma.center.findFirst({
+				where: { tenantId, code: emp.centerCode },
+			});
+
+			if (!center) {
+				console.log(`Center ${emp.centerCode} not found, skipping employee ${emp.firstName}...`);
+				continue;
+			}
+			centerId = center.id;
 		}
 
 		const department = await prisma.department.findFirst({
@@ -1054,7 +1060,7 @@ export const seedEmployees = async (prisma: PrismaClient, tenantId: string): Pro
 		const employee = await prisma.employee.create({
 			data: {
 				tenantId,
-				centerId: center.id,
+				centerId,
 				employeeId,
 				employeeType: emp.employeeType,
 				firstName: emp.firstName,
@@ -1142,7 +1148,8 @@ export const seedEmployees = async (prisma: PrismaClient, tenantId: string): Pro
 			},
 		});
 
-		console.log(`Created employee: ${fullName} (${employeeId}) - ${emp.employeeType}`);
+		const location = isHqEmployee ? "HQ" : emp.centerCode;
+		console.log(`Created employee: ${fullName} (${employeeId}) - ${emp.employeeType} at ${location}`);
 	}
 
 	const tenant = await prisma.tenant.findUnique({

@@ -60,7 +60,7 @@ export class SalaryEligibilityQueryDto {
 	@IsInt()
 	@Min(0)
 	@Max(9)
-	@Transform(({ value }) => parseInt(value, 10))
+	@Transform(({ value }) => (value !== undefined && value !== null && value !== "" ? parseInt(value, 10) : undefined))
 	@IsOptional()
 	currentStep?: number;
 
@@ -78,7 +78,7 @@ export class SalaryEligibilityQueryDto {
 	})
 	@IsInt()
 	@Min(1)
-	@Transform(({ value }) => parseInt(value, 10))
+	@Transform(({ value }) => (value !== undefined && value !== null && value !== "" ? parseInt(value, 10) : undefined))
 	@IsOptional()
 	page?: number = 1;
 
@@ -89,7 +89,7 @@ export class SalaryEligibilityQueryDto {
 	@IsInt()
 	@Min(1)
 	@Max(100)
-	@Transform(({ value }) => parseInt(value, 10))
+	@Transform(({ value }) => (value !== undefined && value !== null && value !== "" ? parseInt(value, 10) : undefined))
 	@IsOptional()
 	limit?: number = 20;
 

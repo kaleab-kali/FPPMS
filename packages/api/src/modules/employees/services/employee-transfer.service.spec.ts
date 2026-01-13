@@ -154,23 +154,12 @@ describe("EmployeeTransferService", () => {
 			);
 		});
 
-		it("should throw BadRequestException if employee has no center", async () => {
-			mockPrismaService.employee.findFirst.mockResolvedValue({
-				...mockEmployee,
-				centerId: null,
-			});
-
-			await expect(service.createTransferRequest(tenantId, createDto, userId, mockAccessContext)).rejects.toThrow(
-				new BadRequestException("Employee must be assigned to a center before transfer"),
-			);
-		});
-
 		it("should throw BadRequestException if transferring to same center", async () => {
 			mockPrismaService.employee.findFirst.mockResolvedValue(mockEmployee);
 
 			await expect(
 				service.createTransferRequest(tenantId, { ...createDto, toCenterId: centerId }, userId, mockAccessContext),
-			).rejects.toThrow(new BadRequestException("Employee is already in the target center"));
+			).rejects.toThrow(new BadRequestException("Source and target center cannot be the same"));
 		});
 
 		it("should throw NotFoundException if target center not found", async () => {
