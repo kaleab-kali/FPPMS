@@ -1,7 +1,8 @@
-import { DollarSign, ExternalLink, TrendingUp } from "lucide-react";
+import { ArrowRight, DollarSign, ExternalLink, History, TrendingUp } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useEmployeeSalaryHistory } from "#web/api/salary-management/salary-management.queries.ts";
 import { useActiveSalaryScale, useRankSalary } from "#web/api/salary-scale/salary-scale.queries.ts";
 import { Badge } from "#web/components/ui/badge.tsx";
 import { Button } from "#web/components/ui/button.tsx";
@@ -20,6 +21,7 @@ export const EmployeeSalaryTab = React.memo(
 	({ employee, isAmharic }: EmployeeSalaryTabProps) => {
 		const { t } = useTranslation("salary-scale");
 		const { t: tEmployees } = useTranslation("employees");
+		const { t: tSalaryMgmt } = useTranslation("salary-management");
 		const navigate = useNavigate();
 
 		const { data: activeSalaryScale, isLoading: isLoadingScale } = useActiveSalaryScale();
@@ -27,6 +29,7 @@ export const EmployeeSalaryTab = React.memo(
 			activeSalaryScale?.id ?? "",
 			employee.rankCode ?? "",
 		);
+		const { data: salaryHistory, isLoading: isLoadingHistory } = useEmployeeSalaryHistory(employee.id, { limit: 5 });
 
 		const formatCurrency = React.useCallback((amount: string | number | undefined) => {
 			if (!amount) return "-";
@@ -288,6 +291,66 @@ export const EmployeeSalaryTab = React.memo(
 						</CardContent>
 					</Card>
 				)}
+
+				{/* Salary History */}
+				<Card>
+					<CardHeader>
+						<div className="flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<History className="h-5 w-5" />
+								<CardTitle>{tSalaryMgmt("history.title")}</CardTitle>
+							</div>
+						</div>
+					</CardHeader>
+					<CardContent>
+						{isLoadingHistory ? (
+							<Skeleton className="h-32" />
+						) : !salaryHistory?.data?.length ? (
+							<p className="text-center text-muted-foreground py-4">{tSalaryMgmt("history.noHistory")}</p>
+						) : (
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead>{tSalaryMgmt("history.changeType")}</TableHead>
+										<TableHead className="text-center">{tSalaryMgmt("history.fromStep")}</TableHead>
+										<TableHead className="text-center">{tSalaryMgmt("history.toStep")}</TableHead>
+										<TableHead className="text-right">{tSalaryMgmt("history.fromSalary")}</TableHead>
+										<TableHead className="text-right">{tSalaryMgmt("history.toSalary")}</TableHead>
+										<TableHead>{tSalaryMgmt("history.effectiveDate")}</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{salaryHistory.data.map((record) => {
+										const changeTypeLabels: Record<string, string> = {
+											STEP_INCREMENT: tSalaryMgmt("history.stepIncrement"),
+											MANUAL_JUMP: tSalaryMgmt("history.manualJump"),
+											MASS_RAISE: tSalaryMgmt("history.massRaise"),
+											PROMOTION: tSalaryMgmt("history.promotion"),
+											INITIAL: tSalaryMgmt("history.initial"),
+										};
+										return (
+											<TableRow key={record.id}>
+												<TableCell>
+													<Badge variant="outline">{changeTypeLabels[record.changeType] ?? record.changeType}</Badge>
+												</TableCell>
+												<TableCell className="text-center">{record.fromStep ?? "-"}</TableCell>
+												<TableCell className="text-center">
+													<div className="flex items-center justify-center gap-1">
+														{record.fromStep !== null && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
+														{record.toStep}
+													</div>
+												</TableCell>
+												<TableCell className="text-right">{formatCurrency(record.fromSalary ?? undefined)}</TableCell>
+												<TableCell className="text-right text-green-600">{formatCurrency(record.toSalary)}</TableCell>
+												<TableCell>{new Date(record.effectiveDate).toLocaleDateString()}</TableCell>
+											</TableRow>
+										);
+									})}
+								</TableBody>
+							</Table>
+						)}
+					</CardContent>
+				</Card>
 			</div>
 		);
 	},

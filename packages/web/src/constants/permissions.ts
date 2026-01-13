@@ -99,6 +99,15 @@ export const PERMISSIONS = {
 	SALARY_SCALE_CREATE: "salary-scales.create.salary-scale",
 	SALARY_SCALE_UPDATE: "salary-scales.update.salary-scale",
 	SALARY_SCALE_DELETE: "salary-scales.delete.salary-scale",
+
+	// Salary Management
+	SALARY_ELIGIBILITY_READ: "salary.read.eligibility",
+	SALARY_INCREMENT_APPROVE: "salary.approve.increment",
+	SALARY_MANUAL_JUMP: "salary.create.manualjump",
+	SALARY_MASS_RAISE: "salary.create.massraise",
+	SALARY_HISTORY_READ: "salary.read.history",
+	SALARY_PROJECTION_READ: "salary.read.projection",
+	SALARY_REPORTS_READ: "salary.read.reports",
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;
