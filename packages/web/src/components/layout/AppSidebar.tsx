@@ -181,8 +181,9 @@ const NAV_ITEMS_CONFIG: NavItemConfig[] = [
 		titleKey: "salary",
 		url: "#",
 		icon: DollarSign,
+		permission: PERMISSIONS.SALARY_SCALE_READ,
 		items: [
-			{ titleKey: "salaryScale", url: "/salary/scale" },
+			{ titleKey: "salaryScale", url: "/salary/scale", permission: PERMISSIONS.SALARY_SCALE_READ },
 			{ titleKey: "salaryIncrement", url: "/salary/increment" },
 			{ titleKey: "payroll", url: "/salary/payroll" },
 		],

@@ -34,6 +34,9 @@ import { DepartmentsListPage } from "#web/features/organization/pages/Department
 import { PositionsListPage } from "#web/features/organization/pages/PositionsListPage.tsx";
 import { TenantsListPage } from "#web/features/organization/pages/TenantsListPage.tsx";
 import { RolesListPage } from "#web/features/roles/pages/RolesListPage.tsx";
+import { SalaryScaleDetailPage } from "#web/features/salary/pages/SalaryScaleDetailPage.tsx";
+import { SalaryScaleFormPage } from "#web/features/salary/pages/SalaryScaleFormPage.tsx";
+import { SalaryScalesListPage } from "#web/features/salary/pages/SalaryScalesListPage.tsx";
 import { UsersListPage } from "#web/features/users/pages/UsersListPage.tsx";
 import { ProtectedRoute } from "#web/routes/ProtectedRoute.tsx";
 
@@ -207,7 +210,27 @@ export const router = createBrowserRouter([
 				element: <ComingSoonPage />,
 			},
 			{
-				path: "/salary/*",
+				path: "/salary/scale",
+				element: <SalaryScalesListPage />,
+			},
+			{
+				path: "/salary/scale/new",
+				element: <SalaryScaleFormPage />,
+			},
+			{
+				path: "/salary/scale/:id",
+				element: <SalaryScaleDetailPage />,
+			},
+			{
+				path: "/salary/scale/:id/edit",
+				element: <SalaryScaleFormPage />,
+			},
+			{
+				path: "/salary/increment",
+				element: <ComingSoonPage />,
+			},
+			{
+				path: "/salary/payroll",
 				element: <ComingSoonPage />,
 			},
 			{

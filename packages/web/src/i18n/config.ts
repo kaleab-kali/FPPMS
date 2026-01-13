@@ -13,6 +13,7 @@ import amLookups from "#web/i18n/locales/am/lookups.json";
 import amNavigation from "#web/i18n/locales/am/navigation.json";
 import amOrganization from "#web/i18n/locales/am/organization.json";
 import amRoles from "#web/i18n/locales/am/roles.json";
+import amSalaryScale from "#web/i18n/locales/am/salary-scale.json";
 import amUsers from "#web/i18n/locales/am/users.json";
 import amValidation from "#web/i18n/locales/am/validation.json";
 import enAuth from "#web/i18n/locales/en/auth.json";
@@ -26,6 +27,7 @@ import enLookups from "#web/i18n/locales/en/lookups.json";
 import enNavigation from "#web/i18n/locales/en/navigation.json";
 import enOrganization from "#web/i18n/locales/en/organization.json";
 import enRoles from "#web/i18n/locales/en/roles.json";
+import enSalaryScale from "#web/i18n/locales/en/salary-scale.json";
 import enUsers from "#web/i18n/locales/en/users.json";
 import enValidation from "#web/i18n/locales/en/validation.json";
 
@@ -44,6 +46,7 @@ const resources = {
 		lookups: enLookups,
 		dashboard: enDashboard,
 		employees: enEmployees,
+		"salary-scale": enSalaryScale,
 	},
 	am: {
 		common: amCommon,
@@ -59,6 +62,7 @@ const resources = {
 		lookups: amLookups,
 		dashboard: amDashboard,
 		employees: amEmployees,
+		"salary-scale": amSalaryScale,
 	},
 } as const;
 
@@ -84,6 +88,7 @@ i18n
 			"lookups",
 			"dashboard",
 			"employees",
+			"salary-scale",
 		],
 		interpolation: {
 			escapeValue: false,

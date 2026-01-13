@@ -93,6 +93,12 @@ export const PERMISSIONS = {
 	HOLIDAY_CREATE: "holidays.create.holiday",
 	HOLIDAY_UPDATE: "holidays.update.holiday",
 	HOLIDAY_DELETE: "holidays.delete.holiday",
+
+	// Salary Scales
+	SALARY_SCALE_READ: "salary-scales.read.salary-scale",
+	SALARY_SCALE_CREATE: "salary-scales.create.salary-scale",
+	SALARY_SCALE_UPDATE: "salary-scales.update.salary-scale",
+	SALARY_SCALE_DELETE: "salary-scales.delete.salary-scale",
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

@@ -446,5 +446,7 @@
 			"WIDOWED": "Widowed",
 			"SEPARATED": "Separated"
 		}
-	}
+	},
+	"noRankAssigned": "No Rank Assigned",
+	"noRankAssignedDescription": "This employee does not have a rank assigned. Military employees must have a rank to view salary information."
 }
