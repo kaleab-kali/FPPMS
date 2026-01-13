@@ -238,6 +238,19 @@ enum ComplaintDocumentType {
   OTHER
 }
 
+enum AttachableType {
+  EMPLOYEE
+  COMPLAINT
+  INVENTORY
+  WEAPON
+  DOCUMENT
+  TRANSFER
+  RETIREMENT
+  APPRAISAL
+  LEAVE_REQUEST
+  CENTER
+}
+
 // ============================================================================
 // TENANT
 // ============================================================================
@@ -2261,4 +2274,32 @@ model SalaryScaleStep {
   @@unique([scaleRankId, stepNumber])
   @@index([scaleRankId])
   @@map("salary_scale_steps")
+}
+
+// ============================================================================
+// ATTACHMENTS (Universal File Upload System)
+// ============================================================================
+
+model Attachment {
+  id             String         @id @default(cuid())
+  tenantId       String         @map("tenant_id")
+  attachableType AttachableType @map("attachable_type")
+  attachableId   String         @map("attachable_id")
+  category       String?
+  title          String
+  description    String?
+  filePath       String         @map("file_path")
+  fileName       String         @map("file_name")
+  fileSize       Int            @map("file_size")
+  mimeType       String         @map("mime_type")
+  fileHash       String?        @map("file_hash")
+  uploadedBy     String         @map("uploaded_by")
+  uploadedAt     DateTime       @default(now()) @map("uploaded_at")
+  deletedAt      DateTime?      @map("deleted_at")
+
+  @@index([tenantId])
+  @@index([attachableType, attachableId])
+  @@index([tenantId, attachableType])
+  @@index([tenantId, attachableType, attachableId])
+  @@map("attachments")
 }

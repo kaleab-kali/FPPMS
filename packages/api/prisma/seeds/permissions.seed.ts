@@ -118,6 +118,10 @@ const PERMISSIONS = [
 
 	{ module: "audit", action: "read", resource: "log", description: "View audit logs" },
 	{ module: "audit", action: "read", resource: "history", description: "View login history" },
+
+	{ module: "attachments", action: "create", resource: "attachment", description: "Upload file attachments" },
+	{ module: "attachments", action: "read", resource: "attachment", description: "View file attachments" },
+	{ module: "attachments", action: "delete", resource: "attachment", description: "Delete file attachments" },
 ];
 
 const ROLE_PERMISSIONS: Record<string, string[]> = {
@@ -138,6 +142,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 		"documents:*",
 		"transfer:*",
 		"reports:*",
+		"attachments:*",
 		"admin:manage:center",
 		"admin:manage:department",
 		"admin:manage:position",
@@ -161,6 +166,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 		"documents:*",
 		"transfer:*",
 		"reports:*",
+		"attachments:*",
 	],
 
 	CENTER_ADMIN: [
@@ -200,6 +206,7 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 		"documents:*",
 		"transfer:*",
 		"reports:*",
+		"attachments:*",
 	],
 
 	CENTER_COMMANDER: [
@@ -253,6 +260,8 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 		"documents:read:document",
 		"transfer:read:request",
 		"reports:read:employee",
+		"attachments:create:attachment",
+		"attachments:read:attachment",
 	],
 
 	DEPARTMENT_HEAD: [
@@ -293,6 +302,9 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
 		"documents:create:document",
 		"documents:read:document",
 		"documents:manage:type",
+		"attachments:create:attachment",
+		"attachments:read:attachment",
+		"attachments:delete:attachment",
 	],
 };
 
