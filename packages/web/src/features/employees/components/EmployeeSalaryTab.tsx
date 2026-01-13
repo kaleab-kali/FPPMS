@@ -80,9 +80,10 @@ export const EmployeeSalaryTab = React.memo(
 			);
 		}
 
-		const hasSalaryScaleConfig = activeSalaryScale && employee.rankCode && rankSalary;
-		const scaleDisplayName = activeSalaryScale && isAmharic && activeSalaryScale.nameAm ? activeSalaryScale.nameAm : activeSalaryScale?.name;
-		const rankDisplayName = rankSalary && isAmharic && rankSalary.rankNameAm ? rankSalary.rankNameAm : rankSalary?.rankName;
+		const scaleDisplayName =
+			activeSalaryScale && isAmharic && activeSalaryScale.nameAm ? activeSalaryScale.nameAm : activeSalaryScale?.name;
+		const rankDisplayName =
+			rankSalary && isAmharic && rankSalary.rankNameAm ? rankSalary.rankNameAm : rankSalary?.rankName;
 
 		const renderHistorySection = (): React.ReactNode => (
 			<Card>

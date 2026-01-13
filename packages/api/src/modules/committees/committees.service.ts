@@ -1,5 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
+import { ACCESS_SCOPES } from "#api/common/constants/roles.constant";
+import { canUserAccessResourceWithHq, isHqCenter } from "#api/common/utils/hq.util";
 import { PrismaService } from "#api/database/prisma.service";
 import { CommitteeFilterDto, CreateCommitteeDto, DissolveCommitteeDto, UpdateCommitteeDto } from "./dto/committee.dto";
 import {
@@ -11,6 +13,12 @@ import {
 	UpdateCommitteeMemberDto,
 } from "./dto/committee-member.dto";
 import { CreateCommitteeTypeDto, UpdateCommitteeTypeDto } from "./dto/committee-type.dto";
+
+interface UserContext {
+	centerId: string | null | undefined;
+	effectiveAccessScope: string;
+	permissions?: string[];
+}
 
 @Injectable()
 export class CommitteesService {
@@ -153,8 +161,21 @@ export class CommitteesService {
 		return committee;
 	}
 
-	async findAllCommittees(tenantId: string, filter: CommitteeFilterDto) {
+	async findAllCommittees(tenantId: string, filter: CommitteeFilterDto, userContext?: UserContext) {
 		const where: Prisma.CommitteeWhereInput = { tenantId };
+
+		if (userContext) {
+			const hasReadAllPermission = userContext.permissions?.includes("committees.read.all");
+
+			if (!hasReadAllPermission && userContext.effectiveAccessScope !== ACCESS_SCOPES.ALL_CENTERS) {
+				const userIsHq = isHqCenter(userContext.centerId);
+				if (userIsHq) {
+					where.centerId = null;
+				} else {
+					where.centerId = userContext.centerId;
+				}
+			}
+		}
 
 		if (filter.committeeTypeId) {
 			where.committeeTypeId = filter.committeeTypeId;
@@ -190,7 +211,7 @@ export class CommitteesService {
 		});
 	}
 
-	async findOneCommittee(tenantId: string, id: string, includeMembers = false) {
+	async findOneCommittee(tenantId: string, id: string, includeMembers = false, userContext?: UserContext) {
 		const committee = await this.prisma.committee.findFirst({
 			where: { id, tenantId },
 			include: {
@@ -235,6 +256,20 @@ export class CommitteesService {
 
 		if (!committee) {
 			throw new NotFoundException(`Committee not found`);
+		}
+
+		if (userContext) {
+			const hasReadAllPermission = userContext.permissions?.includes("committees.read.all");
+			if (!hasReadAllPermission) {
+				const canAccess = canUserAccessResourceWithHq(
+					userContext.centerId,
+					committee.centerId,
+					userContext.effectiveAccessScope,
+				);
+				if (!canAccess) {
+					throw new ForbiddenException("You do not have access to this committee");
+				}
+			}
 		}
 
 		return committee;

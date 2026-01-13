@@ -106,8 +106,18 @@ export class CommitteesController {
 	@ApiQuery({ name: "status", required: false, description: "Filter by status (ACTIVE, SUSPENDED, DISSOLVED)" })
 	@ApiQuery({ name: "search", required: false, description: "Search by name or code" })
 	@ApiResponse({ status: 200, description: "List of committees", type: [CommitteeResponseDto] })
-	findAllCommittees(@CurrentTenant() tenantId: string, @Query() filter: CommitteeFilterDto) {
-		return this.committeesService.findAllCommittees(tenantId, filter);
+	findAllCommittees(
+		@CurrentTenant() tenantId: string,
+		@Query() filter: CommitteeFilterDto,
+		@CurrentUser("centerId") centerId: string | undefined,
+		@CurrentUser("effectiveAccessScope") effectiveAccessScope: string,
+		@CurrentUser("permissions") permissions: string[],
+	) {
+		return this.committeesService.findAllCommittees(tenantId, filter, {
+			centerId,
+			effectiveAccessScope,
+			permissions,
+		});
 	}
 
 	@Get(":id")
@@ -116,12 +126,20 @@ export class CommitteesController {
 	@ApiQuery({ name: "includeMembers", required: false, description: "Include committee members in response" })
 	@ApiResponse({ status: 200, description: "Committee details", type: CommitteeResponseDto })
 	@ApiResponse({ status: 404, description: "Committee not found" })
+	@ApiResponse({ status: 403, description: "Forbidden - no access to this committee" })
 	findOneCommittee(
 		@CurrentTenant() tenantId: string,
 		@Param("id") id: string,
 		@Query("includeMembers") includeMembers?: string,
+		@CurrentUser("centerId") centerId?: string,
+		@CurrentUser("effectiveAccessScope") effectiveAccessScope?: string,
+		@CurrentUser("permissions") permissions?: string[],
 	) {
-		return this.committeesService.findOneCommittee(tenantId, id, includeMembers === "true");
+		return this.committeesService.findOneCommittee(tenantId, id, includeMembers === "true", {
+			centerId,
+			effectiveAccessScope: effectiveAccessScope ?? "OWN_CENTER",
+			permissions,
+		});
 	}
 
 	@Patch(":id")

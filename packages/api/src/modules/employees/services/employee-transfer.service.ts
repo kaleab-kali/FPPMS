@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { EmployeeStatus, Prisma, TransferSource, TransferStatus } from "@prisma/client";
-import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
+import { ACCESS_SCOPES } from "#api/common/constants/roles.constant";
+import { canUserAccessResourceWithHq, isHqCenter, validateTransferCenters } from "#api/common/utils/hq.util";
 import { PrismaService } from "#api/database/prisma.service";
 import {
 	AcceptTransferDto,
@@ -12,9 +13,20 @@ import {
 } from "#api/modules/employees/dto";
 
 export interface AccessContext {
-	centerId?: string;
+	centerId: string | null | undefined;
 	effectiveAccessScope: string;
 }
+
+const validateAccess = (
+	userCenterId: string | null | undefined,
+	resourceCenterId: string | null | undefined,
+	accessScope: string,
+	message = "You do not have access to this resource",
+): void => {
+	if (!canUserAccessResourceWithHq(userCenterId, resourceCenterId, accessScope)) {
+		throw new ForbiddenException(message);
+	}
+};
 
 const TRANSFER_INCLUDE = {
 	employee: {
@@ -63,18 +75,23 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Employee not found");
 		}
 
-		validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
+		validateAccess(
+			accessContext.centerId,
+			employee.centerId,
+			accessContext.effectiveAccessScope,
+			"You do not have access to transfer this employee",
+		);
 
 		if (employee.status !== EmployeeStatus.ACTIVE) {
 			throw new BadRequestException("Only active employees can be transferred");
 		}
 
-		if (!employee.centerId) {
-			throw new BadRequestException("Employee must be assigned to a center before transfer");
-		}
-
-		if (employee.centerId === dto.toCenterId) {
-			throw new BadRequestException("Employee is already in the target center");
+		const transferValidation = validateTransferCenters({
+			fromCenterId: employee.centerId,
+			toCenterId: dto.toCenterId,
+		});
+		if (!transferValidation.isValid) {
+			throw new BadRequestException(transferValidation.error);
 		}
 
 		const toCenter = await this.prisma.center.findFirst({
@@ -152,7 +169,12 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Transfer request not found");
 		}
 
-		validateCenterAccess(accessContext.centerId, transfer.toCenterId ?? undefined, accessContext.effectiveAccessScope);
+		validateAccess(
+			accessContext.centerId,
+			transfer.toCenterId,
+			accessContext.effectiveAccessScope,
+			"You do not have access to accept transfers for this center",
+		);
 
 		if (transfer.status !== TransferStatus.PENDING) {
 			throw new BadRequestException(`Transfer request is already ${transfer.status.toLowerCase()}`);
@@ -222,7 +244,12 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Transfer request not found");
 		}
 
-		validateCenterAccess(accessContext.centerId, transfer.toCenterId ?? undefined, accessContext.effectiveAccessScope);
+		validateAccess(
+			accessContext.centerId,
+			transfer.toCenterId,
+			accessContext.effectiveAccessScope,
+			"You do not have access to reject transfers for this center",
+		);
 
 		if (transfer.status !== TransferStatus.PENDING) {
 			throw new BadRequestException(`Transfer request is already ${transfer.status.toLowerCase()}`);
@@ -255,11 +282,7 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Transfer request not found");
 		}
 
-		validateCenterAccess(
-			accessContext.centerId,
-			transfer.fromCenterId ?? undefined,
-			accessContext.effectiveAccessScope,
-		);
+		validateAccess(accessContext.centerId, transfer.fromCenterId ?? undefined, accessContext.effectiveAccessScope);
 
 		if (transfer.status !== TransferStatus.PENDING) {
 			throw new BadRequestException(`Only pending transfers can be cancelled`);
@@ -287,13 +310,19 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Transfer request not found");
 		}
 
-		const hasAccessToFrom =
-			canAccessAllCenters(accessContext.effectiveAccessScope) || accessContext.centerId === transfer.fromCenterId;
-		const hasAccessToTo =
-			canAccessAllCenters(accessContext.effectiveAccessScope) || accessContext.centerId === transfer.toCenterId;
+		const hasAccessToFrom = canUserAccessResourceWithHq(
+			accessContext.centerId,
+			transfer.fromCenterId,
+			accessContext.effectiveAccessScope,
+		);
+		const hasAccessToTo = canUserAccessResourceWithHq(
+			accessContext.centerId,
+			transfer.toCenterId,
+			accessContext.effectiveAccessScope,
+		);
 
 		if (!hasAccessToFrom && !hasAccessToTo) {
-			throw new NotFoundException("Transfer request not found");
+			throw new ForbiddenException("You do not have access to this transfer request");
 		}
 
 		return transfer;
@@ -308,7 +337,7 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Employee not found");
 		}
 
-		validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
+		validateAccess(accessContext.centerId, employee.centerId, accessContext.effectiveAccessScope);
 
 		return this.prisma.employeeTransferRequest.findMany({
 			where: { tenantId, employeeId },
@@ -318,7 +347,7 @@ export class EmployeeTransferService {
 	}
 
 	async getPendingTransfersForCenter(tenantId: string, centerId: string, accessContext: AccessContext) {
-		validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+		validateAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
 
 		return this.prisma.employeeTransferRequest.findMany({
 			where: {
@@ -332,7 +361,7 @@ export class EmployeeTransferService {
 	}
 
 	async getOutgoingTransfersForCenter(tenantId: string, centerId: string, accessContext: AccessContext) {
-		validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+		validateAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
 
 		return this.prisma.employeeTransferRequest.findMany({
 			where: {
@@ -351,8 +380,13 @@ export class EmployeeTransferService {
 			...(status && { status }),
 		};
 
-		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
-			where.OR = [{ fromCenterId: accessContext.centerId }, { toCenterId: accessContext.centerId }];
+		if (accessContext.effectiveAccessScope !== ACCESS_SCOPES.ALL_CENTERS) {
+			const userIsHq = isHqCenter(accessContext.centerId);
+			if (userIsHq) {
+				where.OR = [{ fromCenterId: null }, { toCenterId: null }];
+			} else {
+				where.OR = [{ fromCenterId: accessContext.centerId }, { toCenterId: accessContext.centerId }];
+			}
 		}
 
 		return this.prisma.employeeTransferRequest.findMany({
@@ -371,7 +405,7 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Employee not found");
 		}
 
-		validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
+		validateAccess(accessContext.centerId, employee.centerId, accessContext.effectiveAccessScope);
 
 		const existingDeparture = await this.prisma.employeeDeparture.findUnique({
 			where: { employeeId: dto.employeeId },
@@ -430,11 +464,7 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Departure record not found");
 		}
 
-		validateCenterAccess(
-			accessContext.centerId,
-			departure.employee.centerId ?? undefined,
-			accessContext.effectiveAccessScope,
-		);
+		validateAccess(accessContext.centerId, departure.employee.centerId, accessContext.effectiveAccessScope);
 
 		return this.prisma.employeeDeparture.update({
 			where: { id: departureId },
@@ -466,7 +496,7 @@ export class EmployeeTransferService {
 		});
 
 		if (employee) {
-			validateCenterAccess(accessContext.centerId, employee.centerId ?? undefined, accessContext.effectiveAccessScope);
+			validateAccess(accessContext.centerId, employee.centerId, accessContext.effectiveAccessScope);
 		}
 
 		const departure = await this.prisma.employeeDeparture.findFirst({
@@ -508,11 +538,7 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Departure record not found");
 		}
 
-		validateCenterAccess(
-			accessContext.centerId,
-			departure.employee.centerId ?? undefined,
-			accessContext.effectiveAccessScope,
-		);
+		validateAccess(accessContext.centerId, departure.employee.centerId, accessContext.effectiveAccessScope);
 
 		return departure;
 	}
@@ -520,8 +546,9 @@ export class EmployeeTransferService {
 	async getAllDepartures(tenantId: string, accessContext: AccessContext) {
 		const where: Prisma.EmployeeDepartureWhereInput = { tenantId };
 
-		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
-			where.employee = { centerId: accessContext.centerId };
+		if (accessContext.effectiveAccessScope !== ACCESS_SCOPES.ALL_CENTERS) {
+			const userIsHq = isHqCenter(accessContext.centerId);
+			where.employee = { centerId: userIsHq ? null : accessContext.centerId };
 		}
 
 		return this.prisma.employeeDeparture.findMany({
@@ -551,11 +578,7 @@ export class EmployeeTransferService {
 			throw new NotFoundException("Departure record not found");
 		}
 
-		validateCenterAccess(
-			accessContext.centerId,
-			departure.employee.centerId ?? undefined,
-			accessContext.effectiveAccessScope,
-		);
+		validateAccess(accessContext.centerId, departure.employee.centerId, accessContext.effectiveAccessScope);
 
 		await this.prisma.$transaction([
 			this.prisma.employeeDeparture.delete({

@@ -20,6 +20,15 @@ const SYSTEM_ROLES = [
 		isSystemRole: true,
 	},
 	{
+		code: "HR_DIRECTOR",
+		name: "HR Director",
+		nameAm: "የሰው ኃይል አመራር",
+		description: "HR department head, full HR access across all centers",
+		level: 90,
+		accessScope: "ALL_CENTERS",
+		isSystemRole: true,
+	},
+	{
 		code: "CENTER_ADMIN",
 		name: "Center Administrator",
 		nameAm: "የማዕከል አስተዳዳሪ",
@@ -29,29 +38,20 @@ const SYSTEM_ROLES = [
 		isSystemRole: true,
 	},
 	{
-		code: "HR_DIRECTOR",
-		name: "HR Director",
-		nameAm: "የሰው ኃይል አመራር",
-		description: "HR department head, full HR access",
-		level: 90,
-		accessScope: "ALL_CENTERS",
+		code: "CENTER_COMMANDER",
+		name: "Center Commander",
+		nameAm: "የማዕከል አዛዥ",
+		description: "Center head, approvals and oversight",
+		level: 80,
+		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
 	{
 		code: "HR_OFFICER",
 		name: "HR Officer",
 		nameAm: "የሰው ኃይል መኮንን",
-		description: "HR operations, employee management",
+		description: "HR operations, employee management at center level",
 		level: 70,
-		accessScope: "OWN_CENTER",
-		isSystemRole: true,
-	},
-	{
-		code: "CENTER_COMMANDER",
-		name: "Center Commander",
-		nameAm: "የማዕከል አዛዥ",
-		description: "Center head, approvals and oversight",
-		level: 80,
 		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
@@ -88,24 +88,6 @@ const SYSTEM_ROLES = [
 		nameAm: "የመዝገብ መኮንን",
 		description: "Document and records management",
 		level: 30,
-		accessScope: "OWN_CENTER",
-		isSystemRole: true,
-	},
-	{
-		code: "EMPLOYEE",
-		name: "Employee",
-		nameAm: "ሰራተኛ",
-		description: "Basic employee access to own records",
-		level: 20,
-		accessScope: "OWN_RECORDS",
-		isSystemRole: true,
-	},
-	{
-		code: "VIEWER",
-		name: "Viewer",
-		nameAm: "ተመልካች",
-		description: "Read-only access to allowed modules",
-		level: 10,
 		accessScope: "OWN_CENTER",
 		isSystemRole: true,
 	},
@@ -149,4 +131,6 @@ export const seedRoles = async (prisma: PrismaClient): Promise<void> => {
 
 		console.log(`Created role: ${role.name} (${role.code})`);
 	}
+
+	console.log(`\nSeeded ${SYSTEM_ROLES.length} system roles (HR and officials only)`);
 };

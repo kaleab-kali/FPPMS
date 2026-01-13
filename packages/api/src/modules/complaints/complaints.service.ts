@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { ComplaintArticle, ComplaintFinding, ComplaintStatus, DecisionAuthority, Prisma } from "@prisma/client";
-import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
+import { ACCESS_SCOPES } from "#api/common/constants/roles.constant";
+import { canUserAccessResourceWithHq, isHqCenter } from "#api/common/utils/hq.util";
 import { PrismaService } from "#api/database/prisma.service";
 import {
 	AssignCommitteeDto,
@@ -19,7 +20,7 @@ import {
 } from "./dto";
 
 export interface AccessContext {
-	centerId?: string;
+	centerId: string | null | undefined;
 	effectiveAccessScope: string;
 }
 
@@ -56,12 +57,15 @@ export class ComplaintsService {
 
 	async create(
 		tenantId: string,
-		centerId: string,
+		centerId: string | null,
 		userId: string,
 		dto: CreateComplaintDto,
 		accessContext: AccessContext,
 	) {
-		validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+		const canAccess = canUserAccessResourceWithHq(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+		if (!canAccess) {
+			throw new ForbiddenException("You do not have access to create complaints for this center");
+		}
 
 		const complaintNumber = await this.generateComplaintNumber(tenantId);
 
@@ -150,8 +154,13 @@ export class ComplaintsService {
 			deletedAt: null,
 		};
 
-		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
-			where.centerId = accessContext.centerId;
+		if (accessContext.effectiveAccessScope !== ACCESS_SCOPES.ALL_CENTERS) {
+			const userIsHq = isHqCenter(accessContext.centerId);
+			if (userIsHq) {
+				where.centerId = null;
+			} else {
+				where.centerId = accessContext.centerId;
+			}
 		}
 
 		if (filters.article) {
@@ -163,7 +172,7 @@ export class ComplaintsService {
 		}
 
 		if (filters.centerId) {
-			if (canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			if (accessContext.effectiveAccessScope === ACCESS_SCOPES.ALL_CENTERS) {
 				where.centerId = filters.centerId;
 			}
 		}
@@ -246,7 +255,14 @@ export class ComplaintsService {
 		}
 
 		if (accessContext) {
-			validateCenterAccess(accessContext.centerId, complaint.centerId ?? undefined, accessContext.effectiveAccessScope);
+			const canAccess = canUserAccessResourceWithHq(
+				accessContext.centerId,
+				complaint.centerId,
+				accessContext.effectiveAccessScope,
+			);
+			if (!canAccess) {
+				throw new ForbiddenException("You do not have access to this complaint");
+			}
 		}
 
 		return complaint;
@@ -898,14 +914,15 @@ export class ComplaintsService {
 		});
 	}
 
-	private async findDisciplineCommitteeForCenter(tenantId: string, centerId: string) {
+	private async findDisciplineCommitteeForCenter(tenantId: string, centerId: string | null) {
+		const isHq = isHqCenter(centerId);
 		return this.prisma.committee.findFirst({
 			where: {
 				tenantId,
-				centerId,
+				centerId: isHq ? null : centerId,
 				status: "ACTIVE",
 				committeeType: {
-					code: "DISCIPLINE",
+					code: isHq ? "HQ_DISCIPLINE" : "DISCIPLINE",
 				},
 			},
 			include: {
