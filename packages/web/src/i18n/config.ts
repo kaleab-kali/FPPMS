@@ -10,6 +10,7 @@ import amComplaints from "#web/i18n/locales/am/complaints.json";
 import amDashboard from "#web/i18n/locales/am/dashboard.json";
 import amEmployees from "#web/i18n/locales/am/employees.json";
 import amErrors from "#web/i18n/locales/am/errors.json";
+import amInventory from "#web/i18n/locales/am/inventory.json";
 import amLookups from "#web/i18n/locales/am/lookups.json";
 import amNavigation from "#web/i18n/locales/am/navigation.json";
 import amOrganization from "#web/i18n/locales/am/organization.json";
@@ -26,6 +27,7 @@ import enComplaints from "#web/i18n/locales/en/complaints.json";
 import enDashboard from "#web/i18n/locales/en/dashboard.json";
 import enEmployees from "#web/i18n/locales/en/employees.json";
 import enErrors from "#web/i18n/locales/en/errors.json";
+import enInventory from "#web/i18n/locales/en/inventory.json";
 import enLookups from "#web/i18n/locales/en/lookups.json";
 import enNavigation from "#web/i18n/locales/en/navigation.json";
 import enOrganization from "#web/i18n/locales/en/organization.json";
@@ -51,6 +53,7 @@ const resources = {
 		lookups: enLookups,
 		dashboard: enDashboard,
 		employees: enEmployees,
+		inventory: enInventory,
 		"salary-scale": enSalaryScale,
 		"salary-management": enSalaryManagement,
 	},
@@ -69,6 +72,7 @@ const resources = {
 		lookups: amLookups,
 		dashboard: amDashboard,
 		employees: amEmployees,
+		inventory: amInventory,
 		"salary-scale": amSalaryScale,
 		"salary-management": amSalaryManagement,
 	},
@@ -97,6 +101,7 @@ i18n
 			"lookups",
 			"dashboard",
 			"employees",
+			"inventory",
 			"salary-scale",
 			"salary-management",
 		],

@@ -7,6 +7,7 @@ import { TenantMiddleware } from "#api/common/middleware/tenant.middleware";
 import { ConfigModule } from "#api/config";
 import { DatabaseModule } from "#api/database";
 import { AttachmentsModule } from "#api/modules/attachments/attachments.module";
+import { AttendanceModule } from "#api/modules/attendance/attendance.module";
 import { AuditLogModule } from "#api/modules/audit-log/audit-log.module";
 import { AuthModule } from "#api/modules/auth/auth.module";
 import { CentersModule } from "#api/modules/centers/centers.module";
@@ -15,6 +16,7 @@ import { ComplaintsModule } from "#api/modules/complaints/complaints.module";
 import { DashboardModule } from "#api/modules/dashboard/dashboard.module";
 import { DepartmentsModule } from "#api/modules/departments/departments.module";
 import { EmployeesModule } from "#api/modules/employees/employees.module";
+import { InventoryModule } from "#api/modules/inventory/inventory.module";
 import { LookupsModule } from "#api/modules/lookups/lookups.module";
 import { PermissionsModule } from "#api/modules/permissions/permissions.module";
 import { PositionsModule } from "#api/modules/positions/positions.module";
@@ -30,6 +32,7 @@ import { UsersModule } from "#api/modules/users/users.module";
 		ConfigModule,
 		DatabaseModule,
 		AttachmentsModule,
+		AttendanceModule,
 		AuditLogModule,
 		CommonModule,
 		AuthModule,
@@ -39,6 +42,7 @@ import { UsersModule } from "#api/modules/users/users.module";
 		ComplaintsModule,
 		DashboardModule,
 		DepartmentsModule,
+		InventoryModule,
 		PositionsModule,
 		LookupsModule,
 		PermissionsModule,
