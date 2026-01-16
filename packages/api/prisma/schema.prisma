@@ -121,6 +121,17 @@ enum RewardEligibility {
   PENDING_REVIEW
 }
 
+enum ServiceRewardStatus {
+  PENDING
+  ELIGIBLE
+  INELIGIBLE
+  POSTPONED
+  AWAITING_APPROVAL
+  APPROVED
+  REJECTED
+  AWARDED
+}
+
 enum DocumentDirection {
   INCOMING
   OUTGOING
@@ -165,6 +176,32 @@ enum CommitteeMemberRole {
   SECRETARY
   MEMBER
   ADVISOR
+}
+
+enum WeaponStatus {
+  IN_SERVICE
+  ASSIGNED
+  IN_MAINTENANCE
+  DECOMMISSIONED
+  LOST
+  STOLEN
+}
+
+enum WeaponCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  UNSERVICEABLE
+}
+
+enum AmmunitionTransactionType {
+  ISSUED
+  RETURNED
+  CONSUMED
+  TRANSFERRED
+  DAMAGED
+  EXPIRED
 }
 
 enum CommitteeStatus {
@@ -325,6 +362,10 @@ model Center {
   complaints           Complaint[]
   inventoryAssignments InventoryAssignment[]
   centerInventory      CenterInventory[]
+  documents            Document[]
+  weapons              Weapon[]
+  centerAmmunitionStock CenterAmmunitionStock[]
+  ammunitionTransactions AmmunitionTransaction[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -734,12 +775,15 @@ model Employee {
   attendanceRecords        AttendanceRecord[]
   shiftAssignments         ShiftAssignment[]
   inventoryAssignments     InventoryAssignment[]
+  concernedDocuments       Document[]
   committeeMemberships     CommitteeMember[]
   committeeMembershipTerms CommitteeMemberTerm[]
   complaintsAgainst        Complaint[]        @relation("AccusedComplaints")
   appealReviewsGiven       ComplaintAppeal[]  @relation("AppealReviewer")
   salaryHistory            EmployeeSalaryHistory[]
   salaryEligibilities      SalaryStepEligibility[]
+  weaponAssignments        WeaponAssignment[]
+  ammunitionTransactions   AmmunitionTransaction[]
 
   @@index([tenantId])
   @@index([tenantId, centerId])
@@ -1431,34 +1475,60 @@ model RewardMilestone {
 }
 
 model ServiceReward {
-  id                   String            @id @default(cuid())
-  tenantId             String            @map("tenant_id")
-  employeeId           String            @map("employee_id")
-  milestoneId          String            @map("milestone_id")
-  eligibilityStatus    RewardEligibility @default(PENDING_REVIEW) @map("eligibility_status")
-  eligibilityCheckDate DateTime          @map("eligibility_check_date")
-  ineligibilityReason  String?           @map("ineligibility_reason")
-  postponedUntil       DateTime?         @map("postponed_until") @db.Date
-  postponementReason   String?           @map("postponement_reason")
-  originalEligibleDate DateTime?         @map("original_eligible_date") @db.Date
-  awardDate            DateTime?         @map("award_date") @db.Date
-  awardedBy            String?           @map("awarded_by")
-  ceremonyDetails      String?           @map("ceremony_details")
-  certificateNumber    String?           @map("certificate_number")
-  certificatePath      String?           @map("certificate_path")
-  photoPath            String?           @map("photo_path")
-  status               String            @default("PENDING")
-  createdAt            DateTime          @default(now()) @map("created_at")
-  updatedAt            DateTime          @updatedAt @map("updated_at")
+  id                     String              @id @default(cuid())
+  tenantId               String              @map("tenant_id")
+  employeeId             String              @map("employee_id")
+  milestoneId            String              @map("milestone_id")
+  eligibilityStatus      RewardEligibility   @default(PENDING_REVIEW) @map("eligibility_status")
+  eligibilityCheckDate   DateTime            @map("eligibility_check_date")
+  ineligibilityReason    String?             @map("ineligibility_reason")
+  postponedUntil         DateTime?           @map("postponed_until") @db.Date
+  postponementReason     String?             @map("postponement_reason")
+  originalEligibleDate   DateTime?           @map("original_eligible_date") @db.Date
+  awardDate              DateTime?           @map("award_date") @db.Date
+  awardedBy              String?             @map("awarded_by")
+  ceremonyDetails        String?             @map("ceremony_details")
+  certificateNumber      String?             @map("certificate_number")
+  certificatePath        String?             @map("certificate_path")
+  photoPath              String?             @map("photo_path")
+  status                 ServiceRewardStatus @default(PENDING)
+  submittedForApprovalAt DateTime?           @map("submitted_for_approval_at")
+  submittedForApprovalBy String?             @map("submitted_for_approval_by")
+  approvedAt             DateTime?           @map("approved_at")
+  approvedBy             String?             @map("approved_by")
+  rejectionReason        String?             @map("rejection_reason")
+  createdBy              String?             @map("created_by")
+  createdAt              DateTime            @default(now()) @map("created_at")
+  updatedAt              DateTime            @updatedAt @map("updated_at")
 
-  employee  Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  milestone RewardMilestone @relation(fields: [milestoneId], references: [id])
+  employee  Employee                 @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  milestone RewardMilestone          @relation(fields: [milestoneId], references: [id])
+  timeline  ServiceRewardTimeline[]
 
   @@unique([employeeId, milestoneId])
   @@index([tenantId])
   @@index([employeeId])
   @@index([tenantId, eligibilityStatus])
+  @@index([tenantId, status])
   @@map("service_rewards")
+}
+
+model ServiceRewardTimeline {
+  id              String   @id @default(cuid())
+  tenantId        String   @map("tenant_id")
+  serviceRewardId String   @map("service_reward_id")
+  action          String
+  fromStatus      String?  @map("from_status")
+  toStatus        String?  @map("to_status")
+  performedBy     String   @map("performed_by")
+  performedAt     DateTime @default(now()) @map("performed_at")
+  notes           String?
+
+  serviceReward ServiceReward @relation(fields: [serviceRewardId], references: [id], onDelete: Cascade)
+
+  @@index([serviceRewardId])
+  @@index([tenantId])
+  @@map("service_reward_timeline")
 }
 
 // ============================================================================
@@ -1753,13 +1823,47 @@ model Document {
   createdAt               DateTime          @default(now()) @map("created_at")
   updatedAt               DateTime          @updatedAt @map("updated_at")
 
-  documentType DocumentType @relation(fields: [documentTypeId], references: [id])
+  folderNumber          String?   @map("folder_number")
+  shelfNumber           String?   @map("shelf_number")
+  officeLocation        String?   @map("office_location")
+  responseDeadline      DateTime? @map("response_deadline") @db.Date
+  responseDate          DateTime? @map("response_date") @db.Date
+  isUrgent              Boolean   @default(false) @map("is_urgent")
+  concernedEmployeeId   String?   @map("concerned_employee_id")
+  centerId              String?   @map("center_id")
+  category              String?
+
+  documentType       DocumentType         @relation(fields: [documentTypeId], references: [id])
+  concernedEmployee  Employee?            @relation(fields: [concernedEmployeeId], references: [id])
+  center             Center?              @relation(fields: [centerId], references: [id])
+  attachments        DocumentAttachment[]
 
   @@index([tenantId])
   @@index([tenantId, direction])
   @@index([tenantId, status])
   @@index([tenantId, documentDate])
+  @@index([centerId])
+  @@index([concernedEmployeeId])
   @@map("documents")
+}
+
+model DocumentAttachment {
+  id         String    @id @default(cuid())
+  tenantId   String    @map("tenant_id")
+  documentId String    @map("document_id")
+  filePath   String    @map("file_path")
+  fileName   String    @map("file_name")
+  fileSize   Int       @map("file_size")
+  mimeType   String    @map("mime_type")
+  uploadedBy String    @map("uploaded_by")
+  uploadedAt DateTime  @default(now()) @map("uploaded_at")
+  deletedAt  DateTime? @map("deleted_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([documentId])
+  @@map("document_attachments")
 }
 
 // ============================================================================
@@ -2332,4 +2436,188 @@ model Attachment {
   @@index([tenantId, attachableType])
   @@index([tenantId, attachableType, attachableId])
   @@map("attachments")
+}
+
+// ============================================================================
+// WEAPONS & AMMUNITION
+// ============================================================================
+
+model WeaponCategory {
+  id          String   @id @default(cuid())
+  tenantId    String   @map("tenant_id")
+  code        String
+  name        String
+  nameAm      String?  @map("name_am")
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  weaponTypes WeaponType[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("weapon_categories")
+}
+
+model WeaponType {
+  id             String   @id @default(cuid())
+  tenantId       String   @map("tenant_id")
+  categoryId     String   @map("category_id")
+  code           String
+  name           String
+  nameAm         String?  @map("name_am")
+  manufacturer   String?
+  model          String?
+  caliber        String?
+  description    String?
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  category       WeaponCategory    @relation(fields: [categoryId], references: [id])
+  weapons        Weapon[]
+  ammunitionType AmmunitionType[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([categoryId])
+  @@map("weapon_types")
+}
+
+model Weapon {
+  id                  String          @id @default(cuid())
+  tenantId            String          @map("tenant_id")
+  weaponTypeId        String          @map("weapon_type_id")
+  centerId            String?         @map("center_id")
+  serialNumber        String          @map("serial_number")
+  registrationNumber  String?         @map("registration_number")
+  manufactureYear     Int?            @map("manufacture_year")
+  acquisitionDate     DateTime?       @map("acquisition_date") @db.Date
+  acquisitionMethod   String?         @map("acquisition_method")
+  purchasePrice       Decimal?        @map("purchase_price") @db.Decimal(12, 2)
+  status              WeaponStatus    @default(IN_SERVICE)
+  condition           WeaponCondition @default(GOOD)
+  lastInspectionDate  DateTime?       @map("last_inspection_date") @db.Date
+  nextInspectionDate  DateTime?       @map("next_inspection_date") @db.Date
+  lastMaintenanceDate DateTime?       @map("last_maintenance_date") @db.Date
+  remarks             String?
+  isActive            Boolean         @default(true) @map("is_active")
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
+
+  weaponType  WeaponType         @relation(fields: [weaponTypeId], references: [id])
+  center      Center?            @relation(fields: [centerId], references: [id])
+  assignments WeaponAssignment[]
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([weaponTypeId])
+  @@index([centerId])
+  @@index([status])
+  @@map("weapons")
+}
+
+model WeaponAssignment {
+  id                    String          @id @default(cuid())
+  tenantId              String          @map("tenant_id")
+  weaponId              String          @map("weapon_id")
+  employeeId            String          @map("employee_id")
+  assignedDate          DateTime        @map("assigned_date") @db.Date
+  assignedBy            String          @map("assigned_by")
+  expectedReturnDate    DateTime?       @map("expected_return_date") @db.Date
+  conditionAtAssignment WeaponCondition @map("condition_at_assignment")
+  issuedRounds          Int?            @map("issued_rounds")
+  isReturned            Boolean         @default(false) @map("is_returned")
+  returnedDate          DateTime?       @map("returned_date") @db.Date
+  returnedTo            String?         @map("returned_to")
+  conditionAtReturn     WeaponCondition? @map("condition_at_return")
+  returnedRounds        Int?            @map("returned_rounds")
+  purpose               String?
+  remarks               String?
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+
+  weapon   Weapon   @relation(fields: [weaponId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([weaponId])
+  @@index([employeeId])
+  @@index([employeeId, isReturned])
+  @@map("weapon_assignments")
+}
+
+model AmmunitionType {
+  id            String   @id @default(cuid())
+  tenantId      String   @map("tenant_id")
+  weaponTypeId  String?  @map("weapon_type_id")
+  code          String
+  name          String
+  nameAm        String?  @map("name_am")
+  caliber       String
+  manufacturer  String?
+  description   String?
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  weaponType       WeaponType?              @relation(fields: [weaponTypeId], references: [id])
+  centerStock      CenterAmmunitionStock[]
+  transactions     AmmunitionTransaction[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([weaponTypeId])
+  @@map("ammunition_types")
+}
+
+model CenterAmmunitionStock {
+  id               String   @id @default(cuid())
+  tenantId         String   @map("tenant_id")
+  centerId         String   @map("center_id")
+  ammunitionTypeId String   @map("ammunition_type_id")
+  totalQuantity    Int      @map("total_quantity")
+  issuedQuantity   Int      @default(0) @map("issued_quantity")
+  availableQuantity Int     @map("available_quantity")
+  minStockLevel    Int?     @map("min_stock_level")
+  remarks          String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  center         Center         @relation(fields: [centerId], references: [id])
+  ammunitionType AmmunitionType @relation(fields: [ammunitionTypeId], references: [id])
+
+  @@unique([centerId, ammunitionTypeId])
+  @@index([tenantId])
+  @@index([centerId])
+  @@map("center_ammunition_stock")
+}
+
+model AmmunitionTransaction {
+  id               String                    @id @default(cuid())
+  tenantId         String                    @map("tenant_id")
+  ammunitionTypeId String                    @map("ammunition_type_id")
+  centerId         String                    @map("center_id")
+  employeeId       String?                   @map("employee_id")
+  transactionType  AmmunitionTransactionType @map("transaction_type")
+  quantity         Int
+  transactionDate  DateTime                  @map("transaction_date") @db.Date
+  processedBy      String                    @map("processed_by")
+  batchNumber      String?                   @map("batch_number")
+  expiryDate       DateTime?                 @map("expiry_date") @db.Date
+  purpose          String?
+  remarks          String?
+  createdAt        DateTime                  @default(now()) @map("created_at")
+
+  ammunitionType AmmunitionType @relation(fields: [ammunitionTypeId], references: [id])
+  center         Center         @relation(fields: [centerId], references: [id])
+  employee       Employee?      @relation(fields: [employeeId], references: [id])
+
+  @@index([tenantId])
+  @@index([ammunitionTypeId])
+  @@index([centerId])
+  @@index([employeeId])
+  @@index([transactionDate])
+  @@map("ammunition_transactions")
 }

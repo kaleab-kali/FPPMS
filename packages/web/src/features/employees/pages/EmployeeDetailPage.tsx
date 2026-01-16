@@ -55,6 +55,10 @@ import {
 import { Skeleton } from "#web/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#web/components/ui/tabs.tsx";
 import { STORAGE_KEYS } from "#web/config/constants.ts";
+// TODO: Uncomment when attendance module is merged
+// import { EmployeeAttendanceTab } from "#web/features/employees/components/EmployeeAttendanceTab.tsx";
+import { EmployeeCorrespondenceTab } from "#web/features/employees/components/EmployeeCorrespondenceTab.tsx";
+import { EmployeeInventoryTab } from "#web/features/employees/components/EmployeeInventoryTab.tsx";
 import { EmployeeSalaryTab } from "#web/features/employees/components/EmployeeSalaryTab.tsx";
 import type { CommitteeMemberTerm, EmployeeCommitteeMembership } from "#web/types/committee.ts";
 import { TERM_STATUS_COLORS, TERM_STATUS_LABELS } from "#web/types/committee.ts";
@@ -1158,6 +1162,13 @@ export const EmployeeDetailPage = React.memo(
 							<UsersRound className="h-3.5 w-3.5" />
 							{t("tabs.committees")}
 						</TabsTrigger>
+						<TabsTrigger
+							value="correspondence"
+							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+						>
+							<Mail className="h-3.5 w-3.5" />
+							{t("tabs.correspondence")}
+						</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value="basic" className="mt-5">
@@ -1186,6 +1197,8 @@ export const EmployeeDetailPage = React.memo(
 					</TabsContent>
 
 					<TabsContent value="attendance" className="mt-5">
+						{/* TODO: Uncomment when attendance module is merged */}
+						{/* <EmployeeAttendanceTab employeeId={id ?? ""} /> */}
 						<PlaceholderTab
 							title={t("tabs.attendance")}
 							icon={<Clock className="h-8 w-8 text-muted-foreground" />}
@@ -1243,11 +1256,7 @@ export const EmployeeDetailPage = React.memo(
 					</TabsContent>
 
 					<TabsContent value="inventory" className="mt-5">
-						<PlaceholderTab
-							title={t("tabs.inventory")}
-							icon={<Package className="h-8 w-8 text-muted-foreground" />}
-							t={t}
-						/>
+						<EmployeeInventoryTab employee={employee} isAmharic={isAmharic} />
 					</TabsContent>
 
 					<TabsContent value="committees" className="mt-5">
@@ -1260,6 +1269,10 @@ export const EmployeeDetailPage = React.memo(
 							tCommittees={tCommittees}
 							isAmharic={isAmharic}
 						/>
+					</TabsContent>
+
+					<TabsContent value="correspondence" className="mt-5">
+						<EmployeeCorrespondenceTab employeeId={id ?? ""} />
 					</TabsContent>
 				</Tabs>
 

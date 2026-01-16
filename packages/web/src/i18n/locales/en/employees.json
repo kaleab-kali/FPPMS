@@ -162,7 +162,8 @@
 		"performance": "Performance",
 		"salary": "Salary Raise",
 		"inventory": "Inventory",
-		"committees": "Committees"
+		"committees": "Committees",
+		"correspondence": "Correspondence"
 	},
 	"committees": {
 		"noMemberships": "Not a member of any committee",
@@ -278,6 +279,20 @@
 		"noSpouse": "No spouse registered",
 		"noChildren": "No children registered",
 		"deleteConfirm": "Are you sure you want to delete this family member?"
+	},
+	"attendance": {
+		"noRecords": "No attendance records",
+		"noRecordsDescription": "No attendance records found for this employee in the last 30 days.",
+		"totalDays": "Total Days",
+		"presentDays": "Present",
+		"lateDays": "Late",
+		"absentDays": "Absent",
+		"recentHistory": "Recent Attendance History",
+		"date": "Date",
+		"status": "Status",
+		"checkIn": "Check In",
+		"checkOut": "Check Out",
+		"workHours": "Work Hours"
 	},
 	"medical": {
 		"title": "Medical Records",

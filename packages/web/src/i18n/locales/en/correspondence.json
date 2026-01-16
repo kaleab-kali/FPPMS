@@ -1,0 +1,99 @@
+{
+	"title": "Correspondence",
+	"description": "Manage incoming and outgoing documents",
+	"incoming": {
+		"title": "Incoming Documents",
+		"description": "Track and manage incoming correspondence"
+	},
+	"outgoing": {
+		"title": "Outgoing Documents",
+		"description": "Track and manage outgoing correspondence"
+	},
+	"table": {
+		"referenceNumber": "Reference #",
+		"subject": "Subject",
+		"direction": "Direction",
+		"documentDate": "Date",
+		"documentType": "Type",
+		"priority": "Priority",
+		"status": "Status",
+		"overdue": "Overdue",
+		"sender": "From",
+		"recipient": "To",
+		"responseDeadline": "Response Due",
+		"sentDate": "Sent Date"
+	},
+	"direction": {
+		"incoming": "Incoming",
+		"outgoing": "Outgoing"
+	},
+	"priority": {
+		"low": "Low",
+		"normal": "Normal",
+		"high": "High",
+		"urgent": "Urgent"
+	},
+	"status": {
+		"pending": "Pending",
+		"in_progress": "In Progress",
+		"responded": "Responded",
+		"completed": "Completed",
+		"archived": "Archived"
+	},
+	"category": {
+		"legal": "Legal",
+		"hr": "HR",
+		"finance": "Finance",
+		"operations": "Operations",
+		"general": "General"
+	},
+	"filters": {
+		"title": "Filters",
+		"searchPlaceholder": "Search by reference, subject...",
+		"direction": "Direction",
+		"priority": "Priority",
+		"status": "Status"
+	},
+	"actions": {
+		"create": "New Document",
+		"registerIncoming": "Register Incoming",
+		"registerOutgoing": "Register Outgoing",
+		"edit": "Edit Document",
+		"markResponded": "Mark as Responded"
+	},
+	"form": {
+		"createTitle": "Register New Document",
+		"editTitle": "Edit Document",
+		"documentType": "Document Type",
+		"selectDocumentType": "Select document type",
+		"direction": "Direction",
+		"subject": "Subject",
+		"documentDate": "Document Date",
+		"receivedDate": "Received Date",
+		"sentDate": "Sent Date",
+		"sourceOrganization": "Source Organization",
+		"destinationOrganization": "Destination Organization",
+		"summary": "Summary",
+		"priority": "Priority",
+		"actionRequired": "Action Required",
+		"deadline": "Action Deadline",
+		"responseDeadline": "Response Deadline",
+		"folderNumber": "Folder Number",
+		"shelfNumber": "Shelf Number",
+		"officeLocation": "Office Location",
+		"isUrgent": "Mark as Urgent",
+		"category": "Category",
+		"selectCategory": "Select category"
+	},
+	"alerts": {
+		"overdue": "This document is overdue"
+	},
+	"messages": {
+		"createSuccess": "Document registered successfully",
+		"updateSuccess": "Document updated successfully"
+	},
+	"employeeTab": {
+		"title": "Employee Correspondence",
+		"noDocuments": "No correspondence documents found for this employee"
+	}
+}

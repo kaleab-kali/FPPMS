@@ -1,0 +1,99 @@
+{
+	"title": "ደብዳቤ",
+	"description": "ገቢና ወጪ ሰነዶችን ያስተዳድሩ",
+	"incoming": {
+		"title": "ገቢ ሰነዶች",
+		"description": "ገቢ ደብዳቤዎችን ይከታተሉ እና ያስተዳድሩ"
+	},
+	"outgoing": {
+		"title": "ወጪ ሰነዶች",
+		"description": "ወጪ ደብዳቤዎችን ይከታተሉ እና ያስተዳድሩ"
+	},
+	"table": {
+		"referenceNumber": "ማጣቀሻ ቁጥር",
+		"subject": "ርዕሰ ጉዳይ",
+		"direction": "አቅጣጫ",
+		"documentDate": "ቀን",
+		"documentType": "ዓይነት",
+		"priority": "ቅድሚያ",
+		"status": "ሁኔታ",
+		"overdue": "ጊዜ ያለፈበት",
+		"sender": "ከ",
+		"recipient": "ለ",
+		"responseDeadline": "የምላሽ ገደብ",
+		"sentDate": "የተላከበት ቀን"
+	},
+	"direction": {
+		"incoming": "ገቢ",
+		"outgoing": "ወጪ"
+	},
+	"priority": {
+		"low": "ዝቅተኛ",
+		"normal": "መደበኛ",
+		"high": "ከፍተኛ",
+		"urgent": "አስቸኳይ"
+	},
+	"status": {
+		"pending": "በመጠባበቅ ላይ",
+		"in_progress": "በሂደት ላይ",
+		"responded": "ምላሽ ተሰጥቷል",
+		"completed": "ተጠናቋል",
+		"archived": "ተመዝግቧል"
+	},
+	"category": {
+		"legal": "ህጋዊ",
+		"hr": "የሰው ሀብት",
+		"finance": "ፋይናንስ",
+		"operations": "ኦፕሬሽኖች",
+		"general": "አጠቃላይ"
+	},
+	"filters": {
+		"title": "ማጣሪያዎች",
+		"searchPlaceholder": "በማጣቀሻ፣ ርዕሰ ጉዳይ ይፈልጉ...",
+		"direction": "አቅጣጫ",
+		"priority": "ቅድሚያ",
+		"status": "ሁኔታ"
+	},
+	"actions": {
+		"create": "አዲስ ሰነድ",
+		"registerIncoming": "ገቢ ይመዝግቡ",
+		"registerOutgoing": "ወጪ ይመዝግቡ",
+		"edit": "ሰነድ ያርትዑ",
+		"markResponded": "ምላሽ እንደተሰጠ ምልክት ያድርጉ"
+	},
+	"form": {
+		"createTitle": "አዲስ ሰነድ ይመዝግቡ",
+		"editTitle": "ሰነድ ያርትዑ",
+		"documentType": "የሰነድ ዓይነት",
+		"selectDocumentType": "የሰነድ ዓይነት ይምረጡ",
+		"direction": "አቅጣጫ",
+		"subject": "ርዕሰ ጉዳይ",
+		"documentDate": "የሰነድ ቀን",
+		"receivedDate": "የተቀበሉበት ቀን",
+		"sentDate": "የተላከበት ቀን",
+		"sourceOrganization": "ምንጭ ድርጅት",
+		"destinationOrganization": "መድረሻ ድርጅት",
+		"summary": "ማጠቃለያ",
+		"priority": "ቅድሚያ",
+		"actionRequired": "የሚያስፈልግ እርምጃ",
+		"deadline": "የእርምጃ ገደብ",
+		"responseDeadline": "የምላሽ ገደብ",
+		"folderNumber": "የፎልደር ቁጥር",
+		"shelfNumber": "የመደርደሪያ ቁጥር",
+		"officeLocation": "የቢሮ ቦታ",
+		"isUrgent": "እንደ አስቸኳይ ምልክት ያድርጉ",
+		"category": "ምድብ",
+		"selectCategory": "ምድብ ይምረጡ"
+	},
+	"alerts": {
+		"overdue": "ይህ ሰነድ ጊዜ አልፏል"
+	},
+	"messages": {
+		"createSuccess": "ሰነዱ በተሳካ ሁኔታ ተመዝግቧል",
+		"updateSuccess": "ሰነዱ በተሳካ ሁኔታ ተሻሽሏል"
+	},
+	"employeeTab": {
+		"title": "የሰራተኛ ደብዳቤዎች",
+		"noDocuments": "ለዚህ ሰራተኛ የደብዳቤ ሰነዶች አልተገኙም"
+	}
+}
