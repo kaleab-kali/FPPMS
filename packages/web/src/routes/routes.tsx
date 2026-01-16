@@ -2,6 +2,11 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ComingSoonPage } from "#web/components/common/ComingSoonPage.tsx";
 import { AppLayout } from "#web/components/layout/AppLayout.tsx";
 import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
+import { AttendanceRecordsPage } from "#web/features/attendance/pages/AttendanceRecordsPage.tsx";
+import { AttendanceReportsPage } from "#web/features/attendance/pages/AttendanceReportsPage.tsx";
+import { DailyAttendancePage } from "#web/features/attendance/pages/DailyAttendancePage.tsx";
+import { ShiftDefinitionsPage } from "#web/features/attendance/pages/ShiftDefinitionsPage.tsx";
+import { ShiftSchedulePage } from "#web/features/attendance/pages/ShiftSchedulePage.tsx";
 import { AuditLogListPage } from "#web/features/audit-log/pages/AuditLogListPage.tsx";
 import { LoginHistoryPage } from "#web/features/audit-log/pages/LoginHistoryPage.tsx";
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
@@ -13,6 +18,9 @@ import { MyCommitteeCasesPage } from "#web/features/committees/pages/MyCommittee
 import { ComplaintDetailPage } from "#web/features/complaints/pages/ComplaintDetailPage.tsx";
 import { ComplaintRegisterPage } from "#web/features/complaints/pages/ComplaintRegisterPage.tsx";
 import { ComplaintsListPage } from "#web/features/complaints/pages/ComplaintsListPage.tsx";
+import { CorrespondenceListPage } from "#web/features/correspondence/pages/CorrespondenceListPage.tsx";
+import { IncomingDocumentsPage } from "#web/features/correspondence/pages/IncomingDocumentsPage.tsx";
+import { OutgoingDocumentsPage } from "#web/features/correspondence/pages/OutgoingDocumentsPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
 import { HqDashboardPage } from "#web/features/dashboard/pages/HqDashboardPage.tsx";
 import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
@@ -27,6 +35,10 @@ import { EmployeeRegisterSelectPage } from "#web/features/employees/pages/Employ
 import { EmployeesListPage } from "#web/features/employees/pages/EmployeesListPage.tsx";
 import { EmployeeTransferPage } from "#web/features/employees/pages/EmployeeTransferPage.tsx";
 import { FormerEmployeesPage } from "#web/features/employees/pages/FormerEmployeesPage.tsx";
+import { HolidayListPage } from "#web/features/holidays/pages/HolidayListPage.tsx";
+import { CenterStockPage } from "#web/features/inventory/pages/CenterStockPage.tsx";
+import { InventoryAssignmentsPage } from "#web/features/inventory/pages/InventoryAssignmentsPage.tsx";
+import { OverdueItemsPage } from "#web/features/inventory/pages/OverdueItemsPage.tsx";
 import { RanksListPage } from "#web/features/lookups/pages/RanksListPage.tsx";
 import { RegionsListPage } from "#web/features/lookups/pages/RegionsListPage.tsx";
 import { SubCitiesListPage } from "#web/features/lookups/pages/SubCitiesListPage.tsx";
@@ -35,6 +47,9 @@ import { CentersListPage } from "#web/features/organization/pages/CentersListPag
 import { DepartmentsListPage } from "#web/features/organization/pages/DepartmentsListPage.tsx";
 import { PositionsListPage } from "#web/features/organization/pages/PositionsListPage.tsx";
 import { TenantsListPage } from "#web/features/organization/pages/TenantsListPage.tsx";
+import { EligibleEmployeesPage } from "#web/features/rewards/pages/EligibleEmployeesPage.tsx";
+import { RewardMilestonesPage } from "#web/features/rewards/pages/RewardMilestonesPage.tsx";
+import { ServiceRewardsListPage } from "#web/features/rewards/pages/ServiceRewardsListPage.tsx";
 import { RolesListPage } from "#web/features/roles/pages/RolesListPage.tsx";
 import { ManualStepJumpPage } from "#web/features/salary/pages/ManualStepJumpPage.tsx";
 import { MassRaisePage } from "#web/features/salary/pages/MassRaisePage.tsx";
@@ -43,6 +58,10 @@ import { SalaryScaleDetailPage } from "#web/features/salary/pages/SalaryScaleDet
 import { SalaryScaleFormPage } from "#web/features/salary/pages/SalaryScaleFormPage.tsx";
 import { SalaryScalesListPage } from "#web/features/salary/pages/SalaryScalesListPage.tsx";
 import { UsersListPage } from "#web/features/users/pages/UsersListPage.tsx";
+import { AmmunitionStockPage } from "#web/features/weapons/pages/AmmunitionStockPage.tsx";
+import { WeaponAssignmentsPage } from "#web/features/weapons/pages/WeaponAssignmentsPage.tsx";
+import { WeaponCategoriesPage } from "#web/features/weapons/pages/WeaponCategoriesPage.tsx";
+import { WeaponsListPage } from "#web/features/weapons/pages/WeaponsListPage.tsx";
 import { ProtectedRoute } from "#web/routes/ProtectedRoute.tsx";
 
 export const router = createBrowserRouter([
@@ -207,7 +226,11 @@ export const router = createBrowserRouter([
 				element: <ComingSoonPage />,
 			},
 			{
-				path: "/holidays/*",
+				path: "/holidays",
+				element: <HolidayListPage />,
+			},
+			{
+				path: "/holidays/calendar",
 				element: <ComingSoonPage />,
 			},
 			{
@@ -247,16 +270,76 @@ export const router = createBrowserRouter([
 				element: <ComingSoonPage />,
 			},
 			{
-				path: "/attendance/*",
-				element: <ComingSoonPage />,
+				path: "/attendance/daily",
+				element: <DailyAttendancePage />,
 			},
 			{
-				path: "/inventory/*",
-				element: <ComingSoonPage />,
+				path: "/attendance/records",
+				element: <AttendanceRecordsPage />,
 			},
 			{
-				path: "/documents/*",
-				element: <ComingSoonPage />,
+				path: "/attendance/shifts",
+				element: <ShiftDefinitionsPage />,
+			},
+			{
+				path: "/attendance/schedule",
+				element: <ShiftSchedulePage />,
+			},
+			{
+				path: "/attendance/reports",
+				element: <AttendanceReportsPage />,
+			},
+			{
+				path: "/inventory/assignments",
+				element: <InventoryAssignmentsPage />,
+			},
+			{
+				path: "/inventory/stock",
+				element: <CenterStockPage />,
+			},
+			{
+				path: "/inventory/overdue",
+				element: <OverdueItemsPage />,
+			},
+			{
+				path: "/correspondence",
+				element: <CorrespondenceListPage />,
+			},
+			{
+				path: "/correspondence/incoming",
+				element: <IncomingDocumentsPage />,
+			},
+			{
+				path: "/correspondence/outgoing",
+				element: <OutgoingDocumentsPage />,
+			},
+			{
+				path: "/weapons",
+				element: <WeaponsListPage />,
+			},
+			{
+				path: "/weapons/categories",
+				element: <WeaponCategoriesPage />,
+			},
+			{
+				path: "/weapons/assignments",
+				element: <WeaponAssignmentsPage />,
+			},
+			{
+				path: "/weapons/ammunition",
+				element: <AmmunitionStockPage />,
+			},
+			{
+				path: "/rewards",
+				element: <ServiceRewardsListPage />,
+			},
+			{
+				path: "/rewards/milestones",
+				element: <RewardMilestonesPage />,
+			},
+			{
+				path: "/rewards/eligibility",
+				element: <EligibleEmployeesPage />,
 			},
 			{
 				path: "/reports/*",

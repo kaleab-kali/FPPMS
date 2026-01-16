@@ -112,6 +112,78 @@ export const PERMISSIONS = {
 	// Audit Logs
 	AUDIT_LOG_READ: "audit.read.log",
 	AUDIT_HISTORY_READ: "audit.read.history",
+
+	// Attendance
+	ATTENDANCE_READ: "attendance.read.record",
+	ATTENDANCE_CREATE: "attendance.create.record",
+	ATTENDANCE_UPDATE: "attendance.update.record",
+	ATTENDANCE_DELETE: "attendance.delete.record",
+	ATTENDANCE_BULK_CREATE: "attendance.create.bulk",
+	ATTENDANCE_REPORTS_READ: "attendance.read.report",
+	ATTENDANCE_EXPORT: "attendance.export.report",
+
+	// Shifts
+	SHIFT_READ: "attendance.read.shift",
+	SHIFT_MANAGE: "attendance.manage.shift",
+	SHIFT_ASSIGN: "attendance.assign.shift",
+
+	// Inventory
+	INVENTORY_READ: "inventory.read.assignment",
+	INVENTORY_CREATE: "inventory.create.assignment",
+	INVENTORY_UPDATE: "inventory.update.assignment",
+	INVENTORY_RETURN: "inventory.manage.return",
+	CENTER_STOCK_READ: "inventory.read.center-stock",
+	CENTER_STOCK_CREATE: "inventory.create.center-stock",
+	CENTER_STOCK_UPDATE: "inventory.update.center-stock",
+	CENTER_STOCK_ADJUST: "inventory.adjust.center-stock",
+
+	// Correspondence
+	CORRESPONDENCE_READ: "correspondence.read.document",
+	CORRESPONDENCE_CREATE: "correspondence.create.document",
+	CORRESPONDENCE_UPDATE: "correspondence.update.document",
+	CORRESPONDENCE_DELETE: "correspondence.delete.document",
+
+	// Weapons - Categories
+	WEAPON_CATEGORY_READ: "weapons.read.category",
+	WEAPON_CATEGORY_CREATE: "weapons.create.category",
+	WEAPON_CATEGORY_UPDATE: "weapons.update.category",
+	WEAPON_CATEGORY_DELETE: "weapons.delete.category",
+	// Weapons - Types
+	WEAPON_TYPE_READ: "weapons.read.type",
+	WEAPON_TYPE_CREATE: "weapons.create.type",
+	WEAPON_TYPE_UPDATE: "weapons.update.type",
+	WEAPON_TYPE_DELETE: "weapons.delete.type",
+	// Weapons - Weapons
+	WEAPON_READ: "weapons.read.weapon",
+	WEAPON_CREATE: "weapons.create.weapon",
+	WEAPON_UPDATE: "weapons.update.weapon",
+	// Weapons - Assignments
+	WEAPON_ASSIGNMENT_READ: "weapons.read.assignment",
+	WEAPON_ASSIGNMENT_CREATE: "weapons.create.assignment",
+	WEAPON_RETURN: "weapons.manage.return",
+	// Ammunition
+	AMMUNITION_TYPE_READ: "ammunition.read.type",
+	AMMUNITION_TYPE_CREATE: "ammunition.create.type",
+	AMMUNITION_TYPE_UPDATE: "ammunition.update.type",
+	AMMUNITION_TYPE_DELETE: "ammunition.delete.type",
+	AMMUNITION_STOCK_READ: "ammunition.read.stock",
+	AMMUNITION_STOCK_MANAGE: "ammunition.manage.stock",
+	AMMUNITION_TRANSACTION_READ: "ammunition.read.transaction",
+	AMMUNITION_TRANSACTION_CREATE: "ammunition.create.transaction",
+
+	// Rewards
+	REWARD_MILESTONE_READ: "rewards.read.milestone",
+	REWARD_MILESTONE_CREATE: "rewards.create.milestone",
+	REWARD_MILESTONE_UPDATE: "rewards.update.milestone",
+	REWARD_MILESTONE_DELETE: "rewards.delete.milestone",
+	REWARD_ELIGIBILITY_READ: "rewards.read.eligibility",
+	REWARD_ELIGIBILITY_CHECK: "rewards.check.eligibility",
+	REWARD_CREATE: "rewards.create.reward",
+	REWARD_READ: "rewards.read.reward",
+	REWARD_SUBMIT: "rewards.submit.reward",
+	REWARD_APPROVE: "rewards.approve.reward",
+	REWARD_AWARD: "rewards.award.reward",
+	REWARD_REPORT_READ: "rewards.read.report",
 } as const;
 
 export type PermissionKey = keyof typeof PERMISSIONS;

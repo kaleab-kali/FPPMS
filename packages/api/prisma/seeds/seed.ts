@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { seedCenters } from "./centers.seed.js";
 import { seedCommittees, seedCommitteeTypes } from "./committee-types.seed.js";
 import { seedDepartments } from "./departments.seed.js";
+import { seedDocumentTypes } from "./document-types.seed.js";
 import { seedEmployees } from "./employees.seed.js";
 import { seedHolidays } from "./holidays.seed.js";
 import { seedLeaveTypes } from "./leave-types.seed.js";
@@ -15,6 +16,7 @@ import { seedRoles } from "./roles.seed.js";
 import { seedSalaryScales } from "./salary-scale.seed.js";
 import { seedTenants } from "./tenants.seed.js";
 import { seedEmergencySystemAccount, seedITAdmin, seedUsersFromEmployees } from "./users.seed.js";
+import { seedWeapons } from "./weapons.seed.js";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL as string });
 const prisma = new PrismaClient({ adapter });
@@ -73,6 +75,14 @@ const main = async (): Promise<void> => {
 
 	console.log("=== Seeding Committees ===");
 	await seedCommittees(prisma, tenantId);
+	console.log("");
+
+	console.log("=== Seeding Document Types ===");
+	await seedDocumentTypes(prisma, tenantId);
+	console.log("");
+
+	console.log("=== Seeding Weapons & Ammunition ===");
+	await seedWeapons(prisma, tenantId);
 	console.log("");
 
 	console.log("=== Seeding Employees ===");

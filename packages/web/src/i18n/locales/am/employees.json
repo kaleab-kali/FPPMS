@@ -171,7 +171,8 @@
 		"performance": "አፈፃፀም",
 		"salary": "ደሞዝ ጭማሪ",
 		"inventory": "ንብረት",
-		"committees": "ኮሚቴዎች"
+		"committees": "ኮሚቴዎች",
+		"correspondence": "ደብዳቤ"
 	},
 	"committees": {
 		"noMemberships": "የማንኛውም ኮሚቴ አባል አይደለም",
@@ -287,6 +288,20 @@
 		"noSpouse": "የትዳር ጓደኛ አልተመዘገበም",
 		"noChildren": "ልጆች አልተመዘገቡም",
 		"deleteConfirm": "ይህንን የቤተሰብ አባል መሰረዝ ይፈልጋሉ?"
+	},
+	"attendance": {
+		"noRecords": "የቅጥር መዝገቦች የሉም",
+		"noRecordsDescription": "ባለፉት 30 ቀናት ውስጥ ለዚህ ሰራተኛ የቅጥር መዝገቦች አልተገኙም።",
+		"totalDays": "ጠቅላላ ቀናት",
+		"presentDays": "ተገኝ",
+		"lateDays": "ዘገየ",
+		"absentDays": "ቀረ",
+		"recentHistory": "የቅርብ ጊዜ የቅጥር ታሪክ",
+		"date": "ቀን",
+		"status": "ሁኔታ",
+		"checkIn": "መግቢያ",
+		"checkOut": "መውጫ",
+		"workHours": "የስራ ሰዓታት"
 	},
 	"medical": {
 		"title": "የሕክምና መዝገቦች",
