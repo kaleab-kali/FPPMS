@@ -37,7 +37,7 @@ const categorySchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	nameAm: z.string().optional(),
 	description: z.string().optional(),
-	isActive: z.boolean().default(true),
+	isActive: z.boolean(),
 });
 
 const typeSchema = z.object({
@@ -47,11 +47,26 @@ const typeSchema = z.object({
 	nameAm: z.string().optional(),
 	caliber: z.string().min(1, "Caliber is required"),
 	manufacturer: z.string().optional(),
-	isActive: z.boolean().default(true),
+	isActive: z.boolean(),
 });
 
-type CategoryFormData = z.infer<typeof categorySchema>;
-type TypeFormData = z.infer<typeof typeSchema>;
+interface CategoryFormData {
+	code: string;
+	name: string;
+	nameAm?: string;
+	description?: string;
+	isActive: boolean;
+}
+
+interface TypeFormData {
+	categoryId: string;
+	code: string;
+	name: string;
+	nameAm?: string;
+	caliber: string;
+	manufacturer?: string;
+	isActive: boolean;
+}
 
 const categoryColumnHelper = createColumnHelper<WeaponCategory>();
 const typeColumnHelper = createColumnHelper<WeaponType>();
@@ -77,12 +92,12 @@ const WeaponCategoriesPageComponent = (): React.ReactElement => {
 	const deleteType = useDeleteWeaponType();
 
 	const categoryForm = useForm<CategoryFormData>({
-		resolver: zodResolver(categorySchema),
+		resolver: zodResolver(categorySchema) as never,
 		defaultValues: { code: "", name: "", nameAm: "", description: "", isActive: true },
 	});
 
 	const typeForm = useForm<TypeFormData>({
-		resolver: zodResolver(typeSchema),
+		resolver: zodResolver(typeSchema) as never,
 		defaultValues: { categoryId: "", code: "", name: "", nameAm: "", caliber: "", manufacturer: "", isActive: true },
 	});
 

@@ -24,12 +24,22 @@ const weaponSchema = z.object({
 	weaponTypeId: z.string().min(1, "Weapon type is required"),
 	serialNumber: z.string().min(1, "Serial number is required"),
 	registrationNumber: z.string().optional(),
-	manufactureYear: z.coerce.number().optional(),
-	condition: z.enum(["EXCELLENT", "GOOD", "FAIR", "POOR", "UNSERVICEABLE"]).default("GOOD"),
+	manufactureYear: z.preprocess(
+		(val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
+		z.number().optional(),
+	),
+	condition: z.enum(["EXCELLENT", "GOOD", "FAIR", "POOR", "UNSERVICEABLE"]),
 	remarks: z.string().optional(),
 });
 
-type WeaponFormData = z.infer<typeof weaponSchema>;
+interface WeaponFormData {
+	weaponTypeId: string;
+	serialNumber: string;
+	registrationNumber?: string;
+	manufactureYear?: number;
+	condition: "EXCELLENT" | "GOOD" | "FAIR" | "POOR" | "UNSERVICEABLE";
+	remarks?: string;
+}
 
 interface WeaponFormDialogProps {
 	open: boolean;
@@ -49,7 +59,7 @@ const WeaponFormDialogComponent = ({ open, onOpenChange, onSuccess }: WeaponForm
 	const createWeapon = useCreateWeapon();
 
 	const form = useForm<WeaponFormData>({
-		resolver: zodResolver(weaponSchema),
+		resolver: zodResolver(weaponSchema) as never,
 		defaultValues: {
 			weaponTypeId: "",
 			serialNumber: "",

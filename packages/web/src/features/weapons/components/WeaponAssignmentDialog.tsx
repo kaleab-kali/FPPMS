@@ -20,6 +20,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "#web/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select";
 import { Textarea } from "#web/components/ui/textarea";
+import type { Employee } from "#web/types/employee";
 import type { WeaponCondition } from "#web/types/weapons";
 
 const assignmentSchema = z.object({
@@ -27,12 +28,23 @@ const assignmentSchema = z.object({
 	employeeId: z.string().min(1, "Employee is required"),
 	assignedDate: z.string().min(1, "Assigned date is required"),
 	conditionAtAssignment: z.enum(["EXCELLENT", "GOOD", "FAIR", "POOR", "UNSERVICEABLE"]),
-	issuedRounds: z.coerce.number().optional(),
+	issuedRounds: z.preprocess(
+		(val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
+		z.number().optional(),
+	),
 	purpose: z.string().optional(),
 	remarks: z.string().optional(),
 });
 
-type AssignmentFormData = z.infer<typeof assignmentSchema>;
+interface AssignmentFormData {
+	weaponId: string;
+	employeeId: string;
+	assignedDate: string;
+	conditionAtAssignment: "EXCELLENT" | "GOOD" | "FAIR" | "POOR" | "UNSERVICEABLE";
+	issuedRounds?: number;
+	purpose?: string;
+	remarks?: string;
+}
 
 interface WeaponAssignmentDialogProps {
 	open: boolean;
@@ -49,11 +61,13 @@ const WeaponAssignmentDialogComponent = ({
 	const { i18n } = useTranslation();
 	const isAmharic = i18n.language === "am";
 
+	const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
+
 	const { data: availableWeapons } = useWeapons({ status: "IN_SERVICE", limit: 100 });
 	const assignWeapon = useAssignWeapon();
 
 	const form = useForm<AssignmentFormData>({
-		resolver: zodResolver(assignmentSchema),
+		resolver: zodResolver(assignmentSchema) as never,
 		defaultValues: {
 			weaponId: "",
 			employeeId: "",
@@ -77,6 +91,7 @@ const WeaponAssignmentDialogComponent = ({
 				remarks: data.remarks || undefined,
 			});
 			form.reset();
+			setSelectedEmployee(null);
 			onOpenChange(false);
 			onSuccess?.();
 		},
@@ -85,15 +100,22 @@ const WeaponAssignmentDialogComponent = ({
 
 	const handleClose = React.useCallback(() => {
 		form.reset();
+		setSelectedEmployee(null);
 		onOpenChange(false);
 	}, [form, onOpenChange]);
 
-	const handleEmployeeSelect = React.useCallback(
-		(employee: { id: string } | null) => {
-			form.setValue("employeeId", employee?.id ?? "");
+	const handleEmployeeFound = React.useCallback(
+		(employee: Employee) => {
+			setSelectedEmployee(employee);
+			form.setValue("employeeId", employee.id);
 		},
 		[form],
 	);
+
+	const handleEmployeeClear = React.useCallback(() => {
+		setSelectedEmployee(null);
+		form.setValue("employeeId", "");
+	}, [form]);
 
 	const conditions: WeaponCondition[] = ["EXCELLENT", "GOOD", "FAIR", "POOR", "UNSERVICEABLE"];
 
@@ -179,7 +201,11 @@ const WeaponAssignmentDialogComponent = ({
 									<FormItem>
 										<FormLabel>{t("weapons:assignedTo")}</FormLabel>
 										<FormControl>
-											<EmployeeSearch onSelect={handleEmployeeSelect} placeholder={t("weapons:searchEmployee")} />
+											<EmployeeSearch
+												onEmployeeFound={handleEmployeeFound}
+												onClear={handleEmployeeClear}
+												selectedEmployee={selectedEmployee}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
