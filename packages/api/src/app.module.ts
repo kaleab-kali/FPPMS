@@ -7,7 +7,8 @@ import { TenantMiddleware } from "#api/common/middleware/tenant.middleware";
 import { ConfigModule } from "#api/config";
 import { DatabaseModule } from "#api/database";
 import { AttachmentsModule } from "#api/modules/attachments/attachments.module";
-import { AttendanceModule } from "#api/modules/attendance/attendance.module";
+// TODO: Uncomment when attendance module is merged
+// import { AttendanceModule } from "#api/modules/attendance/attendance.module";
 import { AuditLogModule } from "#api/modules/audit-log/audit-log.module";
 import { AuthModule } from "#api/modules/auth/auth.module";
 import { CentersModule } from "#api/modules/centers/centers.module";
@@ -17,13 +18,15 @@ import { CorrespondenceModule } from "#api/modules/correspondence/correspondence
 import { DashboardModule } from "#api/modules/dashboard/dashboard.module";
 import { DepartmentsModule } from "#api/modules/departments/departments.module";
 import { EmployeesModule } from "#api/modules/employees/employees.module";
-import { HolidaysModule } from "#api/modules/holidays/holidays.module";
+// TODO: Uncomment when holidays module is merged
+// import { HolidaysModule } from "#api/modules/holidays/holidays.module";
 import { InventoryModule } from "#api/modules/inventory/inventory.module";
 import { LookupsModule } from "#api/modules/lookups/lookups.module";
 import { PermissionsModule } from "#api/modules/permissions/permissions.module";
 import { PositionsModule } from "#api/modules/positions/positions.module";
 import { RanksModule } from "#api/modules/ranks/ranks.module";
-import { RewardsModule } from "#api/modules/rewards/rewards.module";
+// TODO: Uncomment when rewards module is merged
+// import { RewardsModule } from "#api/modules/rewards/rewards.module";
 import { RolesModule } from "#api/modules/roles/roles.module";
 import { SalaryManagementModule } from "#api/modules/salary-management/salary-management.module";
 import { SalaryScaleModule } from "#api/modules/salary-scale/salary-scale.module";
@@ -36,7 +39,7 @@ import { WeaponsModule } from "#api/modules/weapons/weapons.module";
 		ConfigModule,
 		DatabaseModule,
 		AttachmentsModule,
-		AttendanceModule,
+		// AttendanceModule, // TODO: Uncomment when attendance module is merged
 		AuditLogModule,
 		CommonModule,
 		AuthModule,
@@ -52,13 +55,13 @@ import { WeaponsModule } from "#api/modules/weapons/weapons.module";
 		LookupsModule,
 		PermissionsModule,
 		RanksModule,
-		RewardsModule,
+		// RewardsModule, // TODO: Uncomment when rewards module is merged
 		RolesModule,
 		SalaryManagementModule,
 		SalaryScaleModule,
 		UsersModule,
 		EmployeesModule,
-		HolidaysModule,
+		// HolidaysModule, // TODO: Uncomment when holidays module is merged
 		WeaponsModule,
 	],
 	controllers: [AppController],

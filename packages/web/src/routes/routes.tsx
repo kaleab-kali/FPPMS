@@ -2,11 +2,12 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ComingSoonPage } from "#web/components/common/ComingSoonPage.tsx";
 import { AppLayout } from "#web/components/layout/AppLayout.tsx";
 import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
-import { AttendanceRecordsPage } from "#web/features/attendance/pages/AttendanceRecordsPage.tsx";
-import { AttendanceReportsPage } from "#web/features/attendance/pages/AttendanceReportsPage.tsx";
-import { DailyAttendancePage } from "#web/features/attendance/pages/DailyAttendancePage.tsx";
-import { ShiftDefinitionsPage } from "#web/features/attendance/pages/ShiftDefinitionsPage.tsx";
-import { ShiftSchedulePage } from "#web/features/attendance/pages/ShiftSchedulePage.tsx";
+// TODO: Uncomment when attendance module is merged
+// import { AttendanceRecordsPage } from "#web/features/attendance/pages/AttendanceRecordsPage.tsx";
+// import { AttendanceReportsPage } from "#web/features/attendance/pages/AttendanceReportsPage.tsx";
+// import { DailyAttendancePage } from "#web/features/attendance/pages/DailyAttendancePage.tsx";
+// import { ShiftDefinitionsPage } from "#web/features/attendance/pages/ShiftDefinitionsPage.tsx";
+// import { ShiftSchedulePage } from "#web/features/attendance/pages/ShiftSchedulePage.tsx";
 import { AuditLogListPage } from "#web/features/audit-log/pages/AuditLogListPage.tsx";
 import { LoginHistoryPage } from "#web/features/audit-log/pages/LoginHistoryPage.tsx";
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
@@ -35,7 +36,8 @@ import { EmployeeRegisterSelectPage } from "#web/features/employees/pages/Employ
 import { EmployeesListPage } from "#web/features/employees/pages/EmployeesListPage.tsx";
 import { EmployeeTransferPage } from "#web/features/employees/pages/EmployeeTransferPage.tsx";
 import { FormerEmployeesPage } from "#web/features/employees/pages/FormerEmployeesPage.tsx";
-import { HolidayListPage } from "#web/features/holidays/pages/HolidayListPage.tsx";
+// TODO: Uncomment when holidays module is merged
+// import { HolidayListPage } from "#web/features/holidays/pages/HolidayListPage.tsx";
 import { CenterStockPage } from "#web/features/inventory/pages/CenterStockPage.tsx";
 import { InventoryAssignmentsPage } from "#web/features/inventory/pages/InventoryAssignmentsPage.tsx";
 import { OverdueItemsPage } from "#web/features/inventory/pages/OverdueItemsPage.tsx";
@@ -47,9 +49,10 @@ import { CentersListPage } from "#web/features/organization/pages/CentersListPag
 import { DepartmentsListPage } from "#web/features/organization/pages/DepartmentsListPage.tsx";
 import { PositionsListPage } from "#web/features/organization/pages/PositionsListPage.tsx";
 import { TenantsListPage } from "#web/features/organization/pages/TenantsListPage.tsx";
-import { EligibleEmployeesPage } from "#web/features/rewards/pages/EligibleEmployeesPage.tsx";
-import { RewardMilestonesPage } from "#web/features/rewards/pages/RewardMilestonesPage.tsx";
-import { ServiceRewardsListPage } from "#web/features/rewards/pages/ServiceRewardsListPage.tsx";
+// TODO: Uncomment when rewards module is merged
+// import { EligibleEmployeesPage } from "#web/features/rewards/pages/EligibleEmployeesPage.tsx";
+// import { RewardMilestonesPage } from "#web/features/rewards/pages/RewardMilestonesPage.tsx";
+// import { ServiceRewardsListPage } from "#web/features/rewards/pages/ServiceRewardsListPage.tsx";
 import { RolesListPage } from "#web/features/roles/pages/RolesListPage.tsx";
 import { ManualStepJumpPage } from "#web/features/salary/pages/ManualStepJumpPage.tsx";
 import { MassRaisePage } from "#web/features/salary/pages/MassRaisePage.tsx";
@@ -225,14 +228,15 @@ export const router = createBrowserRouter([
 				path: "/leave/*",
 				element: <ComingSoonPage />,
 			},
-			{
-				path: "/holidays",
-				element: <HolidayListPage />,
-			},
-			{
-				path: "/holidays/calendar",
-				element: <ComingSoonPage />,
-			},
+			// TODO: Uncomment when holidays module is merged
+			// {
+			// 	path: "/holidays",
+			// 	element: <HolidayListPage />,
+			// },
+			// {
+			// 	path: "/holidays/calendar",
+			// 	element: <ComingSoonPage />,
+			// },
 			{
 				path: "/appraisal/*",
 				element: <ComingSoonPage />,
@@ -269,26 +273,27 @@ export const router = createBrowserRouter([
 				path: "/salary/payroll",
 				element: <ComingSoonPage />,
 			},
-			{
-				path: "/attendance/daily",
-				element: <DailyAttendancePage />,
-			},
-			{
-				path: "/attendance/records",
-				element: <AttendanceRecordsPage />,
-			},
-			{
-				path: "/attendance/shifts",
-				element: <ShiftDefinitionsPage />,
-			},
-			{
-				path: "/attendance/schedule",
-				element: <ShiftSchedulePage />,
-			},
-			{
-				path: "/attendance/reports",
-				element: <AttendanceReportsPage />,
-			},
+			// TODO: Uncomment when attendance module is merged
+			// {
+			// 	path: "/attendance/daily",
+			// 	element: <DailyAttendancePage />,
+			// },
+			// {
+			// 	path: "/attendance/records",
+			// 	element: <AttendanceRecordsPage />,
+			// },
+			// {
+			// 	path: "/attendance/shifts",
+			// 	element: <ShiftDefinitionsPage />,
+			// },
+			// {
+			// 	path: "/attendance/schedule",
+			// 	element: <ShiftSchedulePage />,
+			// },
+			// {
+			// 	path: "/attendance/reports",
+			// 	element: <AttendanceReportsPage />,
+			// },
 			{
 				path: "/inventory/assignments",
 				element: <InventoryAssignmentsPage />,
@@ -329,18 +334,19 @@ export const router = createBrowserRouter([
 				path: "/weapons/ammunition",
 				element: <AmmunitionStockPage />,
 			},
-			{
-				path: "/rewards",
-				element: <ServiceRewardsListPage />,
-			},
-			{
-				path: "/rewards/milestones",
-				element: <RewardMilestonesPage />,
-			},
-			{
-				path: "/rewards/eligibility",
-				element: <EligibleEmployeesPage />,
-			},
+			// TODO: Uncomment when rewards module is merged
+			// {
+			// 	path: "/rewards",
+			// 	element: <ServiceRewardsListPage />,
+			// },
+			// {
+			// 	path: "/rewards/milestones",
+			// 	element: <RewardMilestonesPage />,
+			// },
+			// {
+			// 	path: "/rewards/eligibility",
+			// 	element: <EligibleEmployeesPage />,
+			// },
 			{
 				path: "/reports/*",
 				element: <ComingSoonPage />,
