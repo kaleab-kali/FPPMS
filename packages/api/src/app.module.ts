@@ -25,8 +25,7 @@ import { LookupsModule } from "#api/modules/lookups/lookups.module";
 import { PermissionsModule } from "#api/modules/permissions/permissions.module";
 import { PositionsModule } from "#api/modules/positions/positions.module";
 import { RanksModule } from "#api/modules/ranks/ranks.module";
-// TODO: Uncomment when rewards module is merged
-// import { RewardsModule } from "#api/modules/rewards/rewards.module";
+import { RewardsModule } from "#api/modules/rewards/rewards.module";
 import { RolesModule } from "#api/modules/roles/roles.module";
 import { SalaryManagementModule } from "#api/modules/salary-management/salary-management.module";
 import { SalaryScaleModule } from "#api/modules/salary-scale/salary-scale.module";
@@ -55,7 +54,7 @@ import { WeaponsModule } from "#api/modules/weapons/weapons.module";
 		LookupsModule,
 		PermissionsModule,
 		RanksModule,
-		// RewardsModule, // TODO: Uncomment when rewards module is merged
+		RewardsModule,
 		RolesModule,
 		SalaryManagementModule,
 		SalaryScaleModule,

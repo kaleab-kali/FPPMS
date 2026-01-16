@@ -19,8 +19,7 @@ import amInventory from "#web/i18n/locales/am/inventory.json";
 import amLookups from "#web/i18n/locales/am/lookups.json";
 import amNavigation from "#web/i18n/locales/am/navigation.json";
 import amOrganization from "#web/i18n/locales/am/organization.json";
-// TODO: Uncomment when rewards module is merged
-// import amRewards from "#web/i18n/locales/am/rewards.json";
+import amRewards from "#web/i18n/locales/am/rewards.json";
 import amRoles from "#web/i18n/locales/am/roles.json";
 import amSalaryManagement from "#web/i18n/locales/am/salary-management.json";
 import amSalaryScale from "#web/i18n/locales/am/salary-scale.json";
@@ -44,8 +43,7 @@ import enInventory from "#web/i18n/locales/en/inventory.json";
 import enLookups from "#web/i18n/locales/en/lookups.json";
 import enNavigation from "#web/i18n/locales/en/navigation.json";
 import enOrganization from "#web/i18n/locales/en/organization.json";
-// TODO: Uncomment when rewards module is merged
-// import enRewards from "#web/i18n/locales/en/rewards.json";
+import enRewards from "#web/i18n/locales/en/rewards.json";
 import enRoles from "#web/i18n/locales/en/roles.json";
 import enSalaryManagement from "#web/i18n/locales/en/salary-management.json";
 import enSalaryScale from "#web/i18n/locales/en/salary-scale.json";
@@ -73,7 +71,7 @@ const resources = {
 		employees: enEmployees,
 		// holidays: enHolidays, // TODO: Uncomment when holidays module is merged
 		inventory: enInventory,
-		// rewards: enRewards, // TODO: Uncomment when rewards module is merged
+		rewards: enRewards,
 		weapons: enWeapons,
 		"salary-scale": enSalaryScale,
 		"salary-management": enSalaryManagement,
@@ -97,7 +95,7 @@ const resources = {
 		employees: amEmployees,
 		// holidays: amHolidays, // TODO: Uncomment when holidays module is merged
 		inventory: amInventory,
-		// rewards: amRewards, // TODO: Uncomment when rewards module is merged
+		rewards: amRewards,
 		weapons: amWeapons,
 		"salary-scale": amSalaryScale,
 		"salary-management": amSalaryManagement,
@@ -131,7 +129,7 @@ i18n
 			"employees",
 			// "holidays", // TODO: Uncomment when holidays module is merged
 			"inventory",
-			// "rewards", // TODO: Uncomment when rewards module is merged
+			"rewards",
 			"weapons",
 			"salary-scale",
 			"salary-management",
