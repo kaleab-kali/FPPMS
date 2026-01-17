@@ -55,8 +55,7 @@ import {
 import { Skeleton } from "#web/components/ui/skeleton.tsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#web/components/ui/tabs.tsx";
 import { STORAGE_KEYS } from "#web/config/constants.ts";
-// TODO: Uncomment when attendance module is merged
-// import { EmployeeAttendanceTab } from "#web/features/employees/components/EmployeeAttendanceTab.tsx";
+import { EmployeeAttendanceTab } from "#web/features/employees/components/EmployeeAttendanceTab.tsx";
 import { EmployeeCorrespondenceTab } from "#web/features/employees/components/EmployeeCorrespondenceTab.tsx";
 import { EmployeeInventoryTab } from "#web/features/employees/components/EmployeeInventoryTab.tsx";
 import { EmployeeSalaryTab } from "#web/features/employees/components/EmployeeSalaryTab.tsx";
@@ -1197,13 +1196,7 @@ export const EmployeeDetailPage = React.memo(
 					</TabsContent>
 
 					<TabsContent value="attendance" className="mt-5">
-						{/* TODO: Uncomment when attendance module is merged */}
-						{/* <EmployeeAttendanceTab employeeId={id ?? ""} /> */}
-						<PlaceholderTab
-							title={t("tabs.attendance")}
-							icon={<Clock className="h-8 w-8 text-muted-foreground" />}
-							t={t}
-						/>
+						<EmployeeAttendanceTab employeeId={id ?? ""} />
 					</TabsContent>
 
 					<TabsContent value="leave" className="mt-5">

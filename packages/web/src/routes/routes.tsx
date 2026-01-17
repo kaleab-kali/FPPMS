@@ -2,12 +2,11 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ComingSoonPage } from "#web/components/common/ComingSoonPage.tsx";
 import { AppLayout } from "#web/components/layout/AppLayout.tsx";
 import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
-// TODO: Uncomment when attendance module is merged
-// import { AttendanceRecordsPage } from "#web/features/attendance/pages/AttendanceRecordsPage.tsx";
-// import { AttendanceReportsPage } from "#web/features/attendance/pages/AttendanceReportsPage.tsx";
-// import { DailyAttendancePage } from "#web/features/attendance/pages/DailyAttendancePage.tsx";
-// import { ShiftDefinitionsPage } from "#web/features/attendance/pages/ShiftDefinitionsPage.tsx";
-// import { ShiftSchedulePage } from "#web/features/attendance/pages/ShiftSchedulePage.tsx";
+import { AttendanceRecordsPage } from "#web/features/attendance/pages/AttendanceRecordsPage.tsx";
+import { AttendanceReportsPage } from "#web/features/attendance/pages/AttendanceReportsPage.tsx";
+import { DailyAttendancePage } from "#web/features/attendance/pages/DailyAttendancePage.tsx";
+import { ShiftDefinitionsPage } from "#web/features/attendance/pages/ShiftDefinitionsPage.tsx";
+import { ShiftSchedulePage } from "#web/features/attendance/pages/ShiftSchedulePage.tsx";
 import { AuditLogListPage } from "#web/features/audit-log/pages/AuditLogListPage.tsx";
 import { LoginHistoryPage } from "#web/features/audit-log/pages/LoginHistoryPage.tsx";
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
@@ -272,27 +271,26 @@ export const router = createBrowserRouter([
 				path: "/salary/payroll",
 				element: <ComingSoonPage />,
 			},
-			// TODO: Uncomment when attendance module is merged
-			// {
-			// 	path: "/attendance/daily",
-			// 	element: <DailyAttendancePage />,
-			// },
-			// {
-			// 	path: "/attendance/records",
-			// 	element: <AttendanceRecordsPage />,
-			// },
-			// {
-			// 	path: "/attendance/shifts",
-			// 	element: <ShiftDefinitionsPage />,
-			// },
-			// {
-			// 	path: "/attendance/schedule",
-			// 	element: <ShiftSchedulePage />,
-			// },
-			// {
-			// 	path: "/attendance/reports",
-			// 	element: <AttendanceReportsPage />,
-			// },
+			{
+				path: "/attendance/daily",
+				element: <DailyAttendancePage />,
+			},
+			{
+				path: "/attendance/records",
+				element: <AttendanceRecordsPage />,
+			},
+			{
+				path: "/attendance/shifts",
+				element: <ShiftDefinitionsPage />,
+			},
+			{
+				path: "/attendance/schedule",
+				element: <ShiftSchedulePage />,
+			},
+			{
+				path: "/attendance/reports",
+				element: <AttendanceReportsPage />,
+			},
 			{
 				path: "/inventory/assignments",
 				element: <InventoryAssignmentsPage />,

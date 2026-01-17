@@ -2,8 +2,7 @@ import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 import { APP_CONFIG, STORAGE_KEYS } from "#web/config/constants.ts";
-// TODO: Uncomment when attendance module is merged
-// import amAttendance from "#web/i18n/locales/am/attendance.json";
+import amAttendance from "#web/i18n/locales/am/attendance.json";
 import amAuditLog from "#web/i18n/locales/am/auditLog.json";
 import amAuth from "#web/i18n/locales/am/auth.json";
 import amCommittees from "#web/i18n/locales/am/committees.json";
@@ -26,8 +25,7 @@ import amSalaryScale from "#web/i18n/locales/am/salary-scale.json";
 import amUsers from "#web/i18n/locales/am/users.json";
 import amValidation from "#web/i18n/locales/am/validation.json";
 import amWeapons from "#web/i18n/locales/am/weapons.json";
-// TODO: Uncomment when attendance module is merged
-// import enAttendance from "#web/i18n/locales/en/attendance.json";
+import enAttendance from "#web/i18n/locales/en/attendance.json";
 import enAuditLog from "#web/i18n/locales/en/auditLog.json";
 import enAuth from "#web/i18n/locales/en/auth.json";
 import enCommittees from "#web/i18n/locales/en/committees.json";
@@ -54,7 +52,7 @@ import enWeapons from "#web/i18n/locales/en/weapons.json";
 const resources = {
 	en: {
 		common: enCommon,
-		// attendance: enAttendance, // TODO: Uncomment when attendance module is merged
+		attendance: enAttendance,
 		auth: enAuth,
 		auditLog: enAuditLog,
 		committees: enCommittees,
@@ -78,7 +76,7 @@ const resources = {
 	},
 	am: {
 		common: amCommon,
-		// attendance: amAttendance, // TODO: Uncomment when attendance module is merged
+		attendance: amAttendance,
 		auth: amAuth,
 		auditLog: amAuditLog,
 		committees: amCommittees,
@@ -112,7 +110,7 @@ i18n
 		defaultNS: "common",
 		ns: [
 			"common",
-			// "attendance", // TODO: Uncomment when attendance module is merged
+			"attendance",
 			"auth",
 			"auditLog",
 			"committees",
