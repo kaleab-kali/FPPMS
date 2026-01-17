@@ -7,8 +7,7 @@ import { TenantMiddleware } from "#api/common/middleware/tenant.middleware";
 import { ConfigModule } from "#api/config";
 import { DatabaseModule } from "#api/database";
 import { AttachmentsModule } from "#api/modules/attachments/attachments.module";
-// TODO: Uncomment when attendance module is merged
-// import { AttendanceModule } from "#api/modules/attendance/attendance.module";
+import { AttendanceModule } from "#api/modules/attendance/attendance.module";
 import { AuditLogModule } from "#api/modules/audit-log/audit-log.module";
 import { AuthModule } from "#api/modules/auth/auth.module";
 import { CentersModule } from "#api/modules/centers/centers.module";
@@ -18,8 +17,7 @@ import { CorrespondenceModule } from "#api/modules/correspondence/correspondence
 import { DashboardModule } from "#api/modules/dashboard/dashboard.module";
 import { DepartmentsModule } from "#api/modules/departments/departments.module";
 import { EmployeesModule } from "#api/modules/employees/employees.module";
-// TODO: Uncomment when holidays module is merged
-// import { HolidaysModule } from "#api/modules/holidays/holidays.module";
+import { HolidaysModule } from "#api/modules/holidays/holidays.module";
 import { InventoryModule } from "#api/modules/inventory/inventory.module";
 import { LookupsModule } from "#api/modules/lookups/lookups.module";
 import { PermissionsModule } from "#api/modules/permissions/permissions.module";
@@ -38,7 +36,7 @@ import { WeaponsModule } from "#api/modules/weapons/weapons.module";
 		ConfigModule,
 		DatabaseModule,
 		AttachmentsModule,
-		// AttendanceModule, // TODO: Uncomment when attendance module is merged
+		AttendanceModule,
 		AuditLogModule,
 		CommonModule,
 		AuthModule,
@@ -60,7 +58,7 @@ import { WeaponsModule } from "#api/modules/weapons/weapons.module";
 		SalaryScaleModule,
 		UsersModule,
 		EmployeesModule,
-		// HolidaysModule, // TODO: Uncomment when holidays module is merged
+		HolidaysModule,
 		WeaponsModule,
 	],
 	controllers: [AppController],
