@@ -49,10 +49,9 @@ import { CentersListPage } from "#web/features/organization/pages/CentersListPag
 import { DepartmentsListPage } from "#web/features/organization/pages/DepartmentsListPage.tsx";
 import { PositionsListPage } from "#web/features/organization/pages/PositionsListPage.tsx";
 import { TenantsListPage } from "#web/features/organization/pages/TenantsListPage.tsx";
-// TODO: Uncomment when rewards module is merged
-// import { EligibleEmployeesPage } from "#web/features/rewards/pages/EligibleEmployeesPage.tsx";
-// import { RewardMilestonesPage } from "#web/features/rewards/pages/RewardMilestonesPage.tsx";
-// import { ServiceRewardsListPage } from "#web/features/rewards/pages/ServiceRewardsListPage.tsx";
+import { EligibleEmployeesPage } from "#web/features/rewards/pages/EligibleEmployeesPage.tsx";
+import { RewardMilestonesPage } from "#web/features/rewards/pages/RewardMilestonesPage.tsx";
+import { ServiceRewardsListPage } from "#web/features/rewards/pages/ServiceRewardsListPage.tsx";
 import { RolesListPage } from "#web/features/roles/pages/RolesListPage.tsx";
 import { ManualStepJumpPage } from "#web/features/salary/pages/ManualStepJumpPage.tsx";
 import { MassRaisePage } from "#web/features/salary/pages/MassRaisePage.tsx";
@@ -334,19 +333,18 @@ export const router = createBrowserRouter([
 				path: "/weapons/ammunition",
 				element: <AmmunitionStockPage />,
 			},
-			// TODO: Uncomment when rewards module is merged
-			// {
-			// 	path: "/rewards",
-			// 	element: <ServiceRewardsListPage />,
-			// },
-			// {
-			// 	path: "/rewards/milestones",
-			// 	element: <RewardMilestonesPage />,
-			// },
-			// {
-			// 	path: "/rewards/eligibility",
-			// 	element: <EligibleEmployeesPage />,
-			// },
+			{
+				path: "/rewards",
+				element: <ServiceRewardsListPage />,
+			},
+			{
+				path: "/rewards/milestones",
+				element: <RewardMilestonesPage />,
+			},
+			{
+				path: "/rewards/eligibility",
+				element: <EligibleEmployeesPage />,
+			},
 			{
 				path: "/reports/*",
 				element: <ComingSoonPage />,
