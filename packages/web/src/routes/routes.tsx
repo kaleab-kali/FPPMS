@@ -35,8 +35,7 @@ import { EmployeeRegisterSelectPage } from "#web/features/employees/pages/Employ
 import { EmployeesListPage } from "#web/features/employees/pages/EmployeesListPage.tsx";
 import { EmployeeTransferPage } from "#web/features/employees/pages/EmployeeTransferPage.tsx";
 import { FormerEmployeesPage } from "#web/features/employees/pages/FormerEmployeesPage.tsx";
-// TODO: Uncomment when holidays module is merged
-// import { HolidayListPage } from "#web/features/holidays/pages/HolidayListPage.tsx";
+import { HolidayListPage } from "#web/features/holidays/pages/HolidayListPage.tsx";
 import { CenterStockPage } from "#web/features/inventory/pages/CenterStockPage.tsx";
 import { InventoryAssignmentsPage } from "#web/features/inventory/pages/InventoryAssignmentsPage.tsx";
 import { OverdueItemsPage } from "#web/features/inventory/pages/OverdueItemsPage.tsx";
@@ -226,15 +225,14 @@ export const router = createBrowserRouter([
 				path: "/leave/*",
 				element: <ComingSoonPage />,
 			},
-			// TODO: Uncomment when holidays module is merged
-			// {
-			// 	path: "/holidays",
-			// 	element: <HolidayListPage />,
-			// },
-			// {
-			// 	path: "/holidays/calendar",
-			// 	element: <ComingSoonPage />,
-			// },
+			{
+				path: "/holidays",
+				element: <HolidayListPage />,
+			},
+			{
+				path: "/holidays/calendar",
+				element: <ComingSoonPage />,
+			},
 			{
 				path: "/appraisal/*",
 				element: <ComingSoonPage />,

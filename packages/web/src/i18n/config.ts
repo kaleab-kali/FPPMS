@@ -12,8 +12,7 @@ import amCorrespondence from "#web/i18n/locales/am/correspondence.json";
 import amDashboard from "#web/i18n/locales/am/dashboard.json";
 import amEmployees from "#web/i18n/locales/am/employees.json";
 import amErrors from "#web/i18n/locales/am/errors.json";
-// TODO: Uncomment when holidays module is merged
-// import amHolidays from "#web/i18n/locales/am/holidays.json";
+import amHolidays from "#web/i18n/locales/am/holidays.json";
 import amInventory from "#web/i18n/locales/am/inventory.json";
 import amLookups from "#web/i18n/locales/am/lookups.json";
 import amNavigation from "#web/i18n/locales/am/navigation.json";
@@ -35,8 +34,7 @@ import enCorrespondence from "#web/i18n/locales/en/correspondence.json";
 import enDashboard from "#web/i18n/locales/en/dashboard.json";
 import enEmployees from "#web/i18n/locales/en/employees.json";
 import enErrors from "#web/i18n/locales/en/errors.json";
-// TODO: Uncomment when holidays module is merged
-// import enHolidays from "#web/i18n/locales/en/holidays.json";
+import enHolidays from "#web/i18n/locales/en/holidays.json";
 import enInventory from "#web/i18n/locales/en/inventory.json";
 import enLookups from "#web/i18n/locales/en/lookups.json";
 import enNavigation from "#web/i18n/locales/en/navigation.json";
@@ -67,7 +65,7 @@ const resources = {
 		lookups: enLookups,
 		dashboard: enDashboard,
 		employees: enEmployees,
-		// holidays: enHolidays, // TODO: Uncomment when holidays module is merged
+		holidays: enHolidays,
 		inventory: enInventory,
 		rewards: enRewards,
 		weapons: enWeapons,
@@ -91,7 +89,7 @@ const resources = {
 		lookups: amLookups,
 		dashboard: amDashboard,
 		employees: amEmployees,
-		// holidays: amHolidays, // TODO: Uncomment when holidays module is merged
+		holidays: amHolidays,
 		inventory: amInventory,
 		rewards: amRewards,
 		weapons: amWeapons,
@@ -125,7 +123,7 @@ i18n
 			"lookups",
 			"dashboard",
 			"employees",
-			// "holidays", // TODO: Uncomment when holidays module is merged
+			"holidays",
 			"inventory",
 			"rewards",
 			"weapons",
