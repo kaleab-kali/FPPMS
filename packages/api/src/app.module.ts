@@ -17,8 +17,7 @@ import { CorrespondenceModule } from "#api/modules/correspondence/correspondence
 import { DashboardModule } from "#api/modules/dashboard/dashboard.module";
 import { DepartmentsModule } from "#api/modules/departments/departments.module";
 import { EmployeesModule } from "#api/modules/employees/employees.module";
-// TODO: Uncomment when holidays module is merged
-// import { HolidaysModule } from "#api/modules/holidays/holidays.module";
+import { HolidaysModule } from "#api/modules/holidays/holidays.module";
 import { InventoryModule } from "#api/modules/inventory/inventory.module";
 import { LookupsModule } from "#api/modules/lookups/lookups.module";
 import { PermissionsModule } from "#api/modules/permissions/permissions.module";
@@ -59,7 +58,7 @@ import { WeaponsModule } from "#api/modules/weapons/weapons.module";
 		SalaryScaleModule,
 		UsersModule,
 		EmployeesModule,
-		// HolidaysModule, // TODO: Uncomment when holidays module is merged
+		HolidaysModule,
 		WeaponsModule,
 	],
 	controllers: [AppController],
