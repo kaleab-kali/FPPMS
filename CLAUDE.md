@@ -1046,3 +1046,128 @@ packages/api/prisma/seeds/
 After seeding:
 - Username: Check console output for IT Admin employee ID (format: `FPCIV-XXXX-XX`)
 - Password: `Police@{year}` (e.g., `Police@2025`)
+
+---
+
+# DOCUMENTATION REFERENCE (MUST READ)
+
+## Documentation Index
+
+The `docs/` folder contains comprehensive documentation. **ALWAYS consult these before implementing features.**
+
+### Essential Documents for AI
+
+| Priority | Document | When to Read |
+|----------|----------|--------------|
+| **1** | `docs/_INDEX.md` | Start here - master navigation |
+| **2** | `docs/guides/AI-MODULE-GUIDE.md` | Before creating ANY module |
+| **3** | `docs/guides/AI-FEATURE-CHECKLIST.md` | Step-by-step feature creation |
+| **4** | `docs/guides/SECURITY-GUIDE.md` | Before writing ANY code handling user input |
+| **5** | `docs/codebase/FILE-MAP.md` | To find existing files quickly |
+| **6** | `docs/reference/UTILITIES.md` | Before creating ANY utility function |
+| **7** | `docs/reference/COMPONENTS.md` | Before creating ANY UI component |
+
+### Documentation Structure
+
+```
+docs/
+├── _INDEX.md                    # Master entry point
+├── architecture/
+│   ├── SYSTEM-OVERVIEW.md       # Tech stack, architecture
+│   ├── DATA-FLOW.md             # Frontend -> API -> DB flow
+│   └── STATE-MACHINES.md        # All workflow state diagrams
+├── codebase/
+│   ├── FILE-MAP.md              # Quick file lookup
+│   └── DATABASE-MODELS.md       # Prisma models reference
+├── guides/
+│   ├── AI-MODULE-GUIDE.md       # How to create modules
+│   ├── AI-FEATURE-CHECKLIST.md  # Step-by-step checklist
+│   ├── SECURITY-GUIDE.md        # OWASP & API security
+│   ├── DOCUMENTATION-MAINTENANCE.md # Keep docs updated
+│   ├── DEVELOPER-SETUP.md       # Environment setup
+│   └── TESTING-GUIDE.md         # Testing practices
+├── business/
+│   ├── BUSINESS-RULES.md        # Domain logic
+│   └── GLOSSARY.md              # Terms & definitions
+└── reference/
+    ├── API-REFERENCE.md         # All API endpoints
+    ├── COMPONENTS.md            # UI components
+    └── UTILITIES.md             # Backend/frontend utilities
+```
+
+## MANDATORY: Pre-Implementation Reading
+
+### Before Creating a New Module/Feature:
+
+1. Read `docs/guides/AI-MODULE-GUIDE.md` for patterns
+2. Read `docs/guides/SECURITY-GUIDE.md` for security rules
+3. Check `docs/codebase/FILE-MAP.md` for existing code
+4. Check `docs/reference/UTILITIES.md` to avoid duplication
+5. Check `docs/business/BUSINESS-RULES.md` for domain logic
+
+### Before Writing Backend Code:
+
+1. Check OWASP rules in `docs/guides/SECURITY-GUIDE.md`
+2. ALWAYS include tenant isolation (`tenantId` in queries)
+3. ALWAYS validate input with class-validator
+4. ALWAYS add Swagger documentation
+5. NEVER expose internal errors to clients
+
+### Before Writing Frontend Code:
+
+1. Check `docs/reference/COMPONENTS.md` for existing components
+2. Use `EmployeeSearch` component for employee selection
+3. Use React.memo with displayName on all components
+4. Add translations to both en.json and am.json
+
+### After Implementing a Feature:
+
+1. Update `docs/codebase/FILE-MAP.md` with new file locations
+2. Update `docs/reference/API-REFERENCE.md` with new endpoints
+3. Follow `docs/guides/DOCUMENTATION-MAINTENANCE.md`
+
+## Security Rules Summary (from SECURITY-GUIDE.md)
+
+### ALWAYS:
+- Include `tenantId` in EVERY database query
+- Validate ALL user input on backend
+- Use parameterized queries (Prisma does this)
+- Use `@Roles()` and `@Permissions()` decorators
+- Hash passwords with bcrypt (12+ rounds)
+- Log security events to audit log
+- Sanitize error messages (don't expose internals)
+
+### NEVER:
+- Trust client-side authorization alone
+- Log passwords or tokens
+- Use user input in raw SQL queries
+- Expose stack traces to clients
+- Store sensitive data in localStorage long-term
+- Skip input validation
+
+### OWASP Top 10 Checklist:
+- [ ] Broken Access Control - Use guards, verify permissions
+- [ ] Cryptographic Failures - Use bcrypt, HTTPS, secure secrets
+- [ ] Injection - Prisma parameterized queries
+- [ ] Insecure Design - Rate limiting, account lockout
+- [ ] Security Misconfiguration - CORS, Helmet, validation pipes
+- [ ] Vulnerable Components - Run `npm audit` regularly
+- [ ] Auth Failures - Strong passwords, short-lived tokens
+- [ ] Data Integrity - Validate file uploads
+- [ ] Logging Failures - Audit all sensitive actions
+- [ ] SSRF - Validate URLs before fetching
+
+## Quick Reference: File Locations
+
+| Looking For | Location |
+|-------------|----------|
+| Backend module patterns | `docs/guides/AI-MODULE-GUIDE.md` |
+| Security rules | `docs/guides/SECURITY-GUIDE.md` |
+| Find any file | `docs/codebase/FILE-MAP.md` |
+| API endpoints | `docs/reference/API-REFERENCE.md` |
+| Existing utilities | `docs/reference/UTILITIES.md` |
+| UI components | `docs/reference/COMPONENTS.md` |
+| Business rules | `docs/business/BUSINESS-RULES.md` |
+| Workflow states | `docs/architecture/STATE-MACHINES.md` |
+| Database models | `docs/codebase/DATABASE-MODELS.md` |
+| Update docs | `docs/guides/DOCUMENTATION-MAINTENANCE.md` |
