@@ -50,3 +50,9 @@ uploads/*
 *.db
 *.sqlite
 *.sqlite3
+
+# Legacy documentation (kept locally for reference)
+docs/old/
+
+# Claude Code temp files
+tmpclaude-*
