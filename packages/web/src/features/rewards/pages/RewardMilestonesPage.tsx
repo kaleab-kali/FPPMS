@@ -114,4 +114,4 @@ const RewardMilestonesPageComponent = (): React.ReactElement => {
 
 RewardMilestonesPageComponent.displayName = "RewardMilestonesPage";
 
-export const RewardMilestonesPage = React.memo(RewardMilestonesPageComponent, () => true);
+export const RewardMilestonesPage = React.memo(RewardMilestonesPageComponent);

@@ -19,119 +19,116 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export const LoginPage = React.memo(
-	() => {
-		const { t } = useTranslation("auth");
-		const { t: tCommon } = useTranslation("common");
-		const { login, isAuthenticated } = useAuth();
-		const navigate = useNavigate();
-		const location = useLocation();
-		const [error, setError] = React.useState<string | undefined>();
-		const [isSubmitting, setIsSubmitting] = React.useState(false);
+export const LoginPage = React.memo(() => {
+	const { t } = useTranslation("auth");
+	const { t: tCommon } = useTranslation("common");
+	const { login, isAuthenticated } = useAuth();
+	const navigate = useNavigate();
+	const location = useLocation();
+	const [error, setError] = React.useState<string | undefined>();
+	const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-		const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
+	const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/dashboard";
 
-		React.useEffect(() => {
-			const deactivatedMessage = globalThis.localStorage.getItem(ACCOUNT_DEACTIVATED_KEY);
-			if (deactivatedMessage) {
-				setError(deactivatedMessage);
-				globalThis.localStorage.removeItem(ACCOUNT_DEACTIVATED_KEY);
-			}
-			const permissionsChangedMessage = globalThis.localStorage.getItem(PERMISSIONS_CHANGED_KEY);
-			if (permissionsChangedMessage) {
-				setError(permissionsChangedMessage);
-				globalThis.localStorage.removeItem(PERMISSIONS_CHANGED_KEY);
-			}
-		}, []);
+	React.useEffect(() => {
+		const deactivatedMessage = globalThis.localStorage.getItem(ACCOUNT_DEACTIVATED_KEY);
+		if (deactivatedMessage) {
+			setError(deactivatedMessage);
+			globalThis.localStorage.removeItem(ACCOUNT_DEACTIVATED_KEY);
+		}
+		const permissionsChangedMessage = globalThis.localStorage.getItem(PERMISSIONS_CHANGED_KEY);
+		if (permissionsChangedMessage) {
+			setError(permissionsChangedMessage);
+			globalThis.localStorage.removeItem(PERMISSIONS_CHANGED_KEY);
+		}
+	}, []);
 
-		React.useEffect(() => {
-			if (isAuthenticated) {
+	React.useEffect(() => {
+		if (isAuthenticated) {
+			navigate(from, { replace: true });
+		}
+	}, [isAuthenticated, navigate, from]);
+
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<LoginFormData>({
+		resolver: zodResolver(loginSchema),
+	});
+
+	const onSubmit = React.useCallback(
+		async (data: LoginFormData) => {
+			setError(undefined);
+			setIsSubmitting(true);
+
+			const result = await login(data).catch((err: unknown) => {
+				const axiosError = err as { response?: { data?: { message?: string }; status?: number } };
+				const apiMessage = axiosError.response?.data?.message;
+				const statusCode = axiosError.response?.status;
+
+				if (statusCode === 403 && apiMessage) {
+					setError(apiMessage);
+				} else {
+					setError(t("invalidCredentials"));
+				}
+				return undefined;
+			});
+
+			setIsSubmitting(false);
+
+			if (result !== undefined) {
 				navigate(from, { replace: true });
 			}
-		}, [isAuthenticated, navigate, from]);
+		},
+		[login, navigate, from, t],
+	);
 
-		const {
-			register,
-			handleSubmit,
-			formState: { errors },
-		} = useForm<LoginFormData>({
-			resolver: zodResolver(loginSchema),
-		});
+	return (
+		<Card>
+			<CardHeader className="space-y-1">
+				<CardTitle className="text-2xl font-bold text-center">{t("loginTitle")}</CardTitle>
+				<CardDescription className="text-center">{t("loginSubtitle")}</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+					{error && (
+						<Alert variant="destructive">
+							<AlertDescription>{error}</AlertDescription>
+						</Alert>
+					)}
 
-		const onSubmit = React.useCallback(
-			async (data: LoginFormData) => {
-				setError(undefined);
-				setIsSubmitting(true);
+					<div className="space-y-2">
+						<Label htmlFor="username">{t("username")}</Label>
+						<Input
+							id="username"
+							type="text"
+							placeholder={t("username")}
+							{...register("username")}
+							aria-invalid={!!errors.username}
+						/>
+						{errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
+					</div>
 
-				const result = await login(data).catch((err: unknown) => {
-					const axiosError = err as { response?: { data?: { message?: string }; status?: number } };
-					const apiMessage = axiosError.response?.data?.message;
-					const statusCode = axiosError.response?.status;
+					<div className="space-y-2">
+						<Label htmlFor="password">{t("password")}</Label>
+						<Input
+							id="password"
+							type="password"
+							placeholder={t("password")}
+							{...register("password")}
+							aria-invalid={!!errors.password}
+						/>
+						{errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+					</div>
 
-					if (statusCode === 403 && apiMessage) {
-						setError(apiMessage);
-					} else {
-						setError(t("invalidCredentials"));
-					}
-					return undefined;
-				});
-
-				setIsSubmitting(false);
-
-				if (result !== undefined) {
-					navigate(from, { replace: true });
-				}
-			},
-			[login, navigate, from, t],
-		);
-
-		return (
-			<Card>
-				<CardHeader className="space-y-1">
-					<CardTitle className="text-2xl font-bold text-center">{t("loginTitle")}</CardTitle>
-					<CardDescription className="text-center">{t("loginSubtitle")}</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-						{error && (
-							<Alert variant="destructive">
-								<AlertDescription>{error}</AlertDescription>
-							</Alert>
-						)}
-
-						<div className="space-y-2">
-							<Label htmlFor="username">{t("username")}</Label>
-							<Input
-								id="username"
-								type="text"
-								placeholder={t("username")}
-								{...register("username")}
-								aria-invalid={!!errors.username}
-							/>
-							{errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
-						</div>
-
-						<div className="space-y-2">
-							<Label htmlFor="password">{t("password")}</Label>
-							<Input
-								id="password"
-								type="password"
-								placeholder={t("password")}
-								{...register("password")}
-								aria-invalid={!!errors.password}
-							/>
-							{errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
-						</div>
-
-						<Button type="submit" className="w-full" disabled={isSubmitting}>
-							{isSubmitting ? tCommon("loading") : t("login")}
-						</Button>
-					</form>
-				</CardContent>
-			</Card>
-		);
-	},
-	() => true,
-);
+					<Button type="submit" className="w-full" disabled={isSubmitting}>
+						{isSubmitting ? tCommon("loading") : t("login")}
+					</Button>
+				</form>
+			</CardContent>
+		</Card>
+	);
+});
 
 LoginPage.displayName = "LoginPage";

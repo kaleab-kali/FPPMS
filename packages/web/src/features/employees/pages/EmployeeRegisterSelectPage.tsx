@@ -58,77 +58,74 @@ const EmployeeTypeCard = React.memo(
 
 EmployeeTypeCard.displayName = "EmployeeTypeCard";
 
-export const EmployeeRegisterSelectPage = React.memo(
-	() => {
-		const { t } = useTranslation("employees");
-		const navigate = useNavigate();
+export const EmployeeRegisterSelectPage = React.memo(() => {
+	const { t } = useTranslation("employees");
+	const navigate = useNavigate();
 
-		const handleBack = React.useCallback(() => {
-			navigate("/employees");
-		}, [navigate]);
+	const handleBack = React.useCallback(() => {
+		navigate("/employees");
+	}, [navigate]);
 
-		const handleSelectMilitary = React.useCallback(() => {
-			navigate("/employees/register/military");
-		}, [navigate]);
+	const handleSelectMilitary = React.useCallback(() => {
+		navigate("/employees/register/military");
+	}, [navigate]);
 
-		const handleSelectCivilian = React.useCallback(() => {
-			navigate("/employees/register/civilian");
-		}, [navigate]);
+	const handleSelectCivilian = React.useCallback(() => {
+		navigate("/employees/register/civilian");
+	}, [navigate]);
 
-		const handleSelectTemporary = React.useCallback(() => {
-			navigate("/employees/register/temporary");
-		}, [navigate]);
+	const handleSelectTemporary = React.useCallback(() => {
+		navigate("/employees/register/temporary");
+	}, [navigate]);
 
-		return (
-			<div className="space-y-6">
-				<div className="flex items-center gap-4">
-					<Button variant="ghost" size="icon" onClick={handleBack}>
-						<ArrowLeft className="h-5 w-5" />
-					</Button>
-					<div>
-						<h1 className="text-2xl font-bold">{t("create")}</h1>
-						<p className="text-muted-foreground">{t("selectTypeDescription")}</p>
-					</div>
-				</div>
-
-				<div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto mt-8">
-					<EmployeeTypeCard
-						type="military"
-						title={t("types.MILITARY")}
-						description={t("typeDescriptions.military")}
-						icon={<Shield className="h-10 w-10 text-blue-600" />}
-						onClick={handleSelectMilitary}
-						color="border-blue-300 hover:border-blue-500 focus:ring-blue-500"
-						bgColor="bg-blue-50 hover:bg-blue-100"
-						clickToRegisterText={t("clickToRegister")}
-					/>
-
-					<EmployeeTypeCard
-						type="civilian"
-						title={t("types.CIVILIAN")}
-						description={t("typeDescriptions.civilian")}
-						icon={<Briefcase className="h-10 w-10 text-green-600" />}
-						onClick={handleSelectCivilian}
-						color="border-green-300 hover:border-green-500 focus:ring-green-500"
-						bgColor="bg-green-50 hover:bg-green-100"
-						clickToRegisterText={t("clickToRegister")}
-					/>
-
-					<EmployeeTypeCard
-						type="temporary"
-						title={t("types.TEMPORARY")}
-						description={t("typeDescriptions.temporary")}
-						icon={<Clock className="h-10 w-10 text-orange-600" />}
-						onClick={handleSelectTemporary}
-						color="border-orange-300 hover:border-orange-500 focus:ring-orange-500"
-						bgColor="bg-orange-50 hover:bg-orange-100"
-						clickToRegisterText={t("clickToRegister")}
-					/>
+	return (
+		<div className="space-y-6">
+			<div className="flex items-center gap-4">
+				<Button variant="ghost" size="icon" onClick={handleBack}>
+					<ArrowLeft className="h-5 w-5" />
+				</Button>
+				<div>
+					<h1 className="text-2xl font-bold">{t("create")}</h1>
+					<p className="text-muted-foreground">{t("selectTypeDescription")}</p>
 				</div>
 			</div>
-		);
-	},
-	() => true,
-);
+
+			<div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto mt-8">
+				<EmployeeTypeCard
+					type="military"
+					title={t("types.MILITARY")}
+					description={t("typeDescriptions.military")}
+					icon={<Shield className="h-10 w-10 text-blue-600" />}
+					onClick={handleSelectMilitary}
+					color="border-blue-300 hover:border-blue-500 focus:ring-blue-500"
+					bgColor="bg-blue-50 hover:bg-blue-100"
+					clickToRegisterText={t("clickToRegister")}
+				/>
+
+				<EmployeeTypeCard
+					type="civilian"
+					title={t("types.CIVILIAN")}
+					description={t("typeDescriptions.civilian")}
+					icon={<Briefcase className="h-10 w-10 text-green-600" />}
+					onClick={handleSelectCivilian}
+					color="border-green-300 hover:border-green-500 focus:ring-green-500"
+					bgColor="bg-green-50 hover:bg-green-100"
+					clickToRegisterText={t("clickToRegister")}
+				/>
+
+				<EmployeeTypeCard
+					type="temporary"
+					title={t("types.TEMPORARY")}
+					description={t("typeDescriptions.temporary")}
+					icon={<Clock className="h-10 w-10 text-orange-600" />}
+					onClick={handleSelectTemporary}
+					color="border-orange-300 hover:border-orange-500 focus:ring-orange-500"
+					bgColor="bg-orange-50 hover:bg-orange-100"
+					clickToRegisterText={t("clickToRegister")}
+				/>
+			</div>
+		</div>
+	);
+});
 
 EmployeeRegisterSelectPage.displayName = "EmployeeRegisterSelectPage";

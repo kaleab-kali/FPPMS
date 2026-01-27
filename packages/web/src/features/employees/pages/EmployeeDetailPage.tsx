@@ -126,36 +126,30 @@ const Section = React.memo(
 );
 Section.displayName = "Section";
 
-const HeaderSkeleton = React.memo(
-	() => (
-		<div className="flex flex-col lg:flex-row gap-6 items-start">
-			<Skeleton className="h-24 w-24 rounded-full shrink-0" />
-			<div className="flex-1 space-y-3">
-				<Skeleton className="h-7 w-56" />
-				<Skeleton className="h-4 w-40" />
-				<div className="flex gap-2">
-					<Skeleton className="h-5 w-16" />
-					<Skeleton className="h-5 w-16" />
-				</div>
+const HeaderSkeleton = React.memo(() => (
+	<div className="flex flex-col lg:flex-row gap-6 items-start">
+		<Skeleton className="h-24 w-24 rounded-full shrink-0" />
+		<div className="flex-1 space-y-3">
+			<Skeleton className="h-7 w-56" />
+			<Skeleton className="h-4 w-40" />
+			<div className="flex gap-2">
+				<Skeleton className="h-5 w-16" />
+				<Skeleton className="h-5 w-16" />
 			</div>
 		</div>
-	),
-	() => true,
-);
+	</div>
+));
 HeaderSkeleton.displayName = "HeaderSkeleton";
 
-const ContentSkeleton = React.memo(
-	() => (
-		<div className="space-y-4">
-			<Skeleton className="h-10 w-full" />
-			<div className="grid gap-4 md:grid-cols-2">
-				<Skeleton className="h-48" />
-				<Skeleton className="h-48" />
-			</div>
+const ContentSkeleton = React.memo(() => (
+	<div className="space-y-4">
+		<Skeleton className="h-10 w-full" />
+		<div className="grid gap-4 md:grid-cols-2">
+			<Skeleton className="h-48" />
+			<Skeleton className="h-48" />
 		</div>
-	),
-	() => true,
-);
+	</div>
+));
 ContentSkeleton.displayName = "ContentSkeleton";
 
 interface EmployeeHeaderProps {
@@ -964,91 +958,64 @@ const ComplaintsTab = React.memo(
 );
 ComplaintsTab.displayName = "ComplaintsTab";
 
-export const EmployeeDetailPage = React.memo(
-	() => {
-		const { t } = useTranslation("employees");
-		const { t: tCommon } = useTranslation("common");
-		const { t: tCommittees } = useTranslation("committees");
-		const { i18n } = useTranslation();
-		const navigate = useNavigate();
-		const { id } = useParams<{ id: string }>();
+export const EmployeeDetailPage = React.memo(() => {
+	const { t } = useTranslation("employees");
+	const { t: tCommon } = useTranslation("common");
+	const { t: tCommittees } = useTranslation("committees");
+	const { i18n } = useTranslation();
+	const navigate = useNavigate();
+	const { id } = useParams<{ id: string }>();
 
-		const [deleteOpen, setDeleteOpen] = React.useState(false);
+	const [deleteOpen, setDeleteOpen] = React.useState(false);
 
-		const { data: employee, isLoading, error } = useEmployee(id ?? "");
-		const { data: activePhoto } = useActivePhoto(id ?? "");
-		const { data: familyMembers, isLoading: familyLoading } = useFamilyMembers(id ?? "");
-		const { data: medicalRecords, isLoading: medicalLoading } = useMedicalRecords(id ?? "");
-		const { data: maritalStatuses, isLoading: maritalLoading } = useMaritalStatusHistory(id ?? "");
-		const { data: directSuperior } = useDirectSuperior(id ?? "");
-		const { data: subordinates } = useSubordinates(id ?? "");
-		const { data: employeeCommittees, isLoading: committeesLoading } = useEmployeeCommittees(id ?? "");
-		const { data: employeeTermHistory, isLoading: termHistoryLoading } = useEmployeeTermHistory(id ?? "");
-		const { data: employeeComplaints, isLoading: complaintsLoading } = useEmployeeComplaintHistory(id ?? "");
-		const deleteMutation = useDeleteEmployee();
+	const { data: employee, isLoading, error } = useEmployee(id ?? "");
+	const { data: activePhoto } = useActivePhoto(id ?? "");
+	const { data: familyMembers, isLoading: familyLoading } = useFamilyMembers(id ?? "");
+	const { data: medicalRecords, isLoading: medicalLoading } = useMedicalRecords(id ?? "");
+	const { data: maritalStatuses, isLoading: maritalLoading } = useMaritalStatusHistory(id ?? "");
+	const { data: directSuperior } = useDirectSuperior(id ?? "");
+	const { data: subordinates } = useSubordinates(id ?? "");
+	const { data: employeeCommittees, isLoading: committeesLoading } = useEmployeeCommittees(id ?? "");
+	const { data: employeeTermHistory, isLoading: termHistoryLoading } = useEmployeeTermHistory(id ?? "");
+	const { data: employeeComplaints, isLoading: complaintsLoading } = useEmployeeComplaintHistory(id ?? "");
+	const deleteMutation = useDeleteEmployee();
 
-		const isAmharic = i18n.language === "am";
+	const isAmharic = i18n.language === "am";
 
-		const handleBack = React.useCallback(() => {
-			navigate("/employees");
-		}, [navigate]);
+	const handleBack = React.useCallback(() => {
+		navigate("/employees");
+	}, [navigate]);
 
-		const handleEdit = React.useCallback(() => {
-			navigate(`/employees/${id}/edit`);
-		}, [navigate, id]);
+	const handleEdit = React.useCallback(() => {
+		navigate(`/employees/${id}/edit`);
+	}, [navigate, id]);
 
-		const handleDeleteClick = React.useCallback(() => {
-			setDeleteOpen(true);
-		}, []);
+	const handleDeleteClick = React.useCallback(() => {
+		setDeleteOpen(true);
+	}, []);
 
-		const handleDeleteConfirm = React.useCallback(() => {
-			if (id) {
-				deleteMutation.mutate(id, {
-					onSuccess: () => {
-						toast.success(tCommon("success"));
-						navigate("/employees");
-					},
-					onError: () => {
-						toast.error(tCommon("error"));
-					},
-				});
-			}
-		}, [id, deleteMutation, tCommon, navigate]);
-
-		const handleViewComplaintDetails = React.useCallback(
-			(complaintId: string) => {
-				navigate(`/complaints/${complaintId}`);
-			},
-			[navigate],
-		);
-
-		if (isLoading) {
-			return (
-				<div className="space-y-6">
-					<div className="flex items-center gap-3">
-						<Button variant="ghost" size="icon" onClick={handleBack}>
-							<ArrowLeft className="h-5 w-5" />
-						</Button>
-						<span className="text-muted-foreground text-sm">{t("view")}</span>
-					</div>
-					<HeaderSkeleton />
-					<ContentSkeleton />
-				</div>
-			);
+	const handleDeleteConfirm = React.useCallback(() => {
+		if (id) {
+			deleteMutation.mutate(id, {
+				onSuccess: () => {
+					toast.success(tCommon("success"));
+					navigate("/employees");
+				},
+				onError: () => {
+					toast.error(tCommon("error"));
+				},
+			});
 		}
+	}, [id, deleteMutation, tCommon, navigate]);
 
-		if (error || !employee) {
-			return (
-				<div className="flex flex-col items-center justify-center py-16 space-y-4">
-					<p className="text-destructive">{tCommon("error")}</p>
-					<Button variant="outline" onClick={handleBack}>
-						<ArrowLeft className="mr-2 h-4 w-4" />
-						{tCommon("back")}
-					</Button>
-				</div>
-			);
-		}
+	const handleViewComplaintDetails = React.useCallback(
+		(complaintId: string) => {
+			navigate(`/complaints/${complaintId}`);
+		},
+		[navigate],
+	);
 
+	if (isLoading) {
 		return (
 			<div className="space-y-6">
 				<div className="flex items-center gap-3">
@@ -1057,231 +1024,251 @@ export const EmployeeDetailPage = React.memo(
 					</Button>
 					<span className="text-muted-foreground text-sm">{t("view")}</span>
 				</div>
-
-				<EmployeeHeader
-					employee={employee}
-					isAmharic={isAmharic}
-					onEdit={handleEdit}
-					onDelete={handleDeleteClick}
-					t={t}
-					tCommon={tCommon}
-					photoId={activePhoto?.id}
-				/>
-
-				<Tabs defaultValue="basic" className="w-full">
-					<TabsList className="w-full h-auto p-1.5 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1 bg-muted/50 rounded-lg">
-						<TabsTrigger
-							value="basic"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<User className="h-3.5 w-3.5" />
-							{t("tabs.basic")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="family"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Users className="h-3.5 w-3.5" />
-							{t("tabs.family")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="education"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<BookOpen className="h-3.5 w-3.5" />
-							{t("tabs.education")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="attendance"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Clock className="h-3.5 w-3.5" />
-							{t("tabs.attendance")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="leave"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Calendar className="h-3.5 w-3.5" />
-							{t("tabs.leave")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="appraisal"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Award className="h-3.5 w-3.5" />
-							{t("tabs.appraisal")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="health"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Heart className="h-3.5 w-3.5" />
-							{t("tabs.health")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="retirement"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Briefcase className="h-3.5 w-3.5" />
-							{t("tabs.retirement")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="complaint"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<AlertTriangle className="h-3.5 w-3.5" />
-							{t("tabs.complaint")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="performance"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Activity className="h-3.5 w-3.5" />
-							{t("tabs.performance")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="salary"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<TrendingUp className="h-3.5 w-3.5" />
-							{t("tabs.salary")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="inventory"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Package className="h-3.5 w-3.5" />
-							{t("tabs.inventory")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="committees"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<UsersRound className="h-3.5 w-3.5" />
-							{t("tabs.committees")}
-						</TabsTrigger>
-						<TabsTrigger
-							value="correspondence"
-							className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-						>
-							<Mail className="h-3.5 w-3.5" />
-							{t("tabs.correspondence")}
-						</TabsTrigger>
-					</TabsList>
-
-					<TabsContent value="basic" className="mt-5">
-						<BasicInfoTab
-							employee={employee}
-							t={t}
-							isAmharic={isAmharic}
-							directSuperior={directSuperior}
-							subordinates={subordinates ?? []}
-						/>
-						<div className="mt-4">
-							<MaritalStatusSection statuses={maritalStatuses ?? []} isLoading={maritalLoading} t={t} />
-						</div>
-					</TabsContent>
-
-					<TabsContent value="family" className="mt-5">
-						<FamilyTab familyMembers={familyMembers ?? []} isLoading={familyLoading} t={t} />
-					</TabsContent>
-
-					<TabsContent value="education" className="mt-5">
-						<PlaceholderTab
-							title={t("tabs.education")}
-							icon={<BookOpen className="h-8 w-8 text-muted-foreground" />}
-							t={t}
-						/>
-					</TabsContent>
-
-					<TabsContent value="attendance" className="mt-5">
-						<EmployeeAttendanceTab employeeId={id ?? ""} />
-					</TabsContent>
-
-					<TabsContent value="leave" className="mt-5">
-						<PlaceholderTab
-							title={t("tabs.leave")}
-							icon={<Calendar className="h-8 w-8 text-muted-foreground" />}
-							t={t}
-						/>
-					</TabsContent>
-
-					<TabsContent value="appraisal" className="mt-5">
-						<PlaceholderTab
-							title={t("tabs.appraisal")}
-							icon={<Award className="h-8 w-8 text-muted-foreground" />}
-							t={t}
-						/>
-					</TabsContent>
-
-					<TabsContent value="health" className="mt-5">
-						<HealthTab medicalRecords={medicalRecords ?? []} isLoading={medicalLoading} t={t} />
-					</TabsContent>
-
-					<TabsContent value="retirement" className="mt-5">
-						<PlaceholderTab
-							title={t("tabs.retirement")}
-							icon={<Briefcase className="h-8 w-8 text-muted-foreground" />}
-							t={t}
-						/>
-					</TabsContent>
-
-					<TabsContent value="complaint" className="mt-5">
-						<ComplaintsTab
-							complaints={employeeComplaints ?? []}
-							isLoading={complaintsLoading}
-							t={t}
-							onViewDetails={handleViewComplaintDetails}
-						/>
-					</TabsContent>
-
-					<TabsContent value="performance" className="mt-5">
-						<PlaceholderTab
-							title={t("tabs.performance")}
-							icon={<Activity className="h-8 w-8 text-muted-foreground" />}
-							t={t}
-						/>
-					</TabsContent>
-
-					<TabsContent value="salary" className="mt-5">
-						<EmployeeSalaryTab employee={employee} isAmharic={isAmharic} />
-					</TabsContent>
-
-					<TabsContent value="inventory" className="mt-5">
-						<EmployeeInventoryTab employee={employee} isAmharic={isAmharic} />
-					</TabsContent>
-
-					<TabsContent value="committees" className="mt-5">
-						<CommitteesTab
-							committees={employeeCommittees ?? []}
-							termHistory={employeeTermHistory ?? []}
-							isLoading={committeesLoading}
-							isTermHistoryLoading={termHistoryLoading}
-							t={t}
-							tCommittees={tCommittees}
-							isAmharic={isAmharic}
-						/>
-					</TabsContent>
-
-					<TabsContent value="correspondence" className="mt-5">
-						<EmployeeCorrespondenceTab employeeId={id ?? ""} />
-					</TabsContent>
-				</Tabs>
-
-				<ConfirmDialog
-					open={deleteOpen}
-					onOpenChange={setDeleteOpen}
-					title={tCommon("confirm")}
-					description={t("deleteConfirm")}
-					onConfirm={handleDeleteConfirm}
-					isLoading={deleteMutation.isPending}
-					variant="destructive"
-				/>
+				<HeaderSkeleton />
+				<ContentSkeleton />
 			</div>
 		);
-	},
-	() => true,
-);
+	}
+
+	if (error || !employee) {
+		return (
+			<div className="flex flex-col items-center justify-center py-16 space-y-4">
+				<p className="text-destructive">{tCommon("error")}</p>
+				<Button variant="outline" onClick={handleBack}>
+					<ArrowLeft className="mr-2 h-4 w-4" />
+					{tCommon("back")}
+				</Button>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-6">
+			<div className="flex items-center gap-3">
+				<Button variant="ghost" size="icon" onClick={handleBack}>
+					<ArrowLeft className="h-5 w-5" />
+				</Button>
+				<span className="text-muted-foreground text-sm">{t("view")}</span>
+			</div>
+
+			<EmployeeHeader
+				employee={employee}
+				isAmharic={isAmharic}
+				onEdit={handleEdit}
+				onDelete={handleDeleteClick}
+				t={t}
+				tCommon={tCommon}
+				photoId={activePhoto?.id}
+			/>
+
+			<Tabs defaultValue="basic" className="w-full">
+				<TabsList className="w-full h-auto p-1.5 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1 bg-muted/50 rounded-lg">
+					<TabsTrigger
+						value="basic"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<User className="h-3.5 w-3.5" />
+						{t("tabs.basic")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="family"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Users className="h-3.5 w-3.5" />
+						{t("tabs.family")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="education"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<BookOpen className="h-3.5 w-3.5" />
+						{t("tabs.education")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="attendance"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Clock className="h-3.5 w-3.5" />
+						{t("tabs.attendance")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="leave"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Calendar className="h-3.5 w-3.5" />
+						{t("tabs.leave")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="appraisal"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Award className="h-3.5 w-3.5" />
+						{t("tabs.appraisal")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="health"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Heart className="h-3.5 w-3.5" />
+						{t("tabs.health")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="retirement"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Briefcase className="h-3.5 w-3.5" />
+						{t("tabs.retirement")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="complaint"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<AlertTriangle className="h-3.5 w-3.5" />
+						{t("tabs.complaint")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="performance"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Activity className="h-3.5 w-3.5" />
+						{t("tabs.performance")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="salary"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<TrendingUp className="h-3.5 w-3.5" />
+						{t("tabs.salary")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="inventory"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Package className="h-3.5 w-3.5" />
+						{t("tabs.inventory")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="committees"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<UsersRound className="h-3.5 w-3.5" />
+						{t("tabs.committees")}
+					</TabsTrigger>
+					<TabsTrigger
+						value="correspondence"
+						className="text-xs gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+					>
+						<Mail className="h-3.5 w-3.5" />
+						{t("tabs.correspondence")}
+					</TabsTrigger>
+				</TabsList>
+
+				<TabsContent value="basic" className="mt-5">
+					<BasicInfoTab
+						employee={employee}
+						t={t}
+						isAmharic={isAmharic}
+						directSuperior={directSuperior}
+						subordinates={subordinates ?? []}
+					/>
+					<div className="mt-4">
+						<MaritalStatusSection statuses={maritalStatuses ?? []} isLoading={maritalLoading} t={t} />
+					</div>
+				</TabsContent>
+
+				<TabsContent value="family" className="mt-5">
+					<FamilyTab familyMembers={familyMembers ?? []} isLoading={familyLoading} t={t} />
+				</TabsContent>
+
+				<TabsContent value="education" className="mt-5">
+					<PlaceholderTab
+						title={t("tabs.education")}
+						icon={<BookOpen className="h-8 w-8 text-muted-foreground" />}
+						t={t}
+					/>
+				</TabsContent>
+
+				<TabsContent value="attendance" className="mt-5">
+					<EmployeeAttendanceTab employeeId={id ?? ""} />
+				</TabsContent>
+
+				<TabsContent value="leave" className="mt-5">
+					<PlaceholderTab title={t("tabs.leave")} icon={<Calendar className="h-8 w-8 text-muted-foreground" />} t={t} />
+				</TabsContent>
+
+				<TabsContent value="appraisal" className="mt-5">
+					<PlaceholderTab
+						title={t("tabs.appraisal")}
+						icon={<Award className="h-8 w-8 text-muted-foreground" />}
+						t={t}
+					/>
+				</TabsContent>
+
+				<TabsContent value="health" className="mt-5">
+					<HealthTab medicalRecords={medicalRecords ?? []} isLoading={medicalLoading} t={t} />
+				</TabsContent>
+
+				<TabsContent value="retirement" className="mt-5">
+					<PlaceholderTab
+						title={t("tabs.retirement")}
+						icon={<Briefcase className="h-8 w-8 text-muted-foreground" />}
+						t={t}
+					/>
+				</TabsContent>
+
+				<TabsContent value="complaint" className="mt-5">
+					<ComplaintsTab
+						complaints={employeeComplaints ?? []}
+						isLoading={complaintsLoading}
+						t={t}
+						onViewDetails={handleViewComplaintDetails}
+					/>
+				</TabsContent>
+
+				<TabsContent value="performance" className="mt-5">
+					<PlaceholderTab
+						title={t("tabs.performance")}
+						icon={<Activity className="h-8 w-8 text-muted-foreground" />}
+						t={t}
+					/>
+				</TabsContent>
+
+				<TabsContent value="salary" className="mt-5">
+					<EmployeeSalaryTab employee={employee} isAmharic={isAmharic} />
+				</TabsContent>
+
+				<TabsContent value="inventory" className="mt-5">
+					<EmployeeInventoryTab employee={employee} isAmharic={isAmharic} />
+				</TabsContent>
+
+				<TabsContent value="committees" className="mt-5">
+					<CommitteesTab
+						committees={employeeCommittees ?? []}
+						termHistory={employeeTermHistory ?? []}
+						isLoading={committeesLoading}
+						isTermHistoryLoading={termHistoryLoading}
+						t={t}
+						tCommittees={tCommittees}
+						isAmharic={isAmharic}
+					/>
+				</TabsContent>
+
+				<TabsContent value="correspondence" className="mt-5">
+					<EmployeeCorrespondenceTab employeeId={id ?? ""} />
+				</TabsContent>
+			</Tabs>
+
+			<ConfirmDialog
+				open={deleteOpen}
+				onOpenChange={setDeleteOpen}
+				title={tCommon("confirm")}
+				description={t("deleteConfirm")}
+				onConfirm={handleDeleteConfirm}
+				isLoading={deleteMutation.isPending}
+				variant="destructive"
+			/>
+		</div>
+	);
+});
 
 EmployeeDetailPage.displayName = "EmployeeDetailPage";

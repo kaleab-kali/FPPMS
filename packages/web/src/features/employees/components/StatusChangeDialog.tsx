@@ -272,7 +272,12 @@ export const StatusChangeDialog = React.memo(
 		);
 	},
 	(prev, next) =>
-		prev.open === next.open && prev.employeeName === next.employeeName && prev.isLoading === next.isLoading,
+		prev.open === next.open &&
+		prev.employeeName === next.employeeName &&
+		prev.currentStatus === next.currentStatus &&
+		prev.isLoading === next.isLoading &&
+		prev.onConfirm === next.onConfirm &&
+		prev.onReturnToActive === next.onReturnToActive,
 );
 
 StatusChangeDialog.displayName = "StatusChangeDialog";

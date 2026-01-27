@@ -41,137 +41,134 @@ const getInitialFilter = (): AuditLogFilter => {
 	};
 };
 
-export const AuditLogListPage = React.memo(
-	() => {
-		const { t } = useTranslation("auditLog");
-		const { t: tCommon } = useTranslation("common");
+export const AuditLogListPage = React.memo(() => {
+	const { t } = useTranslation("auditLog");
+	const { t: tCommon } = useTranslation("common");
 
-		const [filter, setFilter] = React.useState<AuditLogFilter>(getInitialFilter());
-		const [searchInput, setSearchInput] = React.useState("");
-		const [selectedLog, setSelectedLog] = React.useState<AuditLog | null>(null);
-		const [detailDialogOpen, setDetailDialogOpen] = React.useState(false);
-		const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+	const [filter, setFilter] = React.useState<AuditLogFilter>(getInitialFilter());
+	const [searchInput, setSearchInput] = React.useState("");
+	const [selectedLog, setSelectedLog] = React.useState<AuditLog | null>(null);
+	const [detailDialogOpen, setDetailDialogOpen] = React.useState(false);
+	const searchTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-		const { data: auditLogsData, isLoading } = useAuditLogs(filter);
+	const { data: auditLogsData, isLoading } = useAuditLogs(filter);
 
-		const auditLogs = React.useMemo(() => auditLogsData?.data ?? [], [auditLogsData?.data]);
+	const auditLogs = React.useMemo(() => auditLogsData?.data ?? [], [auditLogsData?.data]);
 
-		const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-			const value = e.target.value;
-			setSearchInput(value);
+	const handleSearchChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setSearchInput(value);
 
+		if (searchTimeoutRef.current) {
+			clearTimeout(searchTimeoutRef.current);
+		}
+
+		searchTimeoutRef.current = setTimeout(() => {
+			setFilter((prev) => ({
+				...prev,
+				search: value || undefined,
+				page: 1,
+			}));
+		}, DEBOUNCE_DELAY);
+	}, []);
+
+	const handleFilterChange = React.useCallback((newFilter: AuditLogFilter) => {
+		setFilter((prev) => ({
+			...prev,
+			...newFilter,
+			page: 1,
+		}));
+	}, []);
+
+	const handleResetFilters = React.useCallback(() => {
+		setFilter(getInitialFilter());
+		setSearchInput("");
+	}, []);
+
+	const handleViewLog = React.useCallback((log: AuditLog) => {
+		setSelectedLog(log);
+		setDetailDialogOpen(true);
+	}, []);
+
+	const handleExport = React.useCallback(() => {
+		const csv = [
+			["Timestamp", "User", "Action", "Module", "Resource", "IP Address", "Description"].join(","),
+			...auditLogs.map((log) =>
+				[
+					new Date(log.timestamp).toISOString(),
+					log.username ?? "-",
+					log.action,
+					log.module,
+					log.resource,
+					log.ipAddress,
+					log.description ?? "-",
+				].join(","),
+			),
+		].join("\n");
+
+		const blob = new Blob([csv], { type: "text/csv" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `audit-logs-${new Date().toISOString()}.csv`;
+		a.click();
+		URL.revokeObjectURL(url);
+	}, [auditLogs]);
+
+	React.useEffect(() => {
+		return () => {
 			if (searchTimeoutRef.current) {
 				clearTimeout(searchTimeoutRef.current);
 			}
+		};
+	}, []);
 
-			searchTimeoutRef.current = setTimeout(() => {
-				setFilter((prev) => ({
-					...prev,
-					search: value || undefined,
-					page: 1,
-				}));
-			}, DEBOUNCE_DELAY);
-		}, []);
-
-		const handleFilterChange = React.useCallback((newFilter: AuditLogFilter) => {
-			setFilter((prev) => ({
-				...prev,
-				...newFilter,
-				page: 1,
-			}));
-		}, []);
-
-		const handleResetFilters = React.useCallback(() => {
-			setFilter(getInitialFilter());
-			setSearchInput("");
-		}, []);
-
-		const handleViewLog = React.useCallback((log: AuditLog) => {
-			setSelectedLog(log);
-			setDetailDialogOpen(true);
-		}, []);
-
-		const handleExport = React.useCallback(() => {
-			const csv = [
-				["Timestamp", "User", "Action", "Module", "Resource", "IP Address", "Description"].join(","),
-				...auditLogs.map((log) =>
-					[
-						new Date(log.timestamp).toISOString(),
-						log.username ?? "-",
-						log.action,
-						log.module,
-						log.resource,
-						log.ipAddress,
-						log.description ?? "-",
-					].join(","),
-				),
-			].join("\n");
-
-			const blob = new Blob([csv], { type: "text/csv" });
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement("a");
-			a.href = url;
-			a.download = `audit-logs-${new Date().toISOString()}.csv`;
-			a.click();
-			URL.revokeObjectURL(url);
-		}, [auditLogs]);
-
-		React.useEffect(() => {
-			return () => {
-				if (searchTimeoutRef.current) {
-					clearTimeout(searchTimeoutRef.current);
-				}
-			};
-		}, []);
-
-		return (
-			<div className="space-y-6">
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div>
-						<h1 className="flex items-center gap-2 text-2xl font-bold">
-							<FileText className="h-6 w-6" />
-							{t("title")}
-						</h1>
-						<p className="text-muted-foreground">{t("subtitle")}</p>
-					</div>
-					<Button onClick={handleExport} variant="outline" size="sm" disabled={auditLogs.length === 0}>
-						<Download className="mr-2 h-4 w-4" />
-						{tCommon("export")}
-					</Button>
+	return (
+		<div className="space-y-6">
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<h1 className="flex items-center gap-2 text-2xl font-bold">
+						<FileText className="h-6 w-6" />
+						{t("title")}
+					</h1>
+					<p className="text-muted-foreground">{t("subtitle")}</p>
 				</div>
-
-				<Card>
-					<CardHeader>
-						<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-							<CardTitle>{t("auditLogs")}</CardTitle>
-							<div className="flex flex-wrap gap-2">
-								<Input
-									placeholder={t("searchPlaceholder")}
-									value={searchInput}
-									onChange={handleSearchChange}
-									className="w-full sm:w-[250px]"
-								/>
-								<AuditLogFilters filter={filter} onFilterChange={handleFilterChange} onReset={handleResetFilters} />
-							</div>
-						</div>
-					</CardHeader>
-					<CardContent>
-						<div className="space-y-4">
-							{auditLogsData?.meta && (
-								<div className="text-sm text-muted-foreground">
-									{t("showing")} {auditLogs.length} {t("of")} {auditLogsData.meta.total} {t("entries")}
-								</div>
-							)}
-							<AuditLogTable data={auditLogs} isLoading={isLoading} onView={handleViewLog} />
-						</div>
-					</CardContent>
-				</Card>
-
-				<AuditLogDetailDialog auditLog={selectedLog} open={detailDialogOpen} onOpenChange={setDetailDialogOpen} />
+				<Button onClick={handleExport} variant="outline" size="sm" disabled={auditLogs.length === 0}>
+					<Download className="mr-2 h-4 w-4" />
+					{tCommon("export")}
+				</Button>
 			</div>
-		);
-	},
-	() => true,
-);
+
+			<Card>
+				<CardHeader>
+					<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+						<CardTitle>{t("auditLogs")}</CardTitle>
+						<div className="flex flex-wrap gap-2">
+							<Input
+								placeholder={t("searchPlaceholder")}
+								value={searchInput}
+								onChange={handleSearchChange}
+								className="w-full sm:w-[250px]"
+							/>
+							<AuditLogFilters filter={filter} onFilterChange={handleFilterChange} onReset={handleResetFilters} />
+						</div>
+					</div>
+				</CardHeader>
+				<CardContent>
+					<div className="space-y-4">
+						{auditLogsData?.meta && (
+							<div className="text-sm text-muted-foreground">
+								{t("showing")} {auditLogs.length} {t("of")} {auditLogsData.meta.total} {t("entries")}
+							</div>
+						)}
+						<AuditLogTable data={auditLogs} isLoading={isLoading} onView={handleViewLog} />
+					</div>
+				</CardContent>
+			</Card>
+
+			<AuditLogDetailDialog auditLog={selectedLog} open={detailDialogOpen} onOpenChange={setDetailDialogOpen} />
+		</div>
+	);
+});
 
 AuditLogListPage.displayName = "AuditLogListPage";

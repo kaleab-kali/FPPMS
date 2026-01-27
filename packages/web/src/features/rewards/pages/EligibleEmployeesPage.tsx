@@ -149,4 +149,4 @@ const EligibleEmployeesPageComponent = (): React.ReactElement => {
 
 EligibleEmployeesPageComponent.displayName = "EligibleEmployeesPage";
 
-export const EligibleEmployeesPage = React.memo(EligibleEmployeesPageComponent, () => true);
+export const EligibleEmployeesPage = React.memo(EligibleEmployeesPageComponent);
