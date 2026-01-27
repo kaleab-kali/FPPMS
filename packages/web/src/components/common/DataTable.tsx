@@ -214,4 +214,6 @@ const DataTableInner = <TData, TValue>({
 	);
 };
 
-export const DataTable = React.memo(DataTableInner) as typeof DataTableInner;
+const MemoizedDataTable = React.memo(DataTableInner) as typeof DataTableInner;
+MemoizedDataTable.displayName = "DataTable";
+export const DataTable = MemoizedDataTable;

@@ -41,7 +41,10 @@ export const NavUser = React.memo(
 		const handleLanguageToggle = React.useCallback(() => {
 			const newLang = currentLanguage === "en" ? "am" : "en";
 			i18n.changeLanguage(newLang);
-			localStorage.setItem(STORAGE_KEYS.locale, newLang);
+			const storage = globalThis.localStorage;
+			if (storage) {
+				storage.setItem(STORAGE_KEYS.locale, newLang);
+			}
 		}, [currentLanguage, i18n]);
 
 		const getInitials = React.useCallback((name: string) => {

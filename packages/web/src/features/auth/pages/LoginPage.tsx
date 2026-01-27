@@ -62,24 +62,25 @@ export const LoginPage = React.memo(
 			async (data: LoginFormData) => {
 				setError(undefined);
 				setIsSubmitting(true);
-				login(data)
-					.then(() => {
-						navigate(from, { replace: true });
-					})
-					.catch((err: unknown) => {
-						const axiosError = err as { response?: { data?: { message?: string }; status?: number } };
-						const apiMessage = axiosError.response?.data?.message;
-						const statusCode = axiosError.response?.status;
 
-						if (statusCode === 403 && apiMessage) {
-							setError(apiMessage);
-						} else {
-							setError(t("invalidCredentials"));
-						}
-					})
-					.finally(() => {
-						setIsSubmitting(false);
-					});
+				const result = await login(data).catch((err: unknown) => {
+					const axiosError = err as { response?: { data?: { message?: string }; status?: number } };
+					const apiMessage = axiosError.response?.data?.message;
+					const statusCode = axiosError.response?.status;
+
+					if (statusCode === 403 && apiMessage) {
+						setError(apiMessage);
+					} else {
+						setError(t("invalidCredentials"));
+					}
+					return undefined;
+				});
+
+				setIsSubmitting(false);
+
+				if (result !== undefined) {
+					navigate(from, { replace: true });
+				}
 			},
 			[login, navigate, from, t],
 		);

@@ -21,6 +21,7 @@ export const useInactivityLogout = (options: UseInactivityLogoutOptions = {}) =>
 	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const warningIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 	const lastActivityRef = useRef<number>(Date.now());
+	const handleActivityRef = useRef<() => void>(() => {});
 
 	const clearTimers = useCallback(() => {
 		if (timeoutRef.current) {
@@ -70,7 +71,7 @@ export const useInactivityLogout = (options: UseInactivityLogoutOptions = {}) =>
 		}, mainTimeout);
 	}, [isAuthenticated, enabled, timeoutMinutes, clearTimers, startWarningCountdown]);
 
-	const handleActivity = useCallback(() => {
+	handleActivityRef.current = useCallback(() => {
 		const now = Date.now();
 		const timeSinceLastActivity = now - lastActivityRef.current;
 
@@ -87,17 +88,21 @@ export const useInactivityLogout = (options: UseInactivityLogoutOptions = {}) =>
 
 		resetTimer();
 
+		const stableHandler = () => {
+			handleActivityRef.current();
+		};
+
 		for (const event of INACTIVITY_CONFIG.ACTIVITY_EVENTS) {
-			globalThis.addEventListener(event, handleActivity, { passive: true });
+			globalThis.addEventListener(event, stableHandler, { passive: true });
 		}
 
 		return () => {
 			clearTimers();
 			for (const event of INACTIVITY_CONFIG.ACTIVITY_EVENTS) {
-				globalThis.removeEventListener(event, handleActivity);
+				globalThis.removeEventListener(event, stableHandler);
 			}
 		};
-	}, [isAuthenticated, enabled, resetTimer, handleActivity, clearTimers]);
+	}, [isAuthenticated, enabled, clearTimers, resetTimer]);
 
 	const extendSession = useCallback(() => {
 		resetTimer();

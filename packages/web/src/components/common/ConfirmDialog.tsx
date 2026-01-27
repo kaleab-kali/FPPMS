@@ -34,8 +34,9 @@ export const ConfirmDialog = React.memo(
 		const { t } = useTranslation("common");
 
 		const handleConfirm = React.useCallback(() => {
+			if (isLoading) return;
 			onConfirm();
-		}, [onConfirm]);
+		}, [onConfirm, isLoading]);
 
 		return (
 			<AlertDialog open={open} onOpenChange={onOpenChange}>

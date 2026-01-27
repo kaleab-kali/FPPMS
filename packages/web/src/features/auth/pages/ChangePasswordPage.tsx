@@ -23,13 +23,15 @@ export const ChangePasswordPage = React.memo(
 		const [confirmPassword, setConfirmPassword] = React.useState("");
 		const [isLoading, setIsLoading] = React.useState(false);
 		const [error, setError] = React.useState("");
-		const [showCurrentPassword, setShowCurrentPassword] = React.useState(false);
-		const [showNewPassword, setShowNewPassword] = React.useState(false);
-		const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+		const [showPasswords, setShowPasswords] = React.useState({
+			current: false,
+			new: false,
+			confirm: false,
+		});
 
-		const toggleCurrentPassword = React.useCallback(() => setShowCurrentPassword((prev) => !prev), []);
-		const toggleNewPassword = React.useCallback(() => setShowNewPassword((prev) => !prev), []);
-		const toggleConfirmPassword = React.useCallback(() => setShowConfirmPassword((prev) => !prev), []);
+		const togglePasswordVisibility = React.useCallback((field: "current" | "new" | "confirm") => {
+			setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
+		}, []);
 
 		const handleSubmit = React.useCallback(
 			async (e: React.FormEvent) => {
@@ -105,7 +107,7 @@ export const ChangePasswordPage = React.memo(
 								<div className="relative">
 									<Input
 										id="currentPassword"
-										type={showCurrentPassword ? "text" : "password"}
+										type={showPasswords.current ? "text" : "password"}
 										value={currentPassword}
 										onChange={(e) => setCurrentPassword(e.target.value)}
 										required
@@ -117,9 +119,14 @@ export const ChangePasswordPage = React.memo(
 										variant="ghost"
 										size="icon"
 										className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-										onClick={toggleCurrentPassword}
+										onClick={() => togglePasswordVisibility("current")}
+										aria-label={showPasswords.current ? "Hide current password" : "Show current password"}
 									>
-										{showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+										{showPasswords.current ? (
+											<EyeOff className="h-4 w-4" aria-hidden="true" />
+										) : (
+											<Eye className="h-4 w-4" aria-hidden="true" />
+										)}
 									</Button>
 								</div>
 							</div>
@@ -129,7 +136,7 @@ export const ChangePasswordPage = React.memo(
 								<div className="relative">
 									<Input
 										id="newPassword"
-										type={showNewPassword ? "text" : "password"}
+										type={showPasswords.new ? "text" : "password"}
 										value={newPassword}
 										onChange={(e) => setNewPassword(e.target.value)}
 										required
@@ -141,9 +148,14 @@ export const ChangePasswordPage = React.memo(
 										variant="ghost"
 										size="icon"
 										className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-										onClick={toggleNewPassword}
+										onClick={() => togglePasswordVisibility("new")}
+										aria-label={showPasswords.new ? "Hide new password" : "Show new password"}
 									>
-										{showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+										{showPasswords.new ? (
+											<EyeOff className="h-4 w-4" aria-hidden="true" />
+										) : (
+											<Eye className="h-4 w-4" aria-hidden="true" />
+										)}
 									</Button>
 								</div>
 							</div>
@@ -153,7 +165,7 @@ export const ChangePasswordPage = React.memo(
 								<div className="relative">
 									<Input
 										id="confirmPassword"
-										type={showConfirmPassword ? "text" : "password"}
+										type={showPasswords.confirm ? "text" : "password"}
 										value={confirmPassword}
 										onChange={(e) => setConfirmPassword(e.target.value)}
 										required
@@ -165,9 +177,14 @@ export const ChangePasswordPage = React.memo(
 										variant="ghost"
 										size="icon"
 										className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-										onClick={toggleConfirmPassword}
+										onClick={() => togglePasswordVisibility("confirm")}
+										aria-label={showPasswords.confirm ? "Hide confirm password" : "Show confirm password"}
 									>
-										{showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+										{showPasswords.confirm ? (
+											<EyeOff className="h-4 w-4" aria-hidden="true" />
+										) : (
+											<Eye className="h-4 w-4" aria-hidden="true" />
+										)}
 									</Button>
 								</div>
 							</div>

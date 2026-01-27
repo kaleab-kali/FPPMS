@@ -370,14 +370,14 @@ const DualCalendarPickerComponent = ({
 	const [gregMonth, setGregMonth] = React.useState(currentGreg.getMonth());
 
 	React.useEffect(() => {
-		if (value) {
-			const eth = gregorianToEthiopian(value);
-			setEthYear(eth.year);
-			setEthMonth(eth.month);
-			setGregYear(value.getFullYear());
-			setGregMonth(value.getMonth());
-		}
-	}, [value]);
+		if (!open) return;
+		const eth = value ? gregorianToEthiopian(value) : gregorianToEthiopian(new Date());
+		const greg = value ?? new Date();
+		setEthYear(eth.year);
+		setEthMonth(eth.month);
+		setGregYear(greg.getFullYear());
+		setGregMonth(greg.getMonth());
+	}, [open, value]);
 
 	const handleSelect = React.useCallback(
 		(date: Date | undefined) => {
