@@ -47,8 +47,14 @@ const TableRow = React.memo(
 		}, [auditLog, onView]);
 
 		return (
-			<Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleViewClick}>
-				<Eye className="h-4 w-4" />
+			<Button
+				variant="ghost"
+				size="icon"
+				className="h-8 w-8"
+				onClick={handleViewClick}
+				aria-label={`View audit log details for ${auditLog.action} on ${auditLog.resource}`}
+			>
+				<Eye className="h-4 w-4" aria-hidden="true" />
 			</Button>
 		);
 	},

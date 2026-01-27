@@ -205,13 +205,23 @@ const CorrespondenceTableComponent = ({
 			cell: ({ row }) => (
 				<div className="flex gap-2">
 					{onView && (
-						<Button variant="ghost" size="icon" onClick={() => onView(row.original)} title={t("common:view")}>
-							<Eye className="h-4 w-4" />
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={() => onView(row.original)}
+							aria-label={`${t("common:view")} ${row.original.referenceNumber}`}
+						>
+							<Eye className="h-4 w-4" aria-hidden="true" />
 						</Button>
 					)}
 					{onEdit && (
-						<Button variant="ghost" size="icon" onClick={() => onEdit(row.original)} title={t("common:edit")}>
-							<Pencil className="h-4 w-4" />
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={() => onEdit(row.original)}
+							aria-label={`${t("common:edit")} ${row.original.referenceNumber}`}
+						>
+							<Pencil className="h-4 w-4" aria-hidden="true" />
 						</Button>
 					)}
 				</div>

@@ -61,6 +61,7 @@ const FormInputFieldInner = <T extends FieldValues>({
 };
 
 export const FormInputField = React.memo(FormInputFieldInner) as typeof FormInputFieldInner;
+(FormInputField as { displayName?: string }).displayName = "FormInputField";
 
 const NONE_VALUE = "__none__";
 

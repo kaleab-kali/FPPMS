@@ -69,8 +69,13 @@ const ServiceRewardsTableComponent = ({ data, onView, isLoading }: ServiceReward
 				cell: ({ row }) => (
 					<div className="flex gap-2">
 						{onView && (
-							<Button variant="ghost" size="icon" onClick={() => onView(row.original)} title="View">
-								<Eye className="h-4 w-4" />
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => onView(row.original)}
+								aria-label={`View reward for ${row.original.employee?.fullName ?? "employee"}`}
+							>
+								<Eye className="h-4 w-4" aria-hidden="true" />
 							</Button>
 						)}
 					</div>
