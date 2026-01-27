@@ -20,6 +20,7 @@ import { Button } from "#web/components/ui/button.tsx";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "#web/components/ui/card.tsx";
 import { Skeleton } from "#web/components/ui/skeleton.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#web/components/ui/table.tsx";
+import { formatDateTime } from "#web/lib/date-utils.ts";
 import type { AttachableType, Attachment } from "#web/types/attachment.ts";
 
 interface AttachmentListProps {
@@ -36,17 +37,6 @@ const formatFileSize = (bytes: number): string => {
 	const sizes = ["Bytes", "KB", "MB", "GB"];
 	const i = Math.floor(Math.log(bytes) / Math.log(k));
 	return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
-};
-
-const formatDate = (dateString: string): string => {
-	const date = new Date(dateString);
-	return date.toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-		hour: "2-digit",
-		minute: "2-digit",
-	});
 };
 
 const getFileIcon = (mimeType: string): React.ReactNode => {
@@ -163,7 +153,7 @@ export const AttachmentList = React.memo(
 									<span className="text-sm">{formatFileSize(attachment.fileSize)}</span>
 								</TableCell>
 								<TableCell className="hidden lg:table-cell">
-									<span className="text-sm text-muted-foreground">{formatDate(attachment.uploadedAt)}</span>
+									<span className="text-sm text-muted-foreground">{formatDateTime(attachment.uploadedAt)}</span>
 								</TableCell>
 								{category === undefined && (
 									<TableCell className="hidden md:table-cell">

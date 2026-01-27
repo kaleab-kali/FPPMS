@@ -33,6 +33,7 @@ import { Label } from "#web/components/ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#web/components/ui/table.tsx";
 import { Textarea } from "#web/components/ui/textarea.tsx";
+import { formatDate } from "#web/lib/date-utils.ts";
 import type {
 	SalaryEligibility,
 	SalaryEligibilityQuery,
@@ -43,11 +44,6 @@ const formatCurrency = (value: string | number | undefined | null): string => {
 	if (value === undefined || value === null) return "-";
 	const num = typeof value === "string" ? Number.parseFloat(value) : value;
 	return new Intl.NumberFormat("en-ET", { style: "currency", currency: "ETB" }).format(num);
-};
-
-const formatDate = (date: string | undefined | null): string => {
-	if (!date) return "-";
-	return new Date(date).toLocaleDateString();
 };
 
 const getStatusBadge = (status: SalaryEligibilityStatus, t: (key: string) => string): React.ReactNode => {

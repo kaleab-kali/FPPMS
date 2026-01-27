@@ -35,6 +35,7 @@ import { Input } from "#web/components/ui/input.tsx";
 import { Label } from "#web/components/ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
 import { Textarea } from "#web/components/ui/textarea.tsx";
+import { formatDate } from "#web/lib/date-utils.ts";
 import type { Employee } from "#web/types/employee.ts";
 import type {
 	CreateMaritalStatusRequest,
@@ -42,11 +43,6 @@ import type {
 	UpdateMaritalStatusRequest,
 } from "#web/types/employee-marital-status.ts";
 import { MARITAL_STATUSES } from "#web/types/employee-marital-status.ts";
-
-const formatDate = (date: string | null): string => {
-	if (!date) return "-";
-	return new Date(date).toLocaleDateString();
-};
 
 const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
 	const statusUpper = status.toUpperCase();

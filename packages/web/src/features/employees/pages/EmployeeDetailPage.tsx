@@ -59,6 +59,7 @@ import { EmployeeAttendanceTab } from "#web/features/employees/components/Employ
 import { EmployeeCorrespondenceTab } from "#web/features/employees/components/EmployeeCorrespondenceTab.tsx";
 import { EmployeeInventoryTab } from "#web/features/employees/components/EmployeeInventoryTab.tsx";
 import { EmployeeSalaryTab } from "#web/features/employees/components/EmployeeSalaryTab.tsx";
+import { formatDate } from "#web/lib/date-utils.ts";
 import type { CommitteeMemberTerm, EmployeeCommitteeMembership } from "#web/types/committee.ts";
 import { TERM_STATUS_COLORS, TERM_STATUS_LABELS } from "#web/types/committee.ts";
 import type { EmployeeComplaintHistoryItem } from "#web/types/complaint.ts";
@@ -253,11 +254,6 @@ interface TabProps {
 	directSuperior?: EmployeeBasicInfo | null;
 	subordinates?: EmployeeBasicInfo[];
 }
-
-const formatDate = (dateString: string | undefined) => {
-	if (!dateString) return "-";
-	return new Date(dateString).toLocaleDateString();
-};
 
 const BasicInfoTab = React.memo(
 	({ employee, t, isAmharic, directSuperior, subordinates }: TabProps) => (

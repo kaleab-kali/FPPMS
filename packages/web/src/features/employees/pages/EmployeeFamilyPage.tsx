@@ -32,14 +32,10 @@ import { Input } from "#web/components/ui/input.tsx";
 import { Label } from "#web/components/ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
 import { Switch } from "#web/components/ui/switch.tsx";
+import { formatDate } from "#web/lib/date-utils.ts";
 import type { Employee, Gender } from "#web/types/employee.ts";
 import type { CreateFamilyMemberRequest, FamilyMember, UpdateFamilyMemberRequest } from "#web/types/employee-family.ts";
 import { FAMILY_RELATIONSHIPS } from "#web/types/employee-family.ts";
-
-const formatDate = (date: string | null): string => {
-	if (!date) return "-";
-	return new Date(date).toLocaleDateString();
-};
 
 interface FormState {
 	relationship: string;

@@ -36,6 +36,7 @@ import { Input } from "#web/components/ui/input.tsx";
 import { Label } from "#web/components/ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
 import { Textarea } from "#web/components/ui/textarea.tsx";
+import { formatDate } from "#web/lib/date-utils.ts";
 import type { Employee } from "#web/types/employee.ts";
 import type {
 	CreateMedicalRecordRequest,
@@ -45,11 +46,6 @@ import type {
 import { VISIT_TYPES } from "#web/types/employee-medical.ts";
 
 const SELF_VALUE = "SELF";
-
-const formatDate = (date: string | null): string => {
-	if (!date) return "-";
-	return new Date(date).toLocaleDateString();
-};
 
 const formatCurrency = (amount: number | null): string => {
 	if (amount === null || amount === undefined) return "-";
