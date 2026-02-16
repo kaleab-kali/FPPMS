@@ -107,6 +107,7 @@ export const EmployeeRegisterFormPage = React.memo(() => {
 
 	const gender = watch("gender");
 	const maritalStatus = watch("maritalStatus");
+	const ethnicity = watch("ethnicity");
 	const centerId = watch("centerId");
 	const departmentId = watch("departmentId");
 	const positionId = watch("positionId");
@@ -179,8 +180,10 @@ export const EmployeeRegisterFormPage = React.memo(() => {
 						errors={errors}
 						gender={gender}
 						maritalStatus={maritalStatus ?? ""}
+						ethnicity={ethnicity ?? ""}
 						onGenderChange={handlers.handleGenderChange}
 						onMaritalStatusChange={handlers.handleMaritalStatusChange}
+						onEthnicityChange={handlers.handleEthnicityChange}
 						t={t}
 						isFirst
 					/>

@@ -106,7 +106,7 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 
 	const handleDelete = React.useCallback(
 		(record: MaritalStatusRecord) => {
-			if (!globalThis.confirm(t("maritalStatus.deleteConfirm"))) return;
+			if (!globalThis.confirm(t("maritalStatusModule.deleteConfirm"))) return;
 
 			deleteMutation.mutate(record.id, {
 				onSuccess: () => {
@@ -178,12 +178,12 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 		() => [
 			{
 				accessorKey: "effectiveDate",
-				header: t("maritalStatus.effectiveDate"),
+				header: t("maritalStatusModule.effectiveDate"),
 				cell: ({ row }) => formatDate(row.getValue("effectiveDate")),
 			},
 			{
 				accessorKey: "status",
-				header: t("maritalStatus.status"),
+				header: t("maritalStatusModule.status"),
 				cell: ({ row }) => {
 					const status = row.getValue("status") as string;
 					return (
@@ -195,7 +195,7 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 			},
 			{
 				accessorKey: "remarks",
-				header: t("maritalStatus.remarks"),
+				header: t("maritalStatusModule.remarks"),
 				cell: ({ row }) => {
 					const remarks = row.getValue("remarks") as string | null;
 					return remarks ? <span className="text-sm text-muted-foreground">{remarks}</span> : "-";
@@ -203,7 +203,7 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 			},
 			{
 				accessorKey: "createdAt",
-				header: t("maritalStatus.recordedAt"),
+				header: t("maritalStatusModule.recordedAt"),
 				cell: ({ row }) => formatDate(row.getValue("createdAt")),
 			},
 			{
@@ -241,15 +241,15 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 		<div className="space-y-6">
 			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div>
-					<h1 className="text-2xl font-bold">{t("maritalStatus.title")}</h1>
-					<p className="text-muted-foreground">{t("maritalStatus.subtitle")}</p>
+					<h1 className="text-2xl font-bold">{t("maritalStatusModule.title")}</h1>
+					<p className="text-muted-foreground">{t("maritalStatusModule.subtitle")}</p>
 				</div>
 			</div>
 
 			<Card>
 				<CardHeader>
 					<CardTitle>{tCommon("search")}</CardTitle>
-					<CardDescription>{t("maritalStatus.searchEmployee")}</CardDescription>
+					<CardDescription>{t("maritalStatusModule.searchEmployee")}</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<EmployeeSearch
@@ -265,14 +265,14 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 					<div className="flex justify-end">
 						<Button onClick={handleAddClick}>
 							<Plus className="mr-2 h-4 w-4" />
-							{t("maritalStatus.recordChange")}
+							{t("maritalStatusModule.recordChange")}
 						</Button>
 					</div>
 
 					<div className="grid gap-4 grid-cols-1 md:grid-cols-2">
 						<Card>
 							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">{t("maritalStatus.currentStatus")}</CardTitle>
+								<CardTitle className="text-sm font-medium">{t("maritalStatusModule.currentStatus")}</CardTitle>
 								<Heart className="h-4 w-4 text-rose-500" />
 							</CardHeader>
 							<CardContent>
@@ -285,26 +285,26 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 											)}
 										</Badge>
 									) : (
-										<span className="text-muted-foreground">{t("maritalStatus.notSet")}</span>
+										<span className="text-muted-foreground">{t("maritalStatusModule.notSet")}</span>
 									)}
 								</div>
 								{currentStatus?.marriageDate && (
 									<p className="text-sm text-muted-foreground mt-2">
-										{t("maritalStatus.marriedSince")}: {formatDate(currentStatus.marriageDate)}
+										{t("maritalStatusModule.marriedSince")}: {formatDate(currentStatus.marriageDate)}
 									</p>
 								)}
 							</CardContent>
 						</Card>
 						<Card>
 							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-								<CardTitle className="text-sm font-medium">{t("maritalStatus.totalChanges")}</CardTitle>
+								<CardTitle className="text-sm font-medium">{t("maritalStatusModule.totalChanges")}</CardTitle>
 								<History className="h-4 w-4 text-blue-500" />
 							</CardHeader>
 							<CardContent>
 								<div className="text-2xl font-bold">{history?.length ?? 0}</div>
 								{currentStatus?.lastChange && (
 									<p className="text-sm text-muted-foreground mt-2">
-										{t("maritalStatus.lastChange")}: {formatDate(currentStatus.lastChange.effectiveDate)}
+										{t("maritalStatusModule.lastChange")}: {formatDate(currentStatus.lastChange.effectiveDate)}
 									</p>
 								)}
 							</CardContent>
@@ -313,17 +313,17 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 
 					<Card className="border-amber-500/20 bg-amber-500/5">
 						<CardContent className="pt-4">
-							<p className="text-sm text-muted-foreground">{t("maritalStatus.note")}</p>
+							<p className="text-sm text-muted-foreground">{t("maritalStatusModule.note")}</p>
 						</CardContent>
 					</Card>
 
 					<Card>
 						<CardHeader>
-							<CardTitle>{t("maritalStatus.history")}</CardTitle>
+							<CardTitle>{t("maritalStatusModule.history")}</CardTitle>
 						</CardHeader>
 						<CardContent>
 							{!history?.length && !isLoading ? (
-								<p className="text-center text-muted-foreground py-8">{t("maritalStatus.noHistory")}</p>
+								<p className="text-center text-muted-foreground py-8">{t("maritalStatusModule.noHistory")}</p>
 							) : (
 								<DataTable columns={columns} data={history ?? []} isLoading={isLoading} searchColumn="status" />
 							)}
@@ -335,12 +335,14 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
 				<DialogContent className="sm:max-w-lg">
 					<DialogHeader>
-						<DialogTitle>{editingRecord ? t("maritalStatus.editRecord") : t("maritalStatus.recordChange")}</DialogTitle>
-						<DialogDescription>{t("maritalStatus.recordDescription")}</DialogDescription>
+						<DialogTitle>
+							{editingRecord ? t("maritalStatusModule.editRecord") : t("maritalStatusModule.recordChange")}
+						</DialogTitle>
+						<DialogDescription>{t("maritalStatusModule.recordDescription")}</DialogDescription>
 					</DialogHeader>
 					<div className="space-y-4">
 						<div className="space-y-2">
-							<Label>{t("maritalStatus.status")} *</Label>
+							<Label>{t("maritalStatusModule.status")} *</Label>
 							<Select value={formState.status} onValueChange={(v) => handleFormChange("status", v)}>
 								<SelectTrigger>
 									<SelectValue />
@@ -355,7 +357,7 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 							</Select>
 						</div>
 						<div className="space-y-2">
-							<Label>{t("maritalStatus.effectiveDate")} *</Label>
+							<Label>{t("maritalStatusModule.effectiveDate")} *</Label>
 							<Input
 								type="date"
 								value={formState.effectiveDate}
@@ -363,11 +365,11 @@ export const EmployeeMaritalStatusPage = React.memo(() => {
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label>{t("maritalStatus.remarks")}</Label>
+							<Label>{t("maritalStatusModule.remarks")}</Label>
 							<Textarea
 								value={formState.remarks}
 								onChange={(e) => handleFormChange("remarks", e.target.value)}
-								placeholder={t("maritalStatus.remarksPlaceholder")}
+								placeholder={t("maritalStatusModule.remarksPlaceholder")}
 								rows={3}
 							/>
 						</div>

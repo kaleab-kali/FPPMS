@@ -51,8 +51,10 @@ export interface MotherInfoSectionProps extends SimpleSectionProps {
 export interface PersonalInfoSectionProps extends SimpleSectionProps {
 	gender: string;
 	maritalStatus: string;
+	ethnicity: string;
 	onGenderChange: (value: string) => void;
 	onMaritalStatusChange: (value: string) => void;
+	onEthnicityChange: (value: string) => void;
 	isFirst?: boolean;
 }
 

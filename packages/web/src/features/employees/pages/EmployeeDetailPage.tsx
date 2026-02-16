@@ -619,13 +619,13 @@ const MaritalStatusSection = React.memo(
 		}
 
 		return (
-			<Section title={t("maritalStatus.history")} icon={<Heart className="h-4 w-4" />}>
+			<Section title={t("maritalStatusModule.history")} icon={<Heart className="h-4 w-4" />}>
 				<div className="space-y-3">
 					{statuses.map((status, index) => (
 						<div key={status.id} className="flex items-center justify-between p-2 rounded border bg-muted/30">
 							<div className="flex items-center gap-2">
 								<Badge variant={index === 0 ? "default" : "secondary"}>{t(`maritalStatuses.${status.status}`)}</Badge>
-								{index === 0 && <Badge variant="outline">{t("maritalStatus.current")}</Badge>}
+								{index === 0 && <Badge variant="outline">{t("maritalStatusModule.current")}</Badge>}
 							</div>
 							<span className="text-sm text-muted-foreground">{formatDate(status.effectiveDate)}</span>
 						</div>

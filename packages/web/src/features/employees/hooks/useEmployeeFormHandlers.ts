@@ -13,6 +13,8 @@ export const useEmployeeFormHandlers = (setValue: UseFormSetValue<UnifiedEmploye
 
 	const handleBloodTypeChange = React.useCallback((value: string) => setValue("bloodType", value), [setValue]);
 
+	const handleEthnicityChange = React.useCallback((value: string) => setValue("ethnicity", value), [setValue]);
+
 	const handleCenterChange = React.useCallback((value: string) => setValue("centerId", value), [setValue]);
 
 	const handleDepartmentChange = React.useCallback((value: string) => setValue("departmentId", value), [setValue]);
@@ -89,6 +91,7 @@ export const useEmployeeFormHandlers = (setValue: UseFormSetValue<UnifiedEmploye
 			handleGenderChange,
 			handleMaritalStatusChange,
 			handleBloodTypeChange,
+			handleEthnicityChange,
 			handleCenterChange,
 			handleDepartmentChange,
 			handlePositionChange,
@@ -109,6 +112,7 @@ export const useEmployeeFormHandlers = (setValue: UseFormSetValue<UnifiedEmploye
 			handleGenderChange,
 			handleMaritalStatusChange,
 			handleBloodTypeChange,
+			handleEthnicityChange,
 			handleCenterChange,
 			handleDepartmentChange,
 			handlePositionChange,
