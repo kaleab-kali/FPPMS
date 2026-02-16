@@ -8,6 +8,13 @@ import {
 	validateDestructiveAction,
 	validateEditAuthorization,
 } from "#api/common/utils/access-scope.util";
+import {
+	ENCRYPTED_EMERGENCY_CONTACT_FIELDS,
+	ENCRYPTED_EMPLOYEE_FIELDS,
+	ENCRYPTED_MOTHER_INFO_FIELDS,
+	decryptObject,
+	encryptObject,
+} from "#api/common/utils/encryption.util";
 import { PrismaService } from "#api/database/prisma.service";
 import {
 	ChangeEmployeeStatusDto,
@@ -120,6 +127,8 @@ export class EmployeesService {
 		const salaryStepRecord = rank.salarySteps.find((s) => s.stepNumber === salaryStep);
 		const currentSalary = salaryStepRecord?.salaryAmount ?? rank.baseSalary;
 
+		const encryptedDto = this.encryptEmployeeData(dto as unknown as Record<string, unknown>);
+
 		const employee = await this.prisma.employee.create({
 			data: {
 				tenantId,
@@ -145,11 +154,11 @@ export class EmployeesService {
 				distinguishingMarks: dto.distinguishingMarks,
 				ethnicity: dto.ethnicity,
 				faydaId: dto.faydaId,
-				passportNumber: dto.passportNumber,
-				drivingLicense: dto.drivingLicense,
+				passportNumber: encryptedDto.passportNumber as string,
+				drivingLicense: encryptedDto.drivingLicense as string,
 				primaryPhone: dto.primaryPhone,
-				secondaryPhone: dto.secondaryPhone,
-				email: dto.email,
+				secondaryPhone: encryptedDto.secondaryPhone as string,
+				email: encryptedDto.email as string,
 				centerId: dto.centerId,
 				departmentId: dto.departmentId,
 				positionId: dto.positionId,
@@ -233,6 +242,7 @@ export class EmployeesService {
 		const fullName = `${dto.firstName} ${dto.middleName} ${dto.lastName}`;
 		const fullNameAm = `${dto.firstNameAm} ${dto.middleNameAm} ${dto.lastNameAm}`;
 		const retirementInfo = await this.retirementCalculation.calculateRetirementDate(dto.dateOfBirth);
+		const encCivDto = this.encryptEmployeeData(dto as unknown as Record<string, unknown>);
 
 		const employee = await this.prisma.employee.create({
 			data: {
@@ -259,11 +269,11 @@ export class EmployeesService {
 				distinguishingMarks: dto.distinguishingMarks,
 				ethnicity: dto.ethnicity,
 				faydaId: dto.faydaId,
-				passportNumber: dto.passportNumber,
-				drivingLicense: dto.drivingLicense,
+				passportNumber: encCivDto.passportNumber as string,
+				drivingLicense: encCivDto.drivingLicense as string,
 				primaryPhone: dto.primaryPhone,
-				secondaryPhone: dto.secondaryPhone,
-				email: dto.email,
+				secondaryPhone: encCivDto.secondaryPhone as string,
+				email: encCivDto.email as string,
 				centerId: dto.centerId,
 				departmentId: dto.departmentId,
 				positionId: dto.positionId,
@@ -344,6 +354,7 @@ export class EmployeesService {
 		const employeeId = await this.employeeIdGenerator.generateEmployeeId(tenantId, EmployeeType.TEMPORARY);
 		const fullName = `${dto.firstName} ${dto.middleName} ${dto.lastName}`;
 		const fullNameAm = `${dto.firstNameAm} ${dto.middleNameAm} ${dto.lastNameAm}`;
+		const encTmpDto = this.encryptEmployeeData(dto as unknown as Record<string, unknown>);
 
 		const employee = await this.prisma.employee.create({
 			data: {
@@ -370,11 +381,11 @@ export class EmployeesService {
 				distinguishingMarks: dto.distinguishingMarks,
 				ethnicity: dto.ethnicity,
 				faydaId: dto.faydaId,
-				passportNumber: dto.passportNumber,
-				drivingLicense: dto.drivingLicense,
+				passportNumber: encTmpDto.passportNumber as string,
+				drivingLicense: encTmpDto.drivingLicense as string,
 				primaryPhone: dto.primaryPhone,
-				secondaryPhone: dto.secondaryPhone,
-				email: dto.email,
+				secondaryPhone: encTmpDto.secondaryPhone as string,
+				email: encTmpDto.email as string,
 				centerId: dto.centerId,
 				departmentId: dto.departmentId,
 				positionId: dto.positionId,
@@ -630,7 +641,7 @@ export class EmployeesService {
 			updateData.statusReason = dto.statusReason;
 		}
 
-		return updateData;
+		return this.encryptEmployeeData(updateData as unknown as Record<string, unknown>) as Prisma.EmployeeUncheckedUpdateInput;
 	}
 
 	async remove(
@@ -895,9 +906,31 @@ export class EmployeesService {
 		} as const;
 	}
 
+	private encryptEmployeeData<T extends Record<string, unknown>>(data: T): T {
+		return encryptObject(data, ENCRYPTED_EMPLOYEE_FIELDS);
+	}
+
+	private decryptEmployee<T extends Record<string, unknown>>(employee: T): T {
+		const decrypted = decryptObject(employee, ENCRYPTED_EMPLOYEE_FIELDS);
+		const emergencyContacts = (decrypted as Record<string, unknown>).emergencyContacts;
+		if (Array.isArray(emergencyContacts)) {
+			(decrypted as Record<string, unknown>).emergencyContacts = emergencyContacts.map((c: Record<string, unknown>) =>
+				decryptObject(c, ENCRYPTED_EMERGENCY_CONTACT_FIELDS),
+			);
+		}
+		const motherInfo = (decrypted as Record<string, unknown>).motherInfo;
+		if (motherInfo && typeof motherInfo === "object") {
+			(decrypted as Record<string, unknown>).motherInfo = decryptObject(
+				motherInfo as Record<string, unknown>,
+				ENCRYPTED_MOTHER_INFO_FIELDS,
+			);
+		}
+		return decrypted;
+	}
+
 	private async mapToResponse(employee: EmployeeWithRelations): Promise<EmployeeResponseDto> {
 		const n = <T>(value: T | null): T | undefined => value ?? undefined;
-		const e = employee;
+		const e = this.decryptEmployee(employee as unknown as Record<string, unknown>) as EmployeeWithRelations;
 
 		const primaryAddress = e.addresses?.[0];
 		const motherInfo = e.motherInfo;
@@ -1048,18 +1081,19 @@ export class EmployeesService {
 	}
 
 	private mapToListResponse(employee: EmployeeListItem): EmployeeListResponseDto {
+		const dec = this.decryptEmployee(employee as unknown as Record<string, unknown>) as EmployeeListItem;
 		return {
-			id: employee.id,
-			employeeId: employee.employeeId,
-			employeeType: employee.employeeType,
-			fullName: employee.fullName,
-			fullNameAm: employee.fullNameAm,
-			gender: employee.gender,
-			primaryPhone: employee.primaryPhone,
-			departmentName: employee.department?.name || undefined,
-			positionName: employee.position?.name || undefined,
-			rankName: employee.rank?.name || undefined,
-			status: employee.status,
+			id: dec.id,
+			employeeId: dec.employeeId,
+			employeeType: dec.employeeType,
+			fullName: dec.fullName,
+			fullNameAm: dec.fullNameAm,
+			gender: dec.gender,
+			primaryPhone: dec.primaryPhone,
+			departmentName: dec.department?.name || undefined,
+			positionName: dec.position?.name || undefined,
+			rankName: dec.rank?.name || undefined,
+			status: dec.status,
 		};
 	}
 }
