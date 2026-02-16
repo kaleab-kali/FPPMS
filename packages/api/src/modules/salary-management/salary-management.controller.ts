@@ -68,13 +68,13 @@ export class SalaryManagementController {
 	@ApiResponse({ status: 401, description: "Unauthorized" })
 	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
 	getEligibilityList(
-		@CurrentTenant() tenantId: string,
+		@CurrentUser() user: AuthUserDto,
 		@Query() query: SalaryEligibilityQueryDto,
 	): Promise<SalaryEligibilityListResponseDto> {
-		return this.salaryManagementService.getEligibilityList(
-			tenantId,
-			query,
-		) as Promise<SalaryEligibilityListResponseDto>;
+		return this.salaryManagementService.getEligibilityList(user.tenantId, query, {
+			centerId: user.centerId,
+			effectiveAccessScope: user.effectiveAccessScope,
+		}) as Promise<SalaryEligibilityListResponseDto>;
 	}
 
 	@Get("eligibility/today")
@@ -502,13 +502,13 @@ export class SalaryManagementController {
 	@ApiResponse({ status: 401, description: "Unauthorized" })
 	@ApiResponse({ status: 403, description: "Forbidden - insufficient permissions" })
 	getStepDistributionReport(
-		@CurrentTenant() tenantId: string,
+		@CurrentUser() user: AuthUserDto,
 		@Query("centerId") centerId?: string,
 	): Promise<StepDistributionReportDto> {
-		return this.salaryManagementService.getStepDistributionReport(
-			tenantId,
-			centerId,
-		) as Promise<StepDistributionReportDto>;
+		return this.salaryManagementService.getStepDistributionReport(user.tenantId, {
+			centerId: user.centerId,
+			effectiveAccessScope: user.effectiveAccessScope,
+		}, centerId) as Promise<StepDistributionReportDto>;
 	}
 
 	@Get("ranks/:rankId/steps")

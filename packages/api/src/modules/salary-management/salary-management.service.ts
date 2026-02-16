@@ -1,7 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { EmployeeType, Prisma, SalaryEligibilityStatus } from "@prisma/client";
+import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
 import { calculateSkip, paginate } from "#api/common/utils/pagination.util";
 import { PrismaService } from "#api/database/prisma.service";
+
+export interface SalaryAccessContext {
+	centerId?: string;
+	effectiveAccessScope: string;
+}
 import { MassRaiseType } from "#api/modules/salary-management/dto/mass-raise.dto";
 import { SalaryEligibilityQueryDto } from "#api/modules/salary-management/dto/salary-eligibility-query.dto";
 import { SalaryCalculationService } from "#api/modules/salary-management/services/salary-calculation.service";
@@ -57,6 +63,7 @@ export class SalaryManagementService {
 	async getEligibilityList(
 		tenantId: string,
 		query: SalaryEligibilityQueryDto,
+		accessContext: SalaryAccessContext,
 	): Promise<{
 		data: Array<{
 			id: string;
@@ -118,20 +125,25 @@ export class SalaryManagementService {
 			}
 		}
 
-		if (query.centerId || query.departmentId || query.search) {
-			where.employee = {};
-			if (query.centerId) {
-				where.employee.centerId = query.centerId;
-			}
-			if (query.departmentId) {
-				where.employee.departmentId = query.departmentId;
-			}
-			if (query.search) {
-				where.employee.OR = [
-					{ employeeId: { contains: query.search, mode: "insensitive" } },
-					{ fullName: { contains: query.search, mode: "insensitive" } },
-				];
-			}
+		const employeeFilter: Prisma.EmployeeWhereInput = {};
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			employeeFilter.centerId = accessContext.centerId;
+		}
+		if (query.centerId) {
+			validateCenterAccess(accessContext.centerId, query.centerId, accessContext.effectiveAccessScope);
+			employeeFilter.centerId = query.centerId;
+		}
+		if (query.departmentId) {
+			employeeFilter.departmentId = query.departmentId;
+		}
+		if (query.search) {
+			employeeFilter.OR = [
+				{ employeeId: { contains: query.search, mode: "insensitive" } },
+				{ fullName: { contains: query.search, mode: "insensitive" } },
+			];
+		}
+		if (Object.keys(employeeFilter).length > 0) {
+			where.employee = employeeFilter;
 		}
 
 		const orderBy: Prisma.SalaryStepEligibilityOrderByWithRelationInput = {};
@@ -646,6 +658,7 @@ export class SalaryManagementService {
 
 	async getStepDistributionReport(
 		tenantId: string,
+		accessContext: SalaryAccessContext,
 		centerId?: string,
 	): Promise<{
 		tenantId: string;
@@ -684,7 +697,11 @@ export class SalaryManagementService {
 			deletedAt: null,
 		};
 
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			whereClause.centerId = accessContext.centerId;
+		}
 		if (centerId) {
+			validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
 			whereClause.centerId = centerId;
 		}
 
