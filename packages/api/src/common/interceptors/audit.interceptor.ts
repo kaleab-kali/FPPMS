@@ -1,7 +1,8 @@
 import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from "@nestjs/common";
 import { AuditAction } from "@prisma/client";
-import { Observable, tap } from "rxjs";
+import { Observable, from, switchMap, tap } from "rxjs";
 import { RequestWithUser } from "#api/common/interfaces/request-with-user.interface";
+import { PrismaService } from "#api/database/prisma.service";
 import { AuditLogService } from "#api/modules/audit-log/audit-log.service";
 
 const HTTP_METHOD_TO_ACTION: Record<string, AuditAction> = {
@@ -20,7 +21,10 @@ const EXCLUDED_PATHS = ["/health", "/metrics", "/swagger", "/api-docs", "/favico
 export class AuditInterceptor implements NestInterceptor {
 	private readonly logger = new Logger(AuditInterceptor.name);
 
-	constructor(private readonly auditLogService: AuditLogService) {}
+	constructor(
+		private readonly auditLogService: AuditLogService,
+		private readonly prisma: PrismaService,
+	) {}
 
 	intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
 		const request = context.switchToHttp().getRequest<RequestWithUser>();
@@ -51,68 +55,122 @@ export class AuditInterceptor implements NestInterceptor {
 		const { deviceType, browser, os } = this.parseUserAgent(userAgent);
 		const requestId = (headers["x-request-id"] as string) ?? this.generateRequestId();
 
-		return next.handle().pipe(
-			tap({
-				next: (responseData) => {
-					const extractedResourceId = resourceId ?? this.extractResourceIdFromResponse(responseData);
+		const previousValuePromise =
+			(action === AuditAction.UPDATE || action === AuditAction.DELETE) && resourceId && tenantId
+				? this.fetchPreviousValue(module, resourceId, tenantId)
+				: Promise.resolve(undefined);
 
-					this.logger.log(`Creating audit log for: ${action} ${module}/${resource}`);
-					this.auditLogService
-						.create({
-							tenantId,
-							userId,
-							username: request.user?.username,
-							userRole: request.user?.roles?.[0],
-							userCenter: request.user?.centerId,
-							action,
-							module,
-							resource,
-							resourceId: extractedResourceId,
-							ipAddress,
-							userAgent,
-							deviceType,
-							browser,
-							os,
-							requestId,
-							newValue:
-								action === AuditAction.CREATE || action === AuditAction.UPDATE ? this.sanitizeBody(body) : undefined,
-							changedFields: action === AuditAction.UPDATE ? Object.keys(this.sanitizeBody(body)) : [],
-							description: this.generateDescription(action, module, resource),
-						})
-						.then((result) => {
-							this.logger.log(`Audit log created successfully: ${result.id}`);
-						})
-						.catch((error) => {
-							this.logger.error(`Failed to create audit log: ${error.message}`, error.stack);
-						});
-				},
-				error: (error: Error) => {
-					this.auditLogService
-						.create({
-							tenantId,
-							userId,
-							username: request.user?.username,
-							userRole: request.user?.roles?.[0],
-							userCenter: request.user?.centerId,
-							action,
-							module,
-							resource,
-							resourceId,
-							ipAddress,
-							userAgent,
-							deviceType,
-							browser,
-							os,
-							requestId,
-							newValue: this.sanitizeBody(body),
-							description: `Failed: ${this.generateDescription(action, module, resource)} - ${error.message}`,
-						})
-						.catch((auditError) => {
-							this.logger.error(`Failed to create audit log for error: ${auditError.message}`, auditError.stack);
-						});
-				},
-			}),
+		return from(previousValuePromise).pipe(
+			switchMap((previousValue) =>
+				next.handle().pipe(
+					tap({
+						next: (responseData) => {
+							const extractedResourceId = resourceId ?? this.extractResourceIdFromResponse(responseData);
+							const isSelfEdit =
+								request.user?.employeeId && extractedResourceId === request.user.employeeId;
+
+							this.logger.log(`Creating audit log for: ${action} ${module}/${resource}`);
+							this.auditLogService
+								.create({
+									tenantId,
+									userId,
+									username: request.user?.username,
+									userRole: request.user?.roles?.[0],
+									userCenter: request.user?.centerId,
+									action,
+									module,
+									resource,
+									resourceId: extractedResourceId,
+									ipAddress,
+									userAgent,
+									deviceType,
+									browser,
+									os,
+									requestId,
+									previousValue: previousValue ? this.sanitizeBody(previousValue) : undefined,
+									newValue:
+										action === AuditAction.CREATE || action === AuditAction.UPDATE
+											? this.sanitizeBody(body)
+											: undefined,
+									changedFields: action === AuditAction.UPDATE ? Object.keys(this.sanitizeBody(body)) : [],
+									description: `${isSelfEdit ? "[SELF_EDIT] " : ""}${this.generateDescription(action, module, resource)}`,
+								})
+								.then((result) => {
+									this.logger.log(`Audit log created successfully: ${result.id}`);
+								})
+								.catch((error) => {
+									this.logger.error(`Failed to create audit log: ${error.message}`, error.stack);
+								});
+						},
+						error: (error: Error) => {
+							this.auditLogService
+								.create({
+									tenantId,
+									userId,
+									username: request.user?.username,
+									userRole: request.user?.roles?.[0],
+									userCenter: request.user?.centerId,
+									action,
+									module,
+									resource,
+									resourceId,
+									ipAddress,
+									userAgent,
+									deviceType,
+									browser,
+									os,
+									requestId,
+									previousValue: previousValue ? this.sanitizeBody(previousValue) : undefined,
+									newValue: this.sanitizeBody(body),
+									description: `Failed: ${this.generateDescription(action, module, resource)} - ${error.message}`,
+								})
+								.catch((auditError) => {
+									this.logger.error(
+										`Failed to create audit log for error: ${auditError.message}`,
+										auditError.stack,
+									);
+								});
+						},
+					}),
+				),
+			),
 		);
+	}
+
+	private readonly MODULE_TO_MODEL: Record<string, string> = {
+		employees: "employee",
+		complaints: "complaint",
+		committees: "committee",
+		attendance: "attendanceRecord",
+		users: "user",
+		roles: "role",
+		departments: "department",
+		positions: "position",
+		centers: "center",
+		salary: "salaryStepEligibility",
+		leave: "leaveRequest",
+		holidays: "holiday",
+		rewards: "reward",
+		documents: "document",
+	};
+
+	private async fetchPreviousValue(
+		module: string,
+		resourceId: string,
+		tenantId: string,
+	): Promise<Record<string, unknown> | undefined> {
+		const modelName = this.MODULE_TO_MODEL[module];
+		if (!modelName) return undefined;
+
+		const prismaModel = (this.prisma as unknown as Record<string, unknown>)[modelName];
+		if (!prismaModel || typeof (prismaModel as Record<string, unknown>).findFirst !== "function") return undefined;
+
+		const record = await (prismaModel as { findFirst: (args: unknown) => Promise<unknown> }).findFirst({
+			where: { id: resourceId, tenantId },
+		});
+
+		if (!record || typeof record !== "object") return undefined;
+		return record as Record<string, unknown>;
 	}
 
 	private extractIpAddress(request: RequestWithUser): string {
