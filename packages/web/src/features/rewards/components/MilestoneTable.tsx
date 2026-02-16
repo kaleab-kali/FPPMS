@@ -63,8 +63,13 @@ const MilestoneTableComponent = ({ data, onEdit, onDelete, isLoading }: Mileston
 				cell: ({ row }) => (
 					<div className="flex gap-2">
 						{onEdit && (
-							<Button variant="ghost" size="icon" onClick={() => onEdit(row.original)} title="Edit">
-								<Pencil className="h-4 w-4" />
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => onEdit(row.original)}
+								aria-label={`Edit ${row.original.name}`}
+							>
+								<Pencil className="h-4 w-4" aria-hidden="true" />
 							</Button>
 						)}
 						{onDelete && (
@@ -72,10 +77,10 @@ const MilestoneTableComponent = ({ data, onEdit, onDelete, isLoading }: Mileston
 								variant="ghost"
 								size="icon"
 								onClick={() => onDelete(row.original)}
-								title="Delete"
+								aria-label={`Delete ${row.original.name}`}
 								className="text-destructive hover:text-destructive"
 							>
-								<Trash2 className="h-4 w-4" />
+								<Trash2 className="h-4 w-4" aria-hidden="true" />
 							</Button>
 						)}
 					</div>

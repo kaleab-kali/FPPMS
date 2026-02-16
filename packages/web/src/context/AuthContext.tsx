@@ -55,21 +55,32 @@ export const AuthProvider = React.memo(
 
 		useEffect(() => {
 			const token = getStoredToken();
-			if (token && !user) {
-				api
-					.get<AuthUser>("/auth/me")
-					.then((data) => {
-						setUser(data);
-						globalThis.localStorage.setItem(STORAGE_KEYS.authStore, JSON.stringify({ user: data }));
-					})
-					.catch(() => {
-						clearAuthStorage();
-						setUser(undefined);
-					})
-					.finally(() => setIsLoading(false));
-			} else {
+			if (!token || user) {
 				setIsLoading(false);
+				return;
 			}
+
+			let isMounted = true;
+
+			const fetchUser = async () => {
+				const data = await api.get<AuthUser>("/auth/me").catch(() => undefined);
+				if (!isMounted) return;
+
+				if (data) {
+					setUser(data);
+					globalThis.localStorage.setItem(STORAGE_KEYS.authStore, JSON.stringify({ user: data }));
+				} else {
+					clearAuthStorage();
+					setUser(undefined);
+				}
+				setIsLoading(false);
+			};
+
+			fetchUser();
+
+			return () => {
+				isMounted = false;
+			};
 		}, [user]);
 
 		const login = React.useCallback(async (credentials: LoginRequest) => {

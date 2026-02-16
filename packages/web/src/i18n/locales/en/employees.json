@@ -91,6 +91,7 @@
 	"selectRegion": "Select region",
 	"selectSubCity": "Select sub-city",
 	"selectWoreda": "Select woreda",
+	"selectEthnicity": "Select ethnicity",
 	"filters": "Filters",
 	"clearFilters": "Clear Filters",
 	"physicalInfo": "Physical Information",
@@ -431,7 +432,7 @@
 		"assignAll": "Assign to All",
 		"orgChartDesc": "View hierarchical organization structure"
 	},
-	"maritalStatus": {
+	"maritalStatusModule": {
 		"title": "Marital Status",
 		"subtitle": "Track employee marital status changes",
 		"searchEmployee": "Search for an employee by ID",

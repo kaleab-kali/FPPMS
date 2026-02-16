@@ -89,9 +89,10 @@ const CorrespondenceListPageComponent = (): React.ReactElement => {
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+								aria-label={t("correspondence:filters.searchPlaceholder")}
 							/>
-							<Button variant="outline" onClick={handleSearch}>
-								<Search className="h-4 w-4" />
+							<Button variant="outline" onClick={handleSearch} aria-label={t("common:search")}>
+								<Search className="h-4 w-4" aria-hidden="true" />
 							</Button>
 						</div>
 

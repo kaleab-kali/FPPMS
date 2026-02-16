@@ -184,93 +184,90 @@ const LoadingSkeleton = React.memo(() => (
 ));
 LoadingSkeleton.displayName = "LoadingSkeleton";
 
-export const HqDashboardPage = React.memo(
-	() => {
-		const { t } = useTranslation("dashboard");
-		const { data, isLoading } = useHqDashboard();
+export const HqDashboardPage = React.memo(() => {
+	const { t } = useTranslation("dashboard");
+	const { data, isLoading } = useHqDashboard();
 
-		if (isLoading) {
-			return (
-				<div className="space-y-6">
-					<div>
-						<h1 className="text-2xl font-bold">{t("hqDashboard")}</h1>
-						<p className="text-muted-foreground">{t("hqDashboardDescription")}</p>
-					</div>
-					<LoadingSkeleton />
-				</div>
-			);
-		}
-
-		if (!data) {
-			return (
-				<div className="flex items-center justify-center p-8">
-					<p className="text-muted-foreground">{t("noData")}</p>
-				</div>
-			);
-		}
-
+	if (isLoading) {
 		return (
 			<div className="space-y-6">
 				<div>
 					<h1 className="text-2xl font-bold">{t("hqDashboard")}</h1>
 					<p className="text-muted-foreground">{t("hqDashboardDescription")}</p>
 				</div>
-
-				<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-					<StatCard
-						title={t("totalEmployees")}
-						value={data.totalEmployees}
-						icon={<STAT_CARD_ICONS.employees className="h-5 w-5 text-muted-foreground" />}
-					/>
-					<StatCard
-						title={t("totalCenters")}
-						value={data.totalCenters}
-						icon={<STAT_CARD_ICONS.centers className="h-5 w-5 text-muted-foreground" />}
-					/>
-					<StatCard
-						title={t("totalCommittees")}
-						value={data.totalCommittees}
-						icon={<STAT_CARD_ICONS.committees className="h-5 w-5 text-muted-foreground" />}
-					/>
-					<StatCard
-						title={t("totalComplaints")}
-						value={data.totalComplaints}
-						icon={<STAT_CARD_ICONS.complaints className="h-5 w-5 text-muted-foreground" />}
-					/>
-				</div>
-
-				<div className="grid gap-4 md:grid-cols-3">
-					<StatCard
-						title={t("awaitingHqDecision")}
-						value={data.complaintsAwaitingHqDecision}
-						icon={<STAT_CARD_ICONS.hqDecision className="h-5 w-5 text-yellow-500" />}
-						description={t("awaitingHqDecisionDescription")}
-						variant={data.complaintsAwaitingHqDecision > 0 ? "warning" : "default"}
-					/>
-					<StatCard
-						title={t("pendingAppeals")}
-						value={data.pendingAppeals}
-						icon={<STAT_CARD_ICONS.appeals className="h-5 w-5 text-red-500" />}
-						description={t("pendingAppealsDescription")}
-						variant={data.pendingAppeals > 0 ? "danger" : "default"}
-					/>
-					<StatCard
-						title={t("expiringTerms")}
-						value={data.expiringTerms}
-						icon={<STAT_CARD_ICONS.expiringTerms className="h-5 w-5 text-orange-500" />}
-						description={t("expiringTermsDescription")}
-						variant={data.expiringTerms > 0 ? "warning" : "default"}
-					/>
-				</div>
-
-				<div className="grid gap-6 lg:grid-cols-2">
-					<ComplaintStatusTable data={data.complaintsByStatus} t={t} />
-					<CenterStatisticsTable data={data.centerStatistics} t={t} />
-				</div>
+				<LoadingSkeleton />
 			</div>
 		);
-	},
-	() => true,
-);
+	}
+
+	if (!data) {
+		return (
+			<div className="flex items-center justify-center p-8">
+				<p className="text-muted-foreground">{t("noData")}</p>
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-6">
+			<div>
+				<h1 className="text-2xl font-bold">{t("hqDashboard")}</h1>
+				<p className="text-muted-foreground">{t("hqDashboardDescription")}</p>
+			</div>
+
+			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+				<StatCard
+					title={t("totalEmployees")}
+					value={data.totalEmployees}
+					icon={<STAT_CARD_ICONS.employees className="h-5 w-5 text-muted-foreground" />}
+				/>
+				<StatCard
+					title={t("totalCenters")}
+					value={data.totalCenters}
+					icon={<STAT_CARD_ICONS.centers className="h-5 w-5 text-muted-foreground" />}
+				/>
+				<StatCard
+					title={t("totalCommittees")}
+					value={data.totalCommittees}
+					icon={<STAT_CARD_ICONS.committees className="h-5 w-5 text-muted-foreground" />}
+				/>
+				<StatCard
+					title={t("totalComplaints")}
+					value={data.totalComplaints}
+					icon={<STAT_CARD_ICONS.complaints className="h-5 w-5 text-muted-foreground" />}
+				/>
+			</div>
+
+			<div className="grid gap-4 md:grid-cols-3">
+				<StatCard
+					title={t("awaitingHqDecision")}
+					value={data.complaintsAwaitingHqDecision}
+					icon={<STAT_CARD_ICONS.hqDecision className="h-5 w-5 text-yellow-500" />}
+					description={t("awaitingHqDecisionDescription")}
+					variant={data.complaintsAwaitingHqDecision > 0 ? "warning" : "default"}
+				/>
+				<StatCard
+					title={t("pendingAppeals")}
+					value={data.pendingAppeals}
+					icon={<STAT_CARD_ICONS.appeals className="h-5 w-5 text-red-500" />}
+					description={t("pendingAppealsDescription")}
+					variant={data.pendingAppeals > 0 ? "danger" : "default"}
+				/>
+				<StatCard
+					title={t("expiringTerms")}
+					value={data.expiringTerms}
+					icon={<STAT_CARD_ICONS.expiringTerms className="h-5 w-5 text-orange-500" />}
+					description={t("expiringTermsDescription")}
+					variant={data.expiringTerms > 0 ? "warning" : "default"}
+				/>
+			</div>
+
+			<div className="grid gap-6 lg:grid-cols-2">
+				<ComplaintStatusTable data={data.complaintsByStatus} t={t} />
+				<CenterStatisticsTable data={data.centerStatistics} t={t} />
+			</div>
+		</div>
+	);
+});
 
 HqDashboardPage.displayName = "HqDashboardPage";

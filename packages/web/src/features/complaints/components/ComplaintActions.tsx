@@ -182,6 +182,8 @@ export const ComplaintActions = React.memo(
 	(prevProps, nextProps) =>
 		prevProps.complaint.id === nextProps.complaint.id &&
 		prevProps.complaint.status === nextProps.complaint.status &&
+		prevProps.complaint.centerId === nextProps.complaint.centerId &&
+		prevProps.complaint.assignedCommitteeId === nextProps.complaint.assignedCommitteeId &&
 		prevProps.complaint.appeals?.length === nextProps.complaint.appeals?.length,
 );
 

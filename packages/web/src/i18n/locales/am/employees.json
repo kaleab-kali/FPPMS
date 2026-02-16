@@ -95,6 +95,7 @@
 	"selectRegion": "ክልል ይምረጡ",
 	"selectSubCity": "ክፍለ ከተማ ይምረጡ",
 	"selectWoreda": "ወረዳ ይምረጡ",
+	"selectEthnicity": "ብሔር ይምረጡ",
 	"filters": "ማጣሪያ",
 	"clearFilters": "ማጣሪያ አጥራ",
 	"height": "ቁመት",
@@ -440,7 +441,7 @@
 		"assignAll": "ለሁሉም ምደብ",
 		"orgChartDesc": "የተዋረድ የድርጅት መዋቅር ይመልከቱ"
 	},
-	"maritalStatus": {
+	"maritalStatusModule": {
 		"title": "የጋብቻ ሁኔታ",
 		"subtitle": "የሰራተኛ የጋብቻ ሁኔታ ለውጦችን ይከታተሉ",
 		"searchEmployee": "ሰራተኛ በመታወቂያ ቁጥር ይፈልጉ",

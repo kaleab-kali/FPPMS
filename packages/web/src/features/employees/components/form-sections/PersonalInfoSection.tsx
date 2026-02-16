@@ -2,7 +2,11 @@ import { User } from "lucide-react";
 import React from "react";
 import { BoardingPassSection } from "#web/features/employees/components/BoardingPassSection.tsx";
 import { FormInputField, FormSelectField } from "#web/features/employees/components/FormField.tsx";
-import { GENDER_OPTIONS, MARITAL_STATUS_OPTIONS } from "#web/features/employees/constants/form-options.ts";
+import {
+	ETHNICITY_OPTIONS,
+	GENDER_OPTIONS,
+	MARITAL_STATUS_OPTIONS,
+} from "#web/features/employees/constants/form-options.ts";
 import type { PersonalInfoSectionProps } from "#web/features/employees/types/form-types.ts";
 
 export const PersonalInfoSection = React.memo(
@@ -11,8 +15,10 @@ export const PersonalInfoSection = React.memo(
 		errors,
 		gender,
 		maritalStatus,
+		ethnicity,
 		onGenderChange,
 		onMaritalStatusChange,
+		onEthnicityChange,
 		t,
 		isFirst = false,
 	}: PersonalInfoSectionProps) => {
@@ -24,6 +30,11 @@ export const PersonalInfoSection = React.memo(
 		const maritalOptions = React.useMemo(
 			() => MARITAL_STATUS_OPTIONS.map((m) => ({ value: m.value, label: t(`maritalStatuses.${m.value}`) })),
 			[t],
+		);
+
+		const ethnicityOptions = React.useMemo(
+			() => ETHNICITY_OPTIONS.map((e) => ({ value: e.value, label: e.label })),
+			[],
 		);
 
 		return (
@@ -121,12 +132,20 @@ export const PersonalInfoSection = React.memo(
 				</div>
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<FormInputField label={t("nationality")} name="nationality" register={register} className="w-full" />
-					<FormInputField label={t("ethnicity")} name="ethnicity" register={register} className="w-full" />
+					<FormSelectField
+						label={t("ethnicity")}
+						value={ethnicity ?? ""}
+						onValueChange={onEthnicityChange}
+						options={ethnicityOptions}
+						placeholder={t("selectEthnicity")}
+						className="w-full"
+					/>
 				</div>
 			</BoardingPassSection>
 		);
 	},
-	(prev, next) => prev.gender === next.gender && prev.maritalStatus === next.maritalStatus,
+	(prev, next) =>
+		prev.gender === next.gender && prev.maritalStatus === next.maritalStatus && prev.ethnicity === next.ethnicity,
 );
 
 PersonalInfoSection.displayName = "PersonalInfoSection";

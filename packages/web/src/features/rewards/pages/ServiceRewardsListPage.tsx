@@ -163,4 +163,4 @@ const ServiceRewardsListPageComponent = (): React.ReactElement => {
 
 ServiceRewardsListPageComponent.displayName = "ServiceRewardsListPage";
 
-export const ServiceRewardsListPage = React.memo(ServiceRewardsListPageComponent, () => true);
+export const ServiceRewardsListPage = React.memo(ServiceRewardsListPageComponent);

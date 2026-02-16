@@ -2,6 +2,16 @@ import React from "react";
 import type { PermissionValue, RoleValue } from "#web/constants/permissions";
 import { useAuth } from "#web/context/AuthContext";
 
+const arraysEqual = <T,>(a: T[] | undefined, b: T[] | undefined): boolean => {
+	if (a === b) return true;
+	if (!a || !b) return a === b;
+	if (a.length !== b.length) return false;
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) return false;
+	}
+	return true;
+};
+
 interface PermissionGateProps {
 	children: React.ReactNode;
 	fallback?: React.ReactNode;
@@ -66,8 +76,8 @@ export const PermissionGate = React.memo(
 		prevProps.role === nextProps.role &&
 		prevProps.requireAll === nextProps.requireAll &&
 		prevProps.requireAllRoles === nextProps.requireAllRoles &&
-		JSON.stringify(prevProps.permissions) === JSON.stringify(nextProps.permissions) &&
-		JSON.stringify(prevProps.roles) === JSON.stringify(nextProps.roles),
+		arraysEqual(prevProps.permissions, nextProps.permissions) &&
+		arraysEqual(prevProps.roles, nextProps.roles),
 );
 
 PermissionGate.displayName = "PermissionGate";
@@ -110,7 +120,7 @@ export const RoleGate = React.memo(
 	(prevProps, nextProps) =>
 		prevProps.role === nextProps.role &&
 		prevProps.requireAll === nextProps.requireAll &&
-		JSON.stringify(prevProps.roles) === JSON.stringify(nextProps.roles),
+		arraysEqual(prevProps.roles, nextProps.roles),
 );
 
 RoleGate.displayName = "RoleGate";

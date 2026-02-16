@@ -1,7 +1,49 @@
+import React from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ComingSoonPage } from "#web/components/common/ComingSoonPage.tsx";
+import { LazyRoute } from "#web/components/common/LazyRoute.tsx";
 import { AppLayout } from "#web/components/layout/AppLayout.tsx";
 import { AuthLayout } from "#web/components/layout/AuthLayout.tsx";
+import { ProtectedRoute } from "#web/routes/ProtectedRoute.tsx";
+
+// Lazy-loaded pages (large components)
+const EmployeeDetailPage = React.lazy(() =>
+	import("#web/features/employees/pages/EmployeeDetailPage.tsx").then((m) => ({ default: m.EmployeeDetailPage })),
+);
+const EmployeeTransferPage = React.lazy(() =>
+	import("#web/features/employees/pages/EmployeeTransferPage.tsx").then((m) => ({ default: m.EmployeeTransferPage })),
+);
+const EmployeeMedicalPage = React.lazy(() =>
+	import("#web/features/employees/pages/EmployeeMedicalPage.tsx").then((m) => ({ default: m.EmployeeMedicalPage })),
+);
+const DirectSuperiorPage = React.lazy(() =>
+	import("#web/features/employees/pages/DirectSuperiorPage.tsx").then((m) => ({ default: m.DirectSuperiorPage })),
+);
+const EmployeeFamilyPage = React.lazy(() =>
+	import("#web/features/employees/pages/EmployeeFamilyPage.tsx").then((m) => ({ default: m.EmployeeFamilyPage })),
+);
+const SalaryEligibilityPage = React.lazy(() =>
+	import("#web/features/salary/pages/SalaryEligibilityPage.tsx").then((m) => ({ default: m.SalaryEligibilityPage })),
+);
+const SalaryScaleFormPage = React.lazy(() =>
+	import("#web/features/salary/pages/SalaryScaleFormPage.tsx").then((m) => ({ default: m.SalaryScaleFormPage })),
+);
+const ComplaintDetailPage = React.lazy(() =>
+	import("#web/features/complaints/pages/ComplaintDetailPage.tsx").then((m) => ({ default: m.ComplaintDetailPage })),
+);
+const ComplaintRegisterPage = React.lazy(() =>
+	import("#web/features/complaints/pages/ComplaintRegisterPage.tsx").then((m) => ({
+		default: m.ComplaintRegisterPage,
+	})),
+);
+const WeaponCategoriesPage = React.lazy(() =>
+	import("#web/features/weapons/pages/WeaponCategoriesPage.tsx").then((m) => ({ default: m.WeaponCategoriesPage })),
+);
+const CommitteesListPage = React.lazy(() =>
+	import("#web/features/committees/pages/CommitteesListPage.tsx").then((m) => ({ default: m.CommitteesListPage })),
+);
+
+// Statically imported pages (smaller components)
 import { AttendanceRecordsPage } from "#web/features/attendance/pages/AttendanceRecordsPage.tsx";
 import { AttendanceReportsPage } from "#web/features/attendance/pages/AttendanceReportsPage.tsx";
 import { DailyAttendancePage } from "#web/features/attendance/pages/DailyAttendancePage.tsx";
@@ -12,28 +54,20 @@ import { LoginHistoryPage } from "#web/features/audit-log/pages/LoginHistoryPage
 import { ChangePasswordPage } from "#web/features/auth/pages/ChangePasswordPage.tsx";
 import { LoginPage } from "#web/features/auth/pages/LoginPage.tsx";
 import { CommitteeDetailPage } from "#web/features/committees/pages/CommitteeDetailPage.tsx";
-import { CommitteesListPage } from "#web/features/committees/pages/CommitteesListPage.tsx";
 import { CommitteeTypesListPage } from "#web/features/committees/pages/CommitteeTypesListPage.tsx";
 import { MyCommitteeCasesPage } from "#web/features/committees/pages/MyCommitteeCasesPage.tsx";
-import { ComplaintDetailPage } from "#web/features/complaints/pages/ComplaintDetailPage.tsx";
-import { ComplaintRegisterPage } from "#web/features/complaints/pages/ComplaintRegisterPage.tsx";
 import { ComplaintsListPage } from "#web/features/complaints/pages/ComplaintsListPage.tsx";
 import { CorrespondenceListPage } from "#web/features/correspondence/pages/CorrespondenceListPage.tsx";
 import { IncomingDocumentsPage } from "#web/features/correspondence/pages/IncomingDocumentsPage.tsx";
 import { OutgoingDocumentsPage } from "#web/features/correspondence/pages/OutgoingDocumentsPage.tsx";
 import { DashboardPage } from "#web/features/dashboard/pages/DashboardPage.tsx";
 import { HqDashboardPage } from "#web/features/dashboard/pages/HqDashboardPage.tsx";
-import { DirectSuperiorPage } from "#web/features/employees/pages/DirectSuperiorPage.tsx";
-import { EmployeeDetailPage } from "#web/features/employees/pages/EmployeeDetailPage.tsx";
 import { EmployeeEditPage } from "#web/features/employees/pages/EmployeeEditPage.tsx";
-import { EmployeeFamilyPage } from "#web/features/employees/pages/EmployeeFamilyPage.tsx";
 import { EmployeeMaritalStatusPage } from "#web/features/employees/pages/EmployeeMaritalStatusPage.tsx";
-import { EmployeeMedicalPage } from "#web/features/employees/pages/EmployeeMedicalPage.tsx";
 import { EmployeePhotoPage } from "#web/features/employees/pages/EmployeePhotoPage.tsx";
 import { EmployeeRegisterFormPage } from "#web/features/employees/pages/EmployeeRegisterFormPage.tsx";
 import { EmployeeRegisterSelectPage } from "#web/features/employees/pages/EmployeeRegisterSelectPage.tsx";
 import { EmployeesListPage } from "#web/features/employees/pages/EmployeesListPage.tsx";
-import { EmployeeTransferPage } from "#web/features/employees/pages/EmployeeTransferPage.tsx";
 import { FormerEmployeesPage } from "#web/features/employees/pages/FormerEmployeesPage.tsx";
 import { HolidayListPage } from "#web/features/holidays/pages/HolidayListPage.tsx";
 import { CenterStockPage } from "#web/features/inventory/pages/CenterStockPage.tsx";
@@ -53,16 +87,12 @@ import { ServiceRewardsListPage } from "#web/features/rewards/pages/ServiceRewar
 import { RolesListPage } from "#web/features/roles/pages/RolesListPage.tsx";
 import { ManualStepJumpPage } from "#web/features/salary/pages/ManualStepJumpPage.tsx";
 import { MassRaisePage } from "#web/features/salary/pages/MassRaisePage.tsx";
-import { SalaryEligibilityPage } from "#web/features/salary/pages/SalaryEligibilityPage.tsx";
 import { SalaryScaleDetailPage } from "#web/features/salary/pages/SalaryScaleDetailPage.tsx";
-import { SalaryScaleFormPage } from "#web/features/salary/pages/SalaryScaleFormPage.tsx";
 import { SalaryScalesListPage } from "#web/features/salary/pages/SalaryScalesListPage.tsx";
 import { UsersListPage } from "#web/features/users/pages/UsersListPage.tsx";
 import { AmmunitionStockPage } from "#web/features/weapons/pages/AmmunitionStockPage.tsx";
 import { WeaponAssignmentsPage } from "#web/features/weapons/pages/WeaponAssignmentsPage.tsx";
-import { WeaponCategoriesPage } from "#web/features/weapons/pages/WeaponCategoriesPage.tsx";
 import { WeaponsListPage } from "#web/features/weapons/pages/WeaponsListPage.tsx";
-import { ProtectedRoute } from "#web/routes/ProtectedRoute.tsx";
 
 export const router = createBrowserRouter([
 	{
@@ -119,7 +149,11 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/employees/:id",
-				element: <EmployeeDetailPage />,
+				element: (
+					<LazyRoute>
+						<EmployeeDetailPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/employees/:id/edit",
@@ -131,11 +165,19 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/employees/medical",
-				element: <EmployeeMedicalPage />,
+				element: (
+					<LazyRoute>
+						<EmployeeMedicalPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/employees/family",
-				element: <EmployeeFamilyPage />,
+				element: (
+					<LazyRoute>
+						<EmployeeFamilyPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/employees/marital",
@@ -147,11 +189,19 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/employees/transfer",
-				element: <EmployeeTransferPage />,
+				element: (
+					<LazyRoute>
+						<EmployeeTransferPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/employees/superior",
-				element: <DirectSuperiorPage />,
+				element: (
+					<LazyRoute>
+						<DirectSuperiorPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/organization/tenants",
@@ -195,7 +245,11 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/committees",
-				element: <CommitteesListPage />,
+				element: (
+					<LazyRoute>
+						<CommitteesListPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/committees/types",
@@ -215,11 +269,19 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/complaints/register",
-				element: <ComplaintRegisterPage />,
+				element: (
+					<LazyRoute>
+						<ComplaintRegisterPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/complaints/:id",
-				element: <ComplaintDetailPage />,
+				element: (
+					<LazyRoute>
+						<ComplaintDetailPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/leave/*",
@@ -243,7 +305,11 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/salary/scale/new",
-				element: <SalaryScaleFormPage />,
+				element: (
+					<LazyRoute>
+						<SalaryScaleFormPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/salary/scale/:id",
@@ -251,11 +317,19 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/salary/scale/:id/edit",
-				element: <SalaryScaleFormPage />,
+				element: (
+					<LazyRoute>
+						<SalaryScaleFormPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/salary/eligibility",
-				element: <SalaryEligibilityPage />,
+				element: (
+					<LazyRoute>
+						<SalaryEligibilityPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/salary/manual-jump",
@@ -319,7 +393,11 @@ export const router = createBrowserRouter([
 			},
 			{
 				path: "/weapons/categories",
-				element: <WeaponCategoriesPage />,
+				element: (
+					<LazyRoute>
+						<WeaponCategoriesPage />
+					</LazyRoute>
+				),
 			},
 			{
 				path: "/weapons/assignments",

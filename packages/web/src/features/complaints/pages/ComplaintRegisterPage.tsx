@@ -45,371 +45,368 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export const ComplaintRegisterPage = React.memo(
-	() => {
-		const { t } = useTranslation("complaints");
-		const { t: tCommon } = useTranslation("common");
-		const navigate = useNavigate();
-		const { i18n } = useTranslation();
-		const isAmharic = i18n.language === "am";
+export const ComplaintRegisterPage = React.memo(() => {
+	const { t } = useTranslation("complaints");
+	const { t: tCommon } = useTranslation("common");
+	const navigate = useNavigate();
+	const { i18n } = useTranslation();
+	const isAmharic = i18n.language === "am";
 
-		const [accusedEmployee, setAccusedEmployee] = React.useState<Employee | null>(null);
-		const [complainantEmployee, setComplainantEmployee] = React.useState<Employee | null>(null);
+	const [accusedEmployee, setAccusedEmployee] = React.useState<Employee | null>(null);
+	const [complainantEmployee, setComplainantEmployee] = React.useState<Employee | null>(null);
 
-		const createMutation = useCreateComplaint();
+	const createMutation = useCreateComplaint();
 
-		const form = useForm<FormValues>({
-			resolver: zodResolver(formSchema),
-			defaultValues: {
-				article: "ARTICLE_30",
-				offenseCode: "",
-				accusedEmployeeId: "",
-				complainantType: "EMPLOYEE",
-				complainantName: "",
-				complainantEmployeeId: "",
-				summary: "",
-				summaryAm: "",
-				incidentDate: "",
-				incidentLocation: "",
-				registeredDate: new Date().toISOString().split("T")[0],
-			},
-		});
+	const form = useForm<FormValues>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			article: "ARTICLE_30",
+			offenseCode: "",
+			accusedEmployeeId: "",
+			complainantType: "EMPLOYEE",
+			complainantName: "",
+			complainantEmployeeId: "",
+			summary: "",
+			summaryAm: "",
+			incidentDate: "",
+			incidentLocation: "",
+			registeredDate: new Date().toISOString().split("T")[0],
+		},
+	});
 
-		const watchedArticle = form.watch("article");
-		const watchedComplainantType = form.watch("complainantType");
+	const watchedArticle = form.watch("article");
+	const watchedComplainantType = form.watch("complainantType");
 
-		const offenseOptions = React.useMemo(() => {
-			return watchedArticle === "ARTICLE_30" ? ARTICLE_30_OFFENSE_LIST : ARTICLE_31_OFFENSE_LIST;
-		}, [watchedArticle]);
+	const offenseOptions = React.useMemo(() => {
+		return watchedArticle === "ARTICLE_30" ? ARTICLE_30_OFFENSE_LIST : ARTICLE_31_OFFENSE_LIST;
+	}, [watchedArticle]);
 
-		const handleAccusedEmployeeFound = React.useCallback(
-			(employee: Employee) => {
-				setAccusedEmployee(employee);
-				form.setValue("accusedEmployeeId", employee.id);
-			},
-			[form],
-		);
+	const handleAccusedEmployeeFound = React.useCallback(
+		(employee: Employee) => {
+			setAccusedEmployee(employee);
+			form.setValue("accusedEmployeeId", employee.id);
+		},
+		[form],
+	);
 
-		const handleAccusedEmployeeClear = React.useCallback(() => {
-			setAccusedEmployee(null);
-			form.setValue("accusedEmployeeId", "");
-		}, [form]);
+	const handleAccusedEmployeeClear = React.useCallback(() => {
+		setAccusedEmployee(null);
+		form.setValue("accusedEmployeeId", "");
+	}, [form]);
 
-		const handleComplainantEmployeeFound = React.useCallback(
-			(employee: Employee) => {
-				setComplainantEmployee(employee);
-				form.setValue("complainantEmployeeId", employee.id);
-				form.setValue("complainantName", employee.fullName);
-			},
-			[form],
-		);
+	const handleComplainantEmployeeFound = React.useCallback(
+		(employee: Employee) => {
+			setComplainantEmployee(employee);
+			form.setValue("complainantEmployeeId", employee.id);
+			form.setValue("complainantName", employee.fullName);
+		},
+		[form],
+	);
 
-		const handleComplainantEmployeeClear = React.useCallback(() => {
-			setComplainantEmployee(null);
-			form.setValue("complainantEmployeeId", "");
-			form.setValue("complainantName", "");
-		}, [form]);
+	const handleComplainantEmployeeClear = React.useCallback(() => {
+		setComplainantEmployee(null);
+		form.setValue("complainantEmployeeId", "");
+		form.setValue("complainantName", "");
+	}, [form]);
 
-		const handleBack = React.useCallback(() => {
-			navigate("/complaints");
-		}, [navigate]);
+	const handleBack = React.useCallback(() => {
+		navigate("/complaints");
+	}, [navigate]);
 
-		const onSubmit = React.useCallback(
-			(values: FormValues) => {
-				const request: CreateComplaintRequest = {
-					article: values.article as ComplaintArticle,
-					offenseCode: values.offenseCode,
-					accusedEmployeeId: values.accusedEmployeeId,
-					complainantType: values.complainantType as ComplainantType,
-					complainantName: values.complainantName,
-					complainantEmployeeId: values.complainantEmployeeId,
-					summary: values.summary,
-					summaryAm: values.summaryAm,
-					incidentDate: values.incidentDate,
-					incidentLocation: values.incidentLocation,
-					registeredDate: values.registeredDate,
-				};
+	const onSubmit = React.useCallback(
+		(values: FormValues) => {
+			const request: CreateComplaintRequest = {
+				article: values.article as ComplaintArticle,
+				offenseCode: values.offenseCode,
+				accusedEmployeeId: values.accusedEmployeeId,
+				complainantType: values.complainantType as ComplainantType,
+				complainantName: values.complainantName,
+				complainantEmployeeId: values.complainantEmployeeId,
+				summary: values.summary,
+				summaryAm: values.summaryAm,
+				incidentDate: values.incidentDate,
+				incidentLocation: values.incidentLocation,
+				registeredDate: values.registeredDate,
+			};
 
-				createMutation.mutate(request, {
-					onSuccess: (data) => {
-						toast.success(t("success.registered"));
-						navigate(`/complaints/${data.id}`);
-					},
-					onError: () => {
-						toast.error(tCommon("error"));
-					},
-				});
-			},
-			[createMutation, navigate, t, tCommon],
-		);
+			createMutation.mutate(request, {
+				onSuccess: (data) => {
+					toast.success(t("success.registered"));
+					navigate(`/complaints/${data.id}`);
+				},
+				onError: () => {
+					toast.error(tCommon("error"));
+				},
+			});
+		},
+		[createMutation, navigate, t, tCommon],
+	);
 
-		const handleArticleChange = React.useCallback(
-			(value: string) => {
-				form.setValue("article", value as "ARTICLE_30" | "ARTICLE_31");
-				form.setValue("offenseCode", "");
-			},
-			[form],
-		);
+	const handleArticleChange = React.useCallback(
+		(value: string) => {
+			form.setValue("article", value as "ARTICLE_30" | "ARTICLE_31");
+			form.setValue("offenseCode", "");
+		},
+		[form],
+	);
 
-		return (
-			<div className="space-y-6">
-				<div className="flex items-center gap-4">
-					<Button variant="ghost" size="icon" onClick={handleBack}>
-						<ArrowLeft className="h-5 w-5" />
-					</Button>
-					<div>
-						<h1 className="text-2xl font-bold">{t("register.title")}</h1>
-						<p className="text-muted-foreground">{t("register.description")}</p>
-					</div>
+	return (
+		<div className="space-y-6">
+			<div className="flex items-center gap-4">
+				<Button variant="ghost" size="icon" onClick={handleBack}>
+					<ArrowLeft className="h-5 w-5" />
+				</Button>
+				<div>
+					<h1 className="text-2xl font-bold">{t("register.title")}</h1>
+					<p className="text-muted-foreground">{t("register.description")}</p>
 				</div>
-
-				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-						<Card>
-							<CardHeader>
-								<CardTitle>{t("register.articleSection")}</CardTitle>
-								<CardDescription>{t("register.articleDescription")}</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-6">
-								<FormField
-									control={form.control}
-									name="article"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{t("complaint.article")}</FormLabel>
-											<FormControl>
-												<RadioGroup
-													onValueChange={handleArticleChange}
-													value={field.value}
-													className="flex flex-col space-y-2 sm:flex-row sm:space-x-6 sm:space-y-0"
-												>
-													<div className="flex items-center space-x-2">
-														<RadioGroupItem value="ARTICLE_30" id="article30" />
-														<label htmlFor="article30" className="cursor-pointer">
-															{COMPLAINT_ARTICLE_LABELS.ARTICLE_30}
-														</label>
-													</div>
-													<div className="flex items-center space-x-2">
-														<RadioGroupItem value="ARTICLE_31" id="article31" />
-														<label htmlFor="article31" className="cursor-pointer">
-															{COMPLAINT_ARTICLE_LABELS.ARTICLE_31}
-														</label>
-													</div>
-												</RadioGroup>
-											</FormControl>
-											<FormDescription>
-												{watchedArticle === "ARTICLE_30" ? t("register.article30Hint") : t("register.article31Hint")}
-											</FormDescription>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="offenseCode"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{t("complaint.offense")}</FormLabel>
-											<Select onValueChange={field.onChange} value={field.value}>
-												<FormControl>
-													<SelectTrigger>
-														<SelectValue placeholder={t("register.selectOffense")} />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{offenseOptions.map((offense) => (
-														<SelectItem key={offense.code} value={offense.code}>
-															{offense.code} - {isAmharic ? offense.nameAm : offense.name}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader>
-								<CardTitle>{t("register.accusedSection")}</CardTitle>
-								<CardDescription>{t("register.accusedDescription")}</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<FormField
-									control={form.control}
-									name="accusedEmployeeId"
-									render={() => (
-										<FormItem>
-											<EmployeeSearch
-												onEmployeeFound={handleAccusedEmployeeFound}
-												onClear={handleAccusedEmployeeClear}
-												selectedEmployee={accusedEmployee}
-											/>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader>
-								<CardTitle>{t("register.complainantSection")}</CardTitle>
-								<CardDescription>{t("register.complainantDescription")}</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-6">
-								<FormField
-									control={form.control}
-									name="complainantType"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{t("complaint.complainantType")}</FormLabel>
-											<Select onValueChange={field.onChange} value={field.value}>
-												<FormControl>
-													<SelectTrigger>
-														<SelectValue />
-													</SelectTrigger>
-												</FormControl>
-												<SelectContent>
-													{Object.entries(COMPLAINANT_TYPE_LABELS).map(([value, label]) => (
-														<SelectItem key={value} value={value}>
-															{label}
-														</SelectItem>
-													))}
-												</SelectContent>
-											</Select>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								{watchedComplainantType === "EMPLOYEE" && (
-									<EmployeeSearch
-										onEmployeeFound={handleComplainantEmployeeFound}
-										onClear={handleComplainantEmployeeClear}
-										selectedEmployee={complainantEmployee}
-									/>
-								)}
-
-								{watchedComplainantType === "EXTERNAL" && (
-									<FormField
-										control={form.control}
-										name="complainantName"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>{t("complaint.complainantName")}</FormLabel>
-												<FormControl>
-													<Input {...field} placeholder={t("register.enterComplainantName")} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								)}
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader>
-								<CardTitle>{t("register.incidentSection")}</CardTitle>
-								<CardDescription>{t("register.incidentDescription")}</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-6">
-								<div className="grid gap-6 sm:grid-cols-2">
-									<FormField
-										control={form.control}
-										name="incidentDate"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>{t("complaint.incidentDate")}</FormLabel>
-												<FormControl>
-													<Input type="date" {...field} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="registeredDate"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel>{t("complaint.registeredDate")}</FormLabel>
-												<FormControl>
-													<Input type="date" {...field} />
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
-
-								<FormField
-									control={form.control}
-									name="incidentLocation"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{t("complaint.incidentLocation")}</FormLabel>
-											<FormControl>
-												<Input {...field} placeholder={t("register.enterLocation")} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<Separator />
-
-								<FormField
-									control={form.control}
-									name="summary"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{t("complaint.summary")}</FormLabel>
-											<FormControl>
-												<Textarea {...field} placeholder={t("register.enterSummary")} className="min-h-[120px]" />
-											</FormControl>
-											<FormDescription>{t("register.summaryHint")}</FormDescription>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="summaryAm"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>{t("complaint.summaryAm")}</FormLabel>
-											<FormControl>
-												<Textarea {...field} placeholder={t("register.enterSummaryAm")} className="min-h-[120px]" />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</CardContent>
-						</Card>
-
-						<div className="flex justify-end gap-4">
-							<Button type="button" variant="outline" onClick={handleBack}>
-								{tCommon("cancel")}
-							</Button>
-							<Button type="submit" disabled={createMutation.isPending}>
-								{createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-								{t("action.register")}
-							</Button>
-						</div>
-					</form>
-				</Form>
 			</div>
-		);
-	},
-	() => true,
-);
+
+			<Form {...form}>
+				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+					<Card>
+						<CardHeader>
+							<CardTitle>{t("register.articleSection")}</CardTitle>
+							<CardDescription>{t("register.articleDescription")}</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							<FormField
+								control={form.control}
+								name="article"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>{t("complaint.article")}</FormLabel>
+										<FormControl>
+											<RadioGroup
+												onValueChange={handleArticleChange}
+												value={field.value}
+												className="flex flex-col space-y-2 sm:flex-row sm:space-x-6 sm:space-y-0"
+											>
+												<div className="flex items-center space-x-2">
+													<RadioGroupItem value="ARTICLE_30" id="article30" />
+													<label htmlFor="article30" className="cursor-pointer">
+														{COMPLAINT_ARTICLE_LABELS.ARTICLE_30}
+													</label>
+												</div>
+												<div className="flex items-center space-x-2">
+													<RadioGroupItem value="ARTICLE_31" id="article31" />
+													<label htmlFor="article31" className="cursor-pointer">
+														{COMPLAINT_ARTICLE_LABELS.ARTICLE_31}
+													</label>
+												</div>
+											</RadioGroup>
+										</FormControl>
+										<FormDescription>
+											{watchedArticle === "ARTICLE_30" ? t("register.article30Hint") : t("register.article31Hint")}
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="offenseCode"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>{t("complaint.offense")}</FormLabel>
+										<Select onValueChange={field.onChange} value={field.value}>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue placeholder={t("register.selectOffense")} />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												{offenseOptions.map((offense) => (
+													<SelectItem key={offense.code} value={offense.code}>
+														{offense.code} - {isAmharic ? offense.nameAm : offense.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader>
+							<CardTitle>{t("register.accusedSection")}</CardTitle>
+							<CardDescription>{t("register.accusedDescription")}</CardDescription>
+						</CardHeader>
+						<CardContent>
+							<FormField
+								control={form.control}
+								name="accusedEmployeeId"
+								render={() => (
+									<FormItem>
+										<EmployeeSearch
+											onEmployeeFound={handleAccusedEmployeeFound}
+											onClear={handleAccusedEmployeeClear}
+											selectedEmployee={accusedEmployee}
+										/>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader>
+							<CardTitle>{t("register.complainantSection")}</CardTitle>
+							<CardDescription>{t("register.complainantDescription")}</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							<FormField
+								control={form.control}
+								name="complainantType"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>{t("complaint.complainantType")}</FormLabel>
+										<Select onValueChange={field.onChange} value={field.value}>
+											<FormControl>
+												<SelectTrigger>
+													<SelectValue />
+												</SelectTrigger>
+											</FormControl>
+											<SelectContent>
+												{Object.entries(COMPLAINANT_TYPE_LABELS).map(([value, label]) => (
+													<SelectItem key={value} value={value}>
+														{label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							{watchedComplainantType === "EMPLOYEE" && (
+								<EmployeeSearch
+									onEmployeeFound={handleComplainantEmployeeFound}
+									onClear={handleComplainantEmployeeClear}
+									selectedEmployee={complainantEmployee}
+								/>
+							)}
+
+							{watchedComplainantType === "EXTERNAL" && (
+								<FormField
+									control={form.control}
+									name="complainantName"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>{t("complaint.complainantName")}</FormLabel>
+											<FormControl>
+												<Input {...field} placeholder={t("register.enterComplainantName")} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							)}
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader>
+							<CardTitle>{t("register.incidentSection")}</CardTitle>
+							<CardDescription>{t("register.incidentDescription")}</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							<div className="grid gap-6 sm:grid-cols-2">
+								<FormField
+									control={form.control}
+									name="incidentDate"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>{t("complaint.incidentDate")}</FormLabel>
+											<FormControl>
+												<Input type="date" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={form.control}
+									name="registeredDate"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>{t("complaint.registeredDate")}</FormLabel>
+											<FormControl>
+												<Input type="date" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+
+							<FormField
+								control={form.control}
+								name="incidentLocation"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>{t("complaint.incidentLocation")}</FormLabel>
+										<FormControl>
+											<Input {...field} placeholder={t("register.enterLocation")} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<Separator />
+
+							<FormField
+								control={form.control}
+								name="summary"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>{t("complaint.summary")}</FormLabel>
+										<FormControl>
+											<Textarea {...field} placeholder={t("register.enterSummary")} className="min-h-[120px]" />
+										</FormControl>
+										<FormDescription>{t("register.summaryHint")}</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+
+							<FormField
+								control={form.control}
+								name="summaryAm"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>{t("complaint.summaryAm")}</FormLabel>
+										<FormControl>
+											<Textarea {...field} placeholder={t("register.enterSummaryAm")} className="min-h-[120px]" />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</CardContent>
+					</Card>
+
+					<div className="flex justify-end gap-4">
+						<Button type="button" variant="outline" onClick={handleBack}>
+							{tCommon("cancel")}
+						</Button>
+						<Button type="submit" disabled={createMutation.isPending}>
+							{createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+							{t("action.register")}
+						</Button>
+					</div>
+				</form>
+			</Form>
+		</div>
+	);
+});
 
 ComplaintRegisterPage.displayName = "ComplaintRegisterPage";

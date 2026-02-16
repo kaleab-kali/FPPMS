@@ -35,6 +35,7 @@ import { Input } from "#web/components/ui/input.tsx";
 import { Label } from "#web/components/ui/label.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "#web/components/ui/select.tsx";
 import { Textarea } from "#web/components/ui/textarea.tsx";
+import { formatDate } from "#web/lib/date-utils.ts";
 import type { Employee } from "#web/types/employee.ts";
 import type {
 	CreateMaritalStatusRequest,
@@ -42,11 +43,6 @@ import type {
 	UpdateMaritalStatusRequest,
 } from "#web/types/employee-marital-status.ts";
 import { MARITAL_STATUSES } from "#web/types/employee-marital-status.ts";
-
-const formatDate = (date: string | null): string => {
-	if (!date) return "-";
-	return new Date(date).toLocaleDateString();
-};
 
 const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
 	const statusUpper = status.toUpperCase();
@@ -68,106 +64,87 @@ const INITIAL_FORM_STATE: FormState = {
 	remarks: "",
 };
 
-export const EmployeeMaritalStatusPage = React.memo(
-	() => {
-		const { t } = useTranslation("employees");
-		const { t: tCommon } = useTranslation("common");
+export const EmployeeMaritalStatusPage = React.memo(() => {
+	const { t } = useTranslation("employees");
+	const { t: tCommon } = useTranslation("common");
 
-		const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
-		const [dialogOpen, setDialogOpen] = React.useState(false);
-		const [editingRecord, setEditingRecord] = React.useState<MaritalStatusRecord | null>(null);
-		const [formState, setFormState] = React.useState<FormState>(INITIAL_FORM_STATE);
+	const [selectedEmployee, setSelectedEmployee] = React.useState<Employee | null>(null);
+	const [dialogOpen, setDialogOpen] = React.useState(false);
+	const [editingRecord, setEditingRecord] = React.useState<MaritalStatusRecord | null>(null);
+	const [formState, setFormState] = React.useState<FormState>(INITIAL_FORM_STATE);
 
-		const { data: history, isLoading } = useMaritalStatusHistory(selectedEmployee?.id ?? "");
-		const { data: currentStatus } = useCurrentMaritalStatus(selectedEmployee?.id ?? "");
+	const { data: history, isLoading } = useMaritalStatusHistory(selectedEmployee?.id ?? "");
+	const { data: currentStatus } = useCurrentMaritalStatus(selectedEmployee?.id ?? "");
 
-		const createMutation = useCreateMaritalStatus();
-		const updateMutation = useUpdateMaritalStatus();
-		const deleteMutation = useDeleteMaritalStatus();
+	const createMutation = useCreateMaritalStatus();
+	const updateMutation = useUpdateMaritalStatus();
+	const deleteMutation = useDeleteMaritalStatus();
 
-		const handleEmployeeFound = React.useCallback((employee: Employee) => {
-			setSelectedEmployee(employee);
-		}, []);
+	const handleEmployeeFound = React.useCallback((employee: Employee) => {
+		setSelectedEmployee(employee);
+	}, []);
 
-		const handleEmployeeClear = React.useCallback(() => {
-			setSelectedEmployee(null);
-		}, []);
+	const handleEmployeeClear = React.useCallback(() => {
+		setSelectedEmployee(null);
+	}, []);
 
-		const handleAddClick = React.useCallback(() => {
-			setEditingRecord(null);
-			setFormState(INITIAL_FORM_STATE);
-			setDialogOpen(true);
-		}, []);
+	const handleAddClick = React.useCallback(() => {
+		setEditingRecord(null);
+		setFormState(INITIAL_FORM_STATE);
+		setDialogOpen(true);
+	}, []);
 
-		const handleEditClick = React.useCallback((record: MaritalStatusRecord) => {
-			setEditingRecord(record);
-			setFormState({
-				status: record.status,
-				effectiveDate: record.effectiveDate ? record.effectiveDate.split("T")[0] : "",
-				remarks: record.remarks ?? "",
+	const handleEditClick = React.useCallback((record: MaritalStatusRecord) => {
+		setEditingRecord(record);
+		setFormState({
+			status: record.status,
+			effectiveDate: record.effectiveDate ? record.effectiveDate.split("T")[0] : "",
+			remarks: record.remarks ?? "",
+		});
+		setDialogOpen(true);
+	}, []);
+
+	const handleDelete = React.useCallback(
+		(record: MaritalStatusRecord) => {
+			if (!globalThis.confirm(t("maritalStatusModule.deleteConfirm"))) return;
+
+			deleteMutation.mutate(record.id, {
+				onSuccess: () => {
+					toast.success(tCommon("success"));
+				},
+				onError: () => {
+					toast.error(tCommon("error"));
+				},
 			});
-			setDialogOpen(true);
-		}, []);
+		},
+		[deleteMutation, t, tCommon],
+	);
 
-		const handleDelete = React.useCallback(
-			(record: MaritalStatusRecord) => {
-				if (!globalThis.confirm(t("maritalStatus.deleteConfirm"))) return;
+	const handleFormChange = React.useCallback((field: keyof FormState, value: string) => {
+		setFormState((prev) => ({ ...prev, [field]: value }));
+	}, []);
 
-				deleteMutation.mutate(record.id, {
-					onSuccess: () => {
-						toast.success(tCommon("success"));
-					},
-					onError: () => {
-						toast.error(tCommon("error"));
-					},
-				});
-			},
-			[deleteMutation, t, tCommon],
-		);
+	const handleSubmit = React.useCallback(() => {
+		if (!formState.status || !formState.effectiveDate) {
+			toast.error(tCommon("fillRequired"));
+			return;
+		}
 
-		const handleFormChange = React.useCallback((field: keyof FormState, value: string) => {
-			setFormState((prev) => ({ ...prev, [field]: value }));
-		}, []);
+		if (!selectedEmployee) {
+			toast.error(tCommon("fillRequired"));
+			return;
+		}
 
-		const handleSubmit = React.useCallback(() => {
-			if (!formState.status || !formState.effectiveDate) {
-				toast.error(tCommon("fillRequired"));
-				return;
-			}
+		if (editingRecord) {
+			const updateData: UpdateMaritalStatusRequest = {
+				status: formState.status,
+				effectiveDate: formState.effectiveDate,
+				remarks: formState.remarks || undefined,
+			};
 
-			if (!selectedEmployee) {
-				toast.error(tCommon("fillRequired"));
-				return;
-			}
-
-			if (editingRecord) {
-				const updateData: UpdateMaritalStatusRequest = {
-					status: formState.status,
-					effectiveDate: formState.effectiveDate,
-					remarks: formState.remarks || undefined,
-				};
-
-				updateMutation.mutate(
-					{ id: editingRecord.id, data: updateData },
-					{
-						onSuccess: () => {
-							toast.success(tCommon("success"));
-							setDialogOpen(false);
-						},
-						onError: () => {
-							toast.error(tCommon("error"));
-						},
-					},
-				);
-			} else {
-				const createData: CreateMaritalStatusRequest = {
-					employeeId: selectedEmployee.id,
-					status: formState.status,
-					effectiveDate: formState.effectiveDate,
-					remarks: formState.remarks || undefined,
-				};
-
-				createMutation.mutate(createData, {
+			updateMutation.mutate(
+				{ id: editingRecord.id, data: updateData },
+				{
 					onSuccess: () => {
 						toast.success(tCommon("success"));
 						setDialogOpen(false);
@@ -175,224 +152,240 @@ export const EmployeeMaritalStatusPage = React.memo(
 					onError: () => {
 						toast.error(tCommon("error"));
 					},
-				});
-			}
-		}, [formState, editingRecord, selectedEmployee, createMutation, updateMutation, tCommon]);
+				},
+			);
+		} else {
+			const createData: CreateMaritalStatusRequest = {
+				employeeId: selectedEmployee.id,
+				status: formState.status,
+				effectiveDate: formState.effectiveDate,
+				remarks: formState.remarks || undefined,
+			};
 
-		const columns = React.useMemo<ColumnDef<MaritalStatusRecord>[]>(
-			() => [
-				{
-					accessorKey: "effectiveDate",
-					header: t("maritalStatus.effectiveDate"),
-					cell: ({ row }) => formatDate(row.getValue("effectiveDate")),
+			createMutation.mutate(createData, {
+				onSuccess: () => {
+					toast.success(tCommon("success"));
+					setDialogOpen(false);
 				},
-				{
-					accessorKey: "status",
-					header: t("maritalStatus.status"),
-					cell: ({ row }) => {
-						const status = row.getValue("status") as string;
-						return (
-							<Badge variant={getStatusVariant(status)}>
-								{t(`maritalStatus.statuses.${status.toUpperCase()}`, status)}
-							</Badge>
-						);
-					},
+				onError: () => {
+					toast.error(tCommon("error"));
 				},
-				{
-					accessorKey: "remarks",
-					header: t("maritalStatus.remarks"),
-					cell: ({ row }) => {
-						const remarks = row.getValue("remarks") as string | null;
-						return remarks ? <span className="text-sm text-muted-foreground">{remarks}</span> : "-";
-					},
-				},
-				{
-					accessorKey: "createdAt",
-					header: t("maritalStatus.recordedAt"),
-					cell: ({ row }) => formatDate(row.getValue("createdAt")),
-				},
-				{
-					id: "actions",
-					header: tCommon("actions"),
-					cell: ({ row }) => {
-						const record = row.original;
-						return (
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon" className="h-8 w-8">
-										<MoreHorizontal className="h-4 w-4" />
-										<span className="sr-only">{tCommon("actions")}</span>
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
-									<DropdownMenuItem onClick={() => handleEditClick(record)}>
-										<Pencil className="mr-2 h-4 w-4" />
-										{tCommon("edit")}
-									</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => handleDelete(record)} className="text-destructive">
-										<Trash2 className="mr-2 h-4 w-4" />
-										{tCommon("delete")}
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						);
-					},
-				},
-			],
-			[t, tCommon, handleEditClick, handleDelete],
-		);
+			});
+		}
+	}, [formState, editingRecord, selectedEmployee, createMutation, updateMutation, tCommon]);
 
-		return (
-			<div className="space-y-6">
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div>
-						<h1 className="text-2xl font-bold">{t("maritalStatus.title")}</h1>
-						<p className="text-muted-foreground">{t("maritalStatus.subtitle")}</p>
-					</div>
+	const columns = React.useMemo<ColumnDef<MaritalStatusRecord>[]>(
+		() => [
+			{
+				accessorKey: "effectiveDate",
+				header: t("maritalStatusModule.effectiveDate"),
+				cell: ({ row }) => formatDate(row.getValue("effectiveDate")),
+			},
+			{
+				accessorKey: "status",
+				header: t("maritalStatusModule.status"),
+				cell: ({ row }) => {
+					const status = row.getValue("status") as string;
+					return (
+						<Badge variant={getStatusVariant(status)}>
+							{t(`maritalStatus.statuses.${status.toUpperCase()}`, status)}
+						</Badge>
+					);
+				},
+			},
+			{
+				accessorKey: "remarks",
+				header: t("maritalStatusModule.remarks"),
+				cell: ({ row }) => {
+					const remarks = row.getValue("remarks") as string | null;
+					return remarks ? <span className="text-sm text-muted-foreground">{remarks}</span> : "-";
+				},
+			},
+			{
+				accessorKey: "createdAt",
+				header: t("maritalStatusModule.recordedAt"),
+				cell: ({ row }) => formatDate(row.getValue("createdAt")),
+			},
+			{
+				id: "actions",
+				header: tCommon("actions"),
+				cell: ({ row }) => {
+					const record = row.original;
+					return (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" size="icon" className="h-8 w-8">
+									<MoreHorizontal className="h-4 w-4" />
+									<span className="sr-only">{tCommon("actions")}</span>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem onClick={() => handleEditClick(record)}>
+									<Pencil className="mr-2 h-4 w-4" />
+									{tCommon("edit")}
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleDelete(record)} className="text-destructive">
+									<Trash2 className="mr-2 h-4 w-4" />
+									{tCommon("delete")}
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					);
+				},
+			},
+		],
+		[t, tCommon, handleEditClick, handleDelete],
+	);
+
+	return (
+		<div className="space-y-6">
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<h1 className="text-2xl font-bold">{t("maritalStatusModule.title")}</h1>
+					<p className="text-muted-foreground">{t("maritalStatusModule.subtitle")}</p>
 				</div>
+			</div>
 
-				<Card>
-					<CardHeader>
-						<CardTitle>{tCommon("search")}</CardTitle>
-						<CardDescription>{t("maritalStatus.searchEmployee")}</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<EmployeeSearch
-							onEmployeeFound={handleEmployeeFound}
-							onClear={handleEmployeeClear}
-							selectedEmployee={selectedEmployee}
-						/>
-					</CardContent>
-				</Card>
+			<Card>
+				<CardHeader>
+					<CardTitle>{tCommon("search")}</CardTitle>
+					<CardDescription>{t("maritalStatusModule.searchEmployee")}</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<EmployeeSearch
+						onEmployeeFound={handleEmployeeFound}
+						onClear={handleEmployeeClear}
+						selectedEmployee={selectedEmployee}
+					/>
+				</CardContent>
+			</Card>
 
-				{selectedEmployee && (
-					<>
-						<div className="flex justify-end">
-							<Button onClick={handleAddClick}>
-								<Plus className="mr-2 h-4 w-4" />
-								{t("maritalStatus.recordChange")}
-							</Button>
-						</div>
+			{selectedEmployee && (
+				<>
+					<div className="flex justify-end">
+						<Button onClick={handleAddClick}>
+							<Plus className="mr-2 h-4 w-4" />
+							{t("maritalStatusModule.recordChange")}
+						</Button>
+					</div>
 
-						<div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">{t("maritalStatus.currentStatus")}</CardTitle>
-									<Heart className="h-4 w-4 text-rose-500" />
-								</CardHeader>
-								<CardContent>
-									<div className="text-2xl font-bold">
-										{currentStatus?.currentStatus ? (
-											<Badge variant={getStatusVariant(currentStatus.currentStatus)} className="text-lg px-3 py-1">
-												{t(
-													`maritalStatus.statuses.${currentStatus.currentStatus.toUpperCase()}`,
-													currentStatus.currentStatus,
-												)}
-											</Badge>
-										) : (
-											<span className="text-muted-foreground">{t("maritalStatus.notSet")}</span>
-										)}
-									</div>
-									{currentStatus?.marriageDate && (
-										<p className="text-sm text-muted-foreground mt-2">
-											{t("maritalStatus.marriedSince")}: {formatDate(currentStatus.marriageDate)}
-										</p>
-									)}
-								</CardContent>
-							</Card>
-							<Card>
-								<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-									<CardTitle className="text-sm font-medium">{t("maritalStatus.totalChanges")}</CardTitle>
-									<History className="h-4 w-4 text-blue-500" />
-								</CardHeader>
-								<CardContent>
-									<div className="text-2xl font-bold">{history?.length ?? 0}</div>
-									{currentStatus?.lastChange && (
-										<p className="text-sm text-muted-foreground mt-2">
-											{t("maritalStatus.lastChange")}: {formatDate(currentStatus.lastChange.effectiveDate)}
-										</p>
-									)}
-								</CardContent>
-							</Card>
-						</div>
-
-						<Card className="border-amber-500/20 bg-amber-500/5">
-							<CardContent className="pt-4">
-								<p className="text-sm text-muted-foreground">{t("maritalStatus.note")}</p>
-							</CardContent>
-						</Card>
-
+					<div className="grid gap-4 grid-cols-1 md:grid-cols-2">
 						<Card>
-							<CardHeader>
-								<CardTitle>{t("maritalStatus.history")}</CardTitle>
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium">{t("maritalStatusModule.currentStatus")}</CardTitle>
+								<Heart className="h-4 w-4 text-rose-500" />
 							</CardHeader>
 							<CardContent>
-								{!history?.length && !isLoading ? (
-									<p className="text-center text-muted-foreground py-8">{t("maritalStatus.noHistory")}</p>
-								) : (
-									<DataTable columns={columns} data={history ?? []} isLoading={isLoading} searchColumn="status" />
+								<div className="text-2xl font-bold">
+									{currentStatus?.currentStatus ? (
+										<Badge variant={getStatusVariant(currentStatus.currentStatus)} className="text-lg px-3 py-1">
+											{t(
+												`maritalStatus.statuses.${currentStatus.currentStatus.toUpperCase()}`,
+												currentStatus.currentStatus,
+											)}
+										</Badge>
+									) : (
+										<span className="text-muted-foreground">{t("maritalStatusModule.notSet")}</span>
+									)}
+								</div>
+								{currentStatus?.marriageDate && (
+									<p className="text-sm text-muted-foreground mt-2">
+										{t("maritalStatusModule.marriedSince")}: {formatDate(currentStatus.marriageDate)}
+									</p>
 								)}
 							</CardContent>
 						</Card>
-					</>
-				)}
+						<Card>
+							<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+								<CardTitle className="text-sm font-medium">{t("maritalStatusModule.totalChanges")}</CardTitle>
+								<History className="h-4 w-4 text-blue-500" />
+							</CardHeader>
+							<CardContent>
+								<div className="text-2xl font-bold">{history?.length ?? 0}</div>
+								{currentStatus?.lastChange && (
+									<p className="text-sm text-muted-foreground mt-2">
+										{t("maritalStatusModule.lastChange")}: {formatDate(currentStatus.lastChange.effectiveDate)}
+									</p>
+								)}
+							</CardContent>
+						</Card>
+					</div>
 
-				<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-					<DialogContent className="sm:max-w-lg">
-						<DialogHeader>
-							<DialogTitle>
-								{editingRecord ? t("maritalStatus.editRecord") : t("maritalStatus.recordChange")}
-							</DialogTitle>
-							<DialogDescription>{t("maritalStatus.recordDescription")}</DialogDescription>
-						</DialogHeader>
-						<div className="space-y-4">
-							<div className="space-y-2">
-								<Label>{t("maritalStatus.status")} *</Label>
-								<Select value={formState.status} onValueChange={(v) => handleFormChange("status", v)}>
-									<SelectTrigger>
-										<SelectValue />
-									</SelectTrigger>
-									<SelectContent>
-										{Object.values(MARITAL_STATUSES).map((status) => (
-											<SelectItem key={status} value={status}>
-												{t(`maritalStatus.statuses.${status}`, status)}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-							<div className="space-y-2">
-								<Label>{t("maritalStatus.effectiveDate")} *</Label>
-								<Input
-									type="date"
-									value={formState.effectiveDate}
-									onChange={(e) => handleFormChange("effectiveDate", e.target.value)}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label>{t("maritalStatus.remarks")}</Label>
-								<Textarea
-									value={formState.remarks}
-									onChange={(e) => handleFormChange("remarks", e.target.value)}
-									placeholder={t("maritalStatus.remarksPlaceholder")}
-									rows={3}
-								/>
-							</div>
+					<Card className="border-amber-500/20 bg-amber-500/5">
+						<CardContent className="pt-4">
+							<p className="text-sm text-muted-foreground">{t("maritalStatusModule.note")}</p>
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader>
+							<CardTitle>{t("maritalStatusModule.history")}</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{!history?.length && !isLoading ? (
+								<p className="text-center text-muted-foreground py-8">{t("maritalStatusModule.noHistory")}</p>
+							) : (
+								<DataTable columns={columns} data={history ?? []} isLoading={isLoading} searchColumn="status" />
+							)}
+						</CardContent>
+					</Card>
+				</>
+			)}
+
+			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+				<DialogContent className="sm:max-w-lg">
+					<DialogHeader>
+						<DialogTitle>
+							{editingRecord ? t("maritalStatusModule.editRecord") : t("maritalStatusModule.recordChange")}
+						</DialogTitle>
+						<DialogDescription>{t("maritalStatusModule.recordDescription")}</DialogDescription>
+					</DialogHeader>
+					<div className="space-y-4">
+						<div className="space-y-2">
+							<Label>{t("maritalStatusModule.status")} *</Label>
+							<Select value={formState.status} onValueChange={(v) => handleFormChange("status", v)}>
+								<SelectTrigger>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{Object.values(MARITAL_STATUSES).map((status) => (
+										<SelectItem key={status} value={status}>
+											{t(`maritalStatus.statuses.${status}`, status)}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
-						<DialogFooter>
-							<Button variant="outline" onClick={() => setDialogOpen(false)}>
-								{tCommon("cancel")}
-							</Button>
-							<Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
-								{createMutation.isPending || updateMutation.isPending ? tCommon("saving") : tCommon("save")}
-							</Button>
-						</DialogFooter>
-					</DialogContent>
-				</Dialog>
-			</div>
-		);
-	},
-	() => true,
-);
+						<div className="space-y-2">
+							<Label>{t("maritalStatusModule.effectiveDate")} *</Label>
+							<Input
+								type="date"
+								value={formState.effectiveDate}
+								onChange={(e) => handleFormChange("effectiveDate", e.target.value)}
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label>{t("maritalStatusModule.remarks")}</Label>
+							<Textarea
+								value={formState.remarks}
+								onChange={(e) => handleFormChange("remarks", e.target.value)}
+								placeholder={t("maritalStatusModule.remarksPlaceholder")}
+								rows={3}
+							/>
+						</div>
+					</div>
+					<DialogFooter>
+						<Button variant="outline" onClick={() => setDialogOpen(false)}>
+							{tCommon("cancel")}
+						</Button>
+						<Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+							{createMutation.isPending || updateMutation.isPending ? tCommon("saving") : tCommon("save")}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</div>
+	);
+});
 
 EmployeeMaritalStatusPage.displayName = "EmployeeMaritalStatusPage";

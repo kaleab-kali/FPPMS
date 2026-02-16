@@ -431,8 +431,11 @@ export const AppSidebar = React.memo(
 										<AvatarFallback>FP</AvatarFallback>
 									</Avatar>
 									<div className="grid flex-1 text-left text-sm leading-tight">
-										<span className="truncate font-medium">FPP PPMS</span>
-										<span className="truncate text-xs text-muted-foreground">Personnel Management</span>
+										{/* Previous institution name - commented out for now */}
+										{/* <span className="truncate font-medium">FPP PPMS</span> */}
+										{/* <span className="truncate text-xs text-muted-foreground">Personnel Management</span> */}
+										<span className="truncate font-medium">{t("institutionName")}</span>
+										<span className="truncate text-xs text-muted-foreground">{t("systemSubtitle")}</span>
 									</div>
 								</NavLink>
 							</SidebarMenuButton>
