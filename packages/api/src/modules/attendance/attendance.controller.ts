@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@ne
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
 import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { AuthUserDto } from "#api/common/dto/auth-user.dto";
-import { AttendanceService } from "./attendance.service";
+import { AttendanceAccessContext, AttendanceService } from "./attendance.service";
 import {
 	AttendanceQueryDto,
 	AttendanceRecordResponseDto,
@@ -12,6 +12,11 @@ import {
 	CreateAttendanceRecordDto,
 	UpdateAttendanceRecordDto,
 } from "./dto";
+
+const buildAccessContext = (user: AuthUserDto): AttendanceAccessContext => ({
+	centerId: user.centerId,
+	effectiveAccessScope: user.effectiveAccessScope,
+});
 
 @ApiTags("attendance")
 @ApiBearerAuth("JWT-auth")
@@ -61,7 +66,7 @@ export class AttendanceController {
 	@ApiResponse({ status: 401, description: "Unauthorized" })
 	@ApiResponse({ status: 403, description: "Insufficient permissions" })
 	findAll(@CurrentUser() user: AuthUserDto, @Query() query: AttendanceQueryDto) {
-		return this.attendanceService.findAll(user.tenantId, query);
+		return this.attendanceService.findAll(user.tenantId, query, buildAccessContext(user));
 	}
 
 	@Get("daily/:date")
@@ -80,7 +85,7 @@ export class AttendanceController {
 		@Query("centerId") centerId?: string,
 		@Query("departmentId") departmentId?: string,
 	) {
-		return this.attendanceService.findByDate(user.tenantId, date, centerId, departmentId);
+		return this.attendanceService.findByDate(user.tenantId, date, buildAccessContext(user), centerId, departmentId);
 	}
 
 	@Get("employee/:employeeId")

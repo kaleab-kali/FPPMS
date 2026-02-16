@@ -1,6 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
+import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
 import { PrismaService } from "#api/database/prisma.service";
+
+export interface AttendanceAccessContext {
+	centerId?: string;
+	effectiveAccessScope: string;
+}
 import {
 	AttendanceQueryDto,
 	BulkAttendanceDto,
@@ -194,7 +200,7 @@ export class AttendanceService {
 		return { success: true };
 	}
 
-	async findAll(tenantId: string, query: AttendanceQueryDto) {
+	async findAll(tenantId: string, query: AttendanceQueryDto, accessContext: AttendanceAccessContext) {
 		const page = query.page ?? 1;
 		const pageSize = query.pageSize ?? 20;
 		const skip = (page - 1) * pageSize;
@@ -227,20 +233,25 @@ export class AttendanceService {
 			}
 		}
 
-		if (query.centerId || query.departmentId || query.search) {
-			where.employee = {};
-			if (query.centerId) {
-				where.employee.centerId = query.centerId;
-			}
-			if (query.departmentId) {
-				where.employee.departmentId = query.departmentId;
-			}
-			if (query.search) {
-				where.employee.OR = [
-					{ fullName: { contains: query.search, mode: "insensitive" } },
-					{ employeeId: { contains: query.search, mode: "insensitive" } },
-				];
-			}
+		const employeeFilter: Prisma.EmployeeWhereInput = {};
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			employeeFilter.centerId = accessContext.centerId;
+		}
+		if (query.centerId) {
+			validateCenterAccess(accessContext.centerId, query.centerId, accessContext.effectiveAccessScope);
+			employeeFilter.centerId = query.centerId;
+		}
+		if (query.departmentId) {
+			employeeFilter.departmentId = query.departmentId;
+		}
+		if (query.search) {
+			employeeFilter.OR = [
+				{ fullName: { contains: query.search, mode: "insensitive" } },
+				{ employeeId: { contains: query.search, mode: "insensitive" } },
+			];
+		}
+		if (Object.keys(employeeFilter).length > 0) {
+			where.employee = employeeFilter;
 		}
 
 		const orderBy: Prisma.AttendanceRecordOrderByWithRelationInput = {};
@@ -281,20 +292,31 @@ export class AttendanceService {
 		};
 	}
 
-	async findByDate(tenantId: string, date: string, centerId?: string, departmentId?: string) {
+	async findByDate(
+		tenantId: string,
+		date: string,
+		accessContext: AttendanceAccessContext,
+		centerId?: string,
+		departmentId?: string,
+	) {
 		const where: Prisma.AttendanceRecordWhereInput = {
 			tenantId,
 			attendanceDate: new Date(date),
 		};
 
-		if (centerId || departmentId) {
-			where.employee = {};
-			if (centerId) {
-				where.employee.centerId = centerId;
-			}
-			if (departmentId) {
-				where.employee.departmentId = departmentId;
-			}
+		const employeeFilter: Prisma.EmployeeWhereInput = {};
+		if (!canAccessAllCenters(accessContext.effectiveAccessScope)) {
+			employeeFilter.centerId = accessContext.centerId;
+		}
+		if (centerId) {
+			validateCenterAccess(accessContext.centerId, centerId, accessContext.effectiveAccessScope);
+			employeeFilter.centerId = centerId;
+		}
+		if (departmentId) {
+			employeeFilter.departmentId = departmentId;
+		}
+		if (Object.keys(employeeFilter).length > 0) {
+			where.employee = employeeFilter;
 		}
 
 		const records = await this.prisma.attendanceRecord.findMany({
