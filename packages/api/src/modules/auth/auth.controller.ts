@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Ip, Param, Post, Request, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Throttle } from "@nestjs/throttler";
 import { CurrentUser } from "#api/common/decorators/current-user.decorator";
 import { Permissions } from "#api/common/decorators/permissions.decorator";
 import { Public } from "#api/common/decorators/public.decorator";
@@ -19,6 +20,7 @@ export class AuthController {
 
 	@Public()
 	@UseGuards(LocalAuthGuard)
+	@Throttle({ short: { limit: 5, ttl: 60000 } })
 	@Post("login")
 	@ApiOperation({ summary: "User login", description: "Authenticate user with username and password" })
 	@ApiResponse({ status: 200, description: "Login successful", type: LoginResponseDto })
@@ -74,6 +76,7 @@ export class AuthController {
 		return this.authService.getProfile(user.id);
 	}
 
+	@Throttle({ short: { limit: 3, ttl: 60000 } })
 	@Post("change-password")
 	@ApiBearerAuth("JWT-auth")
 	@ApiOperation({ summary: "Change password", description: "Change the current user password" })
@@ -83,6 +86,7 @@ export class AuthController {
 		return this.authService.changePassword(user.id, dto);
 	}
 
+	@Throttle({ short: { limit: 3, ttl: 60000 } })
 	@Post("reset-password/:userId")
 	@Permissions("auth.manage.password")
 	@ApiBearerAuth("JWT-auth")

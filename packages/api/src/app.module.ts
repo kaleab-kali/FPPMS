@@ -1,4 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { AppController } from "#api/app.controller";
 import { AppService } from "#api/app.service";
 import { CommonModule } from "#api/common/common.module";
@@ -35,6 +37,23 @@ import { WeaponsModule } from "#api/modules/weapons/weapons.module";
 	imports: [
 		ConfigModule,
 		DatabaseModule,
+		ThrottlerModule.forRoot([
+			{
+				name: "short",
+				ttl: 1000,
+				limit: 3,
+			},
+			{
+				name: "medium",
+				ttl: 10000,
+				limit: 20,
+			},
+			{
+				name: "long",
+				ttl: 60000,
+				limit: 100,
+			},
+		]),
 		AttachmentsModule,
 		AttendanceModule,
 		AuditLogModule,
@@ -62,7 +81,13 @@ import { WeaponsModule } from "#api/modules/weapons/weapons.module";
 		WeaponsModule,
 	],
 	controllers: [AppController],
-	providers: [AppService],
+	providers: [
+		AppService,
+		{
+			provide: APP_GUARD,
+			useClass: ThrottlerGuard,
+		},
+	],
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer): void {

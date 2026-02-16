@@ -1,14 +1,36 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import helmet from "helmet";
 import { AppModule } from "#api/app.module";
 
 const PORT = 3000;
 const API_PREFIX = "api";
 const SWAGGER_PATH = "docs";
 
+const DEFAULT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"];
+
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
+
+	app.use(
+		helmet({
+			contentSecurityPolicy: {
+				directives: {
+					defaultSrc: ["'self'"],
+					styleSrc: ["'self'", "'unsafe-inline'"],
+					imgSrc: ["'self'", "data:", "https:"],
+					scriptSrc: ["'self'"],
+				},
+			},
+			hsts: {
+				maxAge: 31536000,
+				includeSubDomains: true,
+				preload: true,
+			},
+			referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+		}),
+	);
 
 	app.useGlobalPipes(
 		new ValidationPipe({
@@ -21,11 +43,14 @@ async function bootstrap() {
 		}),
 	);
 
+	const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : DEFAULT_ORIGINS;
+
 	app.enableCors({
-		origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+		origin: allowedOrigins,
 		methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-		allowedHeaders: ["Content-Type", "Authorization"],
+		allowedHeaders: ["Content-Type", "Authorization", "X-Request-ID"],
 		credentials: true,
+		maxAge: 3600,
 	});
 
 	app.setGlobalPrefix(API_PREFIX);
