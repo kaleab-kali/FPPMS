@@ -18,6 +18,8 @@ import { AccessContext, EmployeesService } from "#api/modules/employees/employee
 const buildAccessContext = (user: AuthUserDto): AccessContext => ({
 	centerId: user.centerId,
 	effectiveAccessScope: user.effectiveAccessScope,
+	employeeId: user.employeeId,
+	roles: user.roles,
 });
 
 @ApiTags("employees")

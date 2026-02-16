@@ -1,6 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Employee, EmployeeStatus, EmployeeType, MaritalStatus, Prisma, WorkScheduleType } from "@prisma/client";
-import { canAccessAllCenters, validateCenterAccess } from "#api/common/utils/access-scope.util";
+import {
+	canAccessAllCenters,
+	getMaxRoleLevel,
+	isSelfEdit,
+	validateCenterAccess,
+	validateDestructiveAction,
+	validateEditAuthorization,
+} from "#api/common/utils/access-scope.util";
 import { PrismaService } from "#api/database/prisma.service";
 import {
 	ChangeEmployeeStatusDto,
@@ -18,6 +25,8 @@ import { RetirementCalculationService } from "#api/modules/employees/services/re
 export interface AccessContext {
 	centerId?: string;
 	effectiveAccessScope: string;
+	employeeId?: string;
+	roles: string[];
 }
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -516,6 +525,12 @@ export class EmployeesService {
 
 		validateCenterAccess(accessContext.centerId, existing.centerId ?? undefined, accessContext.effectiveAccessScope);
 
+		const selfEdit = isSelfEdit(accessContext.employeeId, id);
+		const changedFields = this.getChangedFields(dto);
+		const userRoleLevel = getMaxRoleLevel(accessContext.roles);
+		const targetRoleLevel = selfEdit ? userRoleLevel : await this.getTargetEmployeeRoleLevel(tenantId, id);
+		validateEditAuthorization(userRoleLevel, targetRoleLevel, selfEdit, changedFields);
+
 		const updateData = this.buildUpdatePayload(dto, existing, updatedBy);
 
 		if (dto.rankId !== undefined && existing.employeeType === EmployeeType.MILITARY) {
@@ -534,6 +549,20 @@ export class EmployeesService {
 		});
 
 		return this.mapToResponse(employee);
+	}
+
+	private async getTargetEmployeeRoleLevel(tenantId: string, employeeId: string): Promise<number> {
+		const linkedUser = await this.prisma.user.findFirst({
+			where: { tenantId, employeeId, status: { not: "TERMINATED" } },
+			include: { userRoles: { include: { role: { select: { code: true } } } } },
+		});
+		if (!linkedUser) return 0;
+		const roleCodes = linkedUser.userRoles.map((ur) => ur.role.code);
+		return getMaxRoleLevel(roleCodes);
+	}
+
+	private getChangedFields(dto: UpdateEmployeeDto): string[] {
+		return Object.keys(dto).filter((key) => (dto as Record<string, unknown>)[key] !== undefined);
 	}
 
 	private buildUpdatePayload(
@@ -620,6 +649,10 @@ export class EmployeesService {
 
 		validateCenterAccess(accessContext.centerId, existing.centerId ?? undefined, accessContext.effectiveAccessScope);
 
+		const userRoleLevel = getMaxRoleLevel(accessContext.roles);
+		const targetRoleLevel = await this.getTargetEmployeeRoleLevel(tenantId, id);
+		validateDestructiveAction(accessContext.employeeId, id, userRoleLevel, targetRoleLevel);
+
 		await this.prisma.employee.update({
 			where: { id },
 			data: {
@@ -648,6 +681,10 @@ export class EmployeesService {
 		}
 
 		validateCenterAccess(accessContext.centerId, existing.centerId ?? undefined, accessContext.effectiveAccessScope);
+
+		const userRoleLevel = getMaxRoleLevel(accessContext.roles);
+		const targetRoleLevel = await this.getTargetEmployeeRoleLevel(tenantId, id);
+		validateDestructiveAction(accessContext.employeeId, id, userRoleLevel, targetRoleLevel);
 
 		const statusReason = dto.notes ? `${dto.reason}\n\nNotes: ${dto.notes}` : dto.reason;
 
@@ -686,6 +723,10 @@ export class EmployeesService {
 		}
 
 		validateCenterAccess(accessContext.centerId, existing.centerId ?? undefined, accessContext.effectiveAccessScope);
+
+		const userRoleLevel = getMaxRoleLevel(accessContext.roles);
+		const targetRoleLevel = await this.getTargetEmployeeRoleLevel(tenantId, id);
+		validateDestructiveAction(accessContext.employeeId, id, userRoleLevel, targetRoleLevel);
 
 		if (existing.status === EmployeeStatus.ACTIVE) {
 			throw new BadRequestException("Employee is already active");

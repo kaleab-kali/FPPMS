@@ -13,6 +13,7 @@
 | Create a new module (AI) | [AI-MODULE-GUIDE.md](./guides/AI-MODULE-GUIDE.md) |
 | Follow feature creation steps (AI) | [AI-FEATURE-CHECKLIST.md](./guides/AI-FEATURE-CHECKLIST.md) |
 | **Follow security best practices** | [SECURITY-GUIDE.md](./guides/SECURITY-GUIDE.md) |
+| Understand edit authorization rules | [EDIT-AUTHORIZATION-POLICY.md](./guides/EDIT-AUTHORIZATION-POLICY.md) |
 | Set up development environment | [DEVELOPER-SETUP.md](./guides/DEVELOPER-SETUP.md) |
 | Write/run tests | [TESTING-GUIDE.md](./guides/TESTING-GUIDE.md) |
 | **Update documentation** | [DOCUMENTATION-MAINTENANCE.md](./guides/DOCUMENTATION-MAINTENANCE.md) |

@@ -1,5 +1,90 @@
 import { ForbiddenException } from "@nestjs/common";
-import { ACCESS_SCOPES } from "#api/common/constants/roles.constant";
+import { ACCESS_SCOPES, ROLE_LEVELS } from "#api/common/constants/roles.constant";
+
+const PERSONAL_FIELDS = new Set([
+	"primaryPhone",
+	"secondaryPhone",
+	"email",
+	"addressRegionId",
+	"addressSubCityId",
+	"addressWoredaId",
+	"houseNumber",
+	"uniqueAreaName",
+	"emergencyContactName",
+	"emergencyContactNameAm",
+	"emergencyContactRelationship",
+	"emergencyContactPhone",
+	"emergencyContactAltPhone",
+	"emergencyContactEmail",
+	"emergencyRegionId",
+	"emergencySubCityId",
+	"emergencyWoredaId",
+	"emergencyHouseNumber",
+	"emergencyUniqueAreaName",
+	"height",
+	"weight",
+	"distinguishingMarks",
+	"motherFullName",
+	"motherFullNameAm",
+	"motherPhone",
+	"motherIsAlive",
+	"motherAddress",
+]);
+
+export const getMaxRoleLevel = (roles: string[]): number => {
+	let max = 0;
+	for (const role of roles) {
+		const level = ROLE_LEVELS[role as keyof typeof ROLE_LEVELS] ?? 0;
+		if (level > max) max = level;
+	}
+	return max;
+};
+
+export const isSelfEdit = (userEmployeeId: string | undefined, targetEmployeeId: string): boolean => {
+	return !!userEmployeeId && userEmployeeId === targetEmployeeId;
+};
+
+export const validateSelfEditFields = (changedFields: string[]): void => {
+	const sensitiveFields = changedFields.filter((f) => !PERSONAL_FIELDS.has(f));
+	if (sensitiveFields.length > 0) {
+		throw new ForbiddenException(
+			`You cannot modify sensitive fields on your own record: ${sensitiveFields.join(", ")}`,
+		);
+	}
+};
+
+export const validateEditAuthorization = (
+	userRoleLevel: number,
+	targetRoleLevel: number,
+	isSelf: boolean,
+	changedFields?: string[],
+): void => {
+	if (isSelf) {
+		if (changedFields) {
+			validateSelfEditFields(changedFields);
+		}
+		return;
+	}
+
+	if (userRoleLevel < targetRoleLevel) {
+		throw new ForbiddenException("Insufficient role level to edit this employee");
+	}
+};
+
+export const validateDestructiveAction = (
+	userEmployeeId: string | undefined,
+	targetEmployeeId: string,
+	userRoleLevel: number,
+	targetRoleLevel: number,
+): void => {
+	if (isSelfEdit(userEmployeeId, targetEmployeeId)) {
+		throw new ForbiddenException("You cannot perform this action on your own record");
+	}
+
+	if (userRoleLevel < targetRoleLevel) {
+		throw new ForbiddenException("Insufficient role level to perform this action on this employee");
+	}
+};
 
 export const canAccessAllCenters = (effectiveAccessScope: string): boolean => {
 	return effectiveAccessScope === ACCESS_SCOPES.ALL_CENTERS;
