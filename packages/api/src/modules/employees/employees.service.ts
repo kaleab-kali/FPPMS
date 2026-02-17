@@ -9,10 +9,10 @@ import {
 	validateEditAuthorization,
 } from "#api/common/utils/access-scope.util";
 import {
+	decryptObject,
 	ENCRYPTED_EMERGENCY_CONTACT_FIELDS,
 	ENCRYPTED_EMPLOYEE_FIELDS,
 	ENCRYPTED_MOTHER_INFO_FIELDS,
-	decryptObject,
 	encryptObject,
 } from "#api/common/utils/encryption.util";
 import { PrismaService } from "#api/database/prisma.service";
@@ -641,7 +641,9 @@ export class EmployeesService {
 			updateData.statusReason = dto.statusReason;
 		}
 
-		return this.encryptEmployeeData(updateData as unknown as Record<string, unknown>) as Prisma.EmployeeUncheckedUpdateInput;
+		return this.encryptEmployeeData(
+			updateData as unknown as Record<string, unknown>,
+		) as Prisma.EmployeeUncheckedUpdateInput;
 	}
 
 	async remove(

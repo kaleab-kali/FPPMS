@@ -8,6 +8,7 @@ export interface SalaryAccessContext {
 	centerId?: string;
 	effectiveAccessScope: string;
 }
+
 import { MassRaiseType } from "#api/modules/salary-management/dto/mass-raise.dto";
 import { SalaryEligibilityQueryDto } from "#api/modules/salary-management/dto/salary-eligibility-query.dto";
 import { SalaryCalculationService } from "#api/modules/salary-management/services/salary-calculation.service";

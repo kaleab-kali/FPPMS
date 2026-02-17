@@ -505,10 +505,14 @@ export class SalaryManagementController {
 		@CurrentUser() user: AuthUserDto,
 		@Query("centerId") centerId?: string,
 	): Promise<StepDistributionReportDto> {
-		return this.salaryManagementService.getStepDistributionReport(user.tenantId, {
-			centerId: user.centerId,
-			effectiveAccessScope: user.effectiveAccessScope,
-		}, centerId) as Promise<StepDistributionReportDto>;
+		return this.salaryManagementService.getStepDistributionReport(
+			user.tenantId,
+			{
+				centerId: user.centerId,
+				effectiveAccessScope: user.effectiveAccessScope,
+			},
+			centerId,
+		) as Promise<StepDistributionReportDto>;
 	}
 
 	@Get("ranks/:rankId/steps")

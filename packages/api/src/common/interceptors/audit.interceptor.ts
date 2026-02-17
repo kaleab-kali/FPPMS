@@ -1,6 +1,6 @@
 import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from "@nestjs/common";
 import { AuditAction } from "@prisma/client";
-import { Observable, from, switchMap, tap } from "rxjs";
+import { from, Observable, switchMap, tap } from "rxjs";
 import { RequestWithUser } from "#api/common/interfaces/request-with-user.interface";
 import { PrismaService } from "#api/database/prisma.service";
 import { AuditLogService } from "#api/modules/audit-log/audit-log.service";
@@ -66,8 +66,7 @@ export class AuditInterceptor implements NestInterceptor {
 					tap({
 						next: (responseData) => {
 							const extractedResourceId = resourceId ?? this.extractResourceIdFromResponse(responseData);
-							const isSelfEdit =
-								request.user?.employeeId && extractedResourceId === request.user.employeeId;
+							const isSelfEdit = request.user?.employeeId && extractedResourceId === request.user.employeeId;
 
 							this.logger.log(`Creating audit log for: ${action} ${module}/${resource}`);
 							this.auditLogService
@@ -125,10 +124,7 @@ export class AuditInterceptor implements NestInterceptor {
 									description: `Failed: ${this.generateDescription(action, module, resource)} - ${error.message}`,
 								})
 								.catch((auditError) => {
-									this.logger.error(
-										`Failed to create audit log for error: ${auditError.message}`,
-										auditError.stack,
-									);
+									this.logger.error(`Failed to create audit log for error: ${auditError.message}`, auditError.stack);
 								});
 						},
 					}),
